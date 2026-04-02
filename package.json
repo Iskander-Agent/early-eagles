@@ -9,7 +9,12 @@
   },
   "dependencies": {
     "@noble/curves": "^1.4.0",
-    "@noble/hashes": "^1.4.0"
+    "@noble/hashes": "^1.4.0",
+    "@scure/bip32": "^2.0.1",
+    "@scure/bip39": "^2.0.1",
+    "@stacks/network": "^7.3.1",
+    "@stacks/transactions": "^7.4.0",
+    "@stacks/wallet-sdk": "^7.2.0"
   },
   "devDependencies": {
     "wrangler": "^3.0.0"
