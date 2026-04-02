@@ -73,7 +73,7 @@ module.exports = async function handler(req, res) {
   const rawKey = process.env.SIGNER_PRIVATE_KEY;
   if (!rawKey) return res.status(500).json({ error: "Signer not configured" });
   // Ensure exactly 64 hex chars (pad left if needed)
-  const privKeyHex = rawKey.replace(/^0x/, '').padStart(64, '0');
+  const privKeyHex = rawKey.trim().replace(/^0x/, '').padStart(64, '0').slice(0, 64);
 
   try {
     const { secp256k1, keccak_256, bytesToHex, concatBytes } = await getNoble();
