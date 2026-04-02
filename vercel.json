@@ -14,6 +14,7 @@
   "routes": [
     { "src": "/api/authorize", "dest": "/api/authorize.js" },
     { "src": "/api/token/([0-9]+)", "dest": "/api/token/[id].js?id=$1" },
+    { "src": "/api/test-token/([0-9]+)", "dest": "/api/test-token/[id].js?id=$1" },
     { "src": "/(.*)", "dest": "/mint-page/index.html" }
   ]
 }
