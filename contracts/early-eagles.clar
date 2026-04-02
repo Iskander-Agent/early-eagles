@@ -21,8 +21,7 @@
 (define-constant IDENTITY-REGISTRY 'SP1NMR7MY0TJ1QA7WQBZ6504KC79PZNTRQH4YGFJD.identity-registry-v2)
 
 ;; Signer public key (33 bytes compressed secp256k1) — set at deploy, never changes
-;; Replace with actual pubkey derived from SIGNER_PRIVATE_KEY
-(define-constant SIGNER-PUBKEY 0x000000000000000000000000000000000000000000000000000000000000000000)
+(define-constant SIGNER-PUBKEY 0x022bb7747cfa7c1f77e1a96993f9f2699ea927a8c8f20ea5799bdc26072573027e)
 
 ;; Supply caps
 (define-constant MAX-SUPPLY u210)
