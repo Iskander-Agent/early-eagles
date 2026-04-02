@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/authorize.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "mint-page/index.html",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    { "src": "/api/authorize", "dest": "/api/authorize.js" },
+    { "src": "/(.*)", "dest": "/mint-page/index.html" }
+  ]
+}
