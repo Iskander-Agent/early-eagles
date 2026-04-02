@@ -1,6 +1,12 @@
 /**
- * Early Eagles 🦅 — Vercel Serverless Function: /api/authorize
- * CommonJS for Vercel Node.js runtime compatibility
+ * Early Eagles - Vercel Serverless Function: /api/authorize
+ *
+ * Verifies caller is a Genesis AIBTC agent with ERC-8004 identity,
+ * returns secp256k1 signature for on-chain mint authorization.
+ *
+ * Signature message: keccak256(principal_consensus_bytes || nonce_16 || expiry_8)
+ * principal_consensus_bytes = 0x05 + version_byte + hash160 (22 bytes total)
+ * expiry_8 = uint64 big-endian unix timestamp
  */
 
 const AIBTC_API_BASE = "https://aibtc.com/api";
@@ -19,9 +25,42 @@ async function getNoble() {
   return { secp256k1, keccak_256, bytesToHex, concatBytes };
 }
 
+// Decode a Stacks c32check address to version + hash160
+function decodeStacksAddress(addr) {
+  // c32check alphabet
+  const C32 = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
+  // Strip prefix (SP, ST, SM, SN)
+  const body = addr.slice(2);
+  let n = BigInt(0);
+  for (const ch of body) {
+    const idx = C32.indexOf(ch);
+    if (idx < 0) throw new Error(`Invalid c32 char: ${ch}`);
+    n = n * BigInt(32) + BigInt(idx);
+  }
+  // Last 4 bytes = checksum, byte before = version, first 20 = hash160
+  const bytes = [];
+  let tmp = n;
+  for (let i = 0; i < 25; i++) {
+    bytes.unshift(Number(tmp & 0xffn));
+    tmp >>= 8n;
+  }
+  // bytes[0] = version, bytes[1..20] = hash160, bytes[21..24] = checksum
+  return { version: bytes[0], hash160: bytes.slice(1, 21) };
+}
+
+// Build Clarity consensus bytes for a standard principal (same as to-consensus-buff?)
+// Result: 0x05 + version(1) + hash160(20) = 22 bytes
+function principalConsensusBytes(stxAddress) {
+  const { version, hash160 } = decodeStacksAddress(stxAddress);
+  const buf = new Uint8Array(22);
+  buf[0] = 0x05; // standard principal type tag
+  buf[1] = version;
+  buf.set(hash160, 2);
+  return buf;
+}
+
 module.exports = async function handler(req, res) {
   Object.entries(CORS).forEach(([k, v]) => res.setHeader(k, v));
-
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
@@ -29,7 +68,7 @@ module.exports = async function handler(req, res) {
   if (!stxAddress || typeof stxAddress !== "string") {
     return res.status(400).json({ error: "Missing stxAddress" });
   }
-  if (!/^S[PT][A-Z0-9]{38,41}$/.test(stxAddress)) {
+  if (!/^S[PMTN][A-Z0-9]{38,41}$/.test(stxAddress)) {
     return res.status(400).json({ error: "Invalid Stacks address format" });
   }
 
@@ -69,25 +108,25 @@ module.exports = async function handler(req, res) {
     });
   }
 
-  // Build signature
   const rawKey = process.env.SIGNER_PRIVATE_KEY;
   if (!rawKey) return res.status(500).json({ error: "Signer not configured" });
-  // Ensure exactly 64 hex chars (pad left if needed)
-  const privKeyHex = rawKey.trim().replace(/^0x/, '').padStart(64, '0').slice(0, 64);
+  const privKeyHex = rawKey.trim().replace(/^0x/, "").padStart(64, "0").slice(0, 64);
 
   try {
     const { secp256k1, keccak_256, bytesToHex, concatBytes } = await getNoble();
 
+    // Random 16-byte nonce
     const nonce = new Uint8Array(16);
     crypto.getRandomValues(nonce);
-    const nonceHex = bytesToHex(nonce);
-    const expiry = Math.floor(Date.now() / 1000) + SIG_EXPIRY_SECONDS;
 
-    const addrBytes = new TextEncoder().encode(stxAddress);
+    // Expiry: unix timestamp as uint64 big-endian (8 bytes)
+    const expiryTs = Math.floor(Date.now() / 1000) + SIG_EXPIRY_SECONDS;
     const expiryBuf = new Uint8Array(8);
-    new DataView(expiryBuf.buffer).setBigUint64(0, BigInt(expiry), false);
+    new DataView(expiryBuf.buffer).setBigUint64(0, BigInt(expiryTs), false);
 
-    const message = concatBytes(addrBytes, nonce, expiryBuf);
+    // Build message matching Clarity's keccak256(concat(to-consensus-buff?(tx-sender), nonce, expiry-buff))
+    const principalBytes = principalConsensusBytes(stxAddress);
+    const message = concatBytes(principalBytes, nonce, expiryBuf);
     const msgHash = keccak_256(message);
 
     const sig = secp256k1.sign(msgHash, privKeyHex, { lowS: true });
@@ -108,8 +147,9 @@ module.exports = async function handler(req, res) {
         level: agentData.levelName,
       },
       auth: {
-        nonce: nonceHex,
-        expiry,
+        nonce: bytesToHex(nonce),
+        expiryBuff: bytesToHex(expiryBuf),
+        expiryTs,
         signature: bytesToHex(sigFull),
       },
     });
