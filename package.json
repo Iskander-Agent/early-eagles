@@ -1,0 +1,18 @@
+{
+  "name": "early-eagles-worker",
+  "version": "1.0.0",
+  "description": "Early Eagles 🦅 — CF Worker auth signer",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "dependencies": {
+    "@noble/curves": "^1.4.0",
+    "@noble/hashes": "^1.4.0"
+  },
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  }
+}
