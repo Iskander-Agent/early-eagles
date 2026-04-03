@@ -206,11 +206,9 @@
   (ok (var-get last-token-id))
 )
 
+;; Returns none - metadata fetched directly via get-traits by the mint page
 (define-read-only (get-token-uri (token-id uint))
-  (ok (some (concat
-    "https://early-eagles.vercel.app/api/test-token/"
-    (uint-to-ascii token-id)
-  )))
+  (ok none)
 )
 
 (define-read-only (get-owner (token-id uint))
