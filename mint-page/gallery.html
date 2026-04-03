@@ -475,9 +475,11 @@ async function loadNfts() {
   }
 
   // Scan all token IDs from 0 to lastId, fetch traits
+  // If lastId=0 that could be token #0 OR an unresolved lastId, scan at least up to totalMinted-1
+  const scanTo = Math.max(lastId, 9); // scan at least 0-9 to catch any minted tokens
   grid.innerHTML = '';
   const tokenIds = [];
-  for (let i = 0; i <= lastId; i++) tokenIds.push(i);
+  for (let i = 0; i <= scanTo; i++) tokenIds.push(i);
 
   // Fetch traits for all tokens in parallel (batched)
   const BATCH = 5;
@@ -702,11 +704,16 @@ function encodeUint(n) {
 
 function decodeUint(hex) {
   const h = hex.startsWith('0x') ? hex.slice(2) : hex;
-  const buf = Buffer.from ? Buffer.from(h, 'hex') : new Uint8Array(h.match(/../g).map(b => parseInt(b, 16)));
-  if (buf[0] !== 0x01) return 0;
-  // last 8 bytes are the value
+  const bytes = h.match(/../g).map(b => parseInt(b, 16));
+  let pos = 0;
+  // unwrap ok wrapper (0x07)
+  if (bytes[pos] === 0x07) pos++;
+  // must be uint (0x01)
+  if (bytes[pos] !== 0x01) return 0;
+  pos++;
+  // 16-byte big-endian uint, take last 8
   let v = 0n;
-  for (let i = 9; i < 17; i++) v = (v << 8n) | BigInt(buf[i]);
+  for (let i = pos + 8; i < pos + 16; i++) v = (v << 8n) | BigInt(bytes[i] || 0);
   return Number(v);
 }
 
@@ -714,7 +721,7 @@ function decodeOption(hex) {
   const h = hex.startsWith('0x') ? hex.slice(2) : hex;
   const bytes = h.match(/../g).map(b => parseInt(b, 16));
   if (bytes[0] === 0x09) return null; // none
-  if (bytes[0] === 0x0a) return '0x' + h.slice(2); // some — strip some wrapper byte
+  if (bytes[0] === 0x0a) return '0x' + bytes.slice(1).map(b => b.toString(16).padStart(2,'0')).join(''); // some
   return hex;
 }
 
