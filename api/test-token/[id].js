@@ -16,7 +16,7 @@ const COLOR_NAMES = [
 
 const CONTRACT = {
   address: 'SP3JR7JXFT7ZM9JKSQPBQG1HPT0D365MA5TN0P12E',
-  name: 'early-eagles-test-v0',
+  name: 'early-eagles-test-v1',
   api: 'https://api.hiro.so',
 };
 
