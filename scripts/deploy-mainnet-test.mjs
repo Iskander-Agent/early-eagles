@@ -10,7 +10,7 @@ import { dirname, join } from 'path';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const MCP_BASE = '/home/ghislo/.aibtc/node_modules/@aibtc/mcp-server';
 const MAINNET_API = 'https://api.hiro.so';
-const CONTRACT_NAME = 'early-eagles-test-v2';
+const CONTRACT_NAME = 'early-eagles-test-v3';
 
 const { makeContractDeploy, AnchorMode, PostConditionMode } = await import('@stacks/transactions');
 const { STACKS_MAINNET } = await import('@stacks/network');
