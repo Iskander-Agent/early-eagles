@@ -9,6 +9,10 @@
     {
       "src": "mint-page/index.html",
       "use": "@vercel/static"
+    },
+    {
+      "src": "mint-page/gallery.html",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
