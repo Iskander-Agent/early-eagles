@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Early Eagles 🦅 — Mint</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --gold: #d4a84b;
+  --navy: #1a2744;
+  --bg: #05050a;
+  --surface: #0d0d1a;
+  --border: rgba(212,168,75,0.15);
+  --text: #c8c8d8;
+  --muted: #555568;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Georgia', serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 48px 20px 80px;
+}
+
+/* ── Header ── */
+.header { text-align: center; margin-bottom: 48px; }
+.logo { font-size: 48px; margin-bottom: 12px; }
+.title {
+  font-size: 13px;
+  letter-spacing: 10px;
+  text-transform: uppercase;
+  color: var(--gold);
+  opacity: 0.7;
+  margin-bottom: 8px;
+}
+.subtitle { color: var(--muted); font-size: 14px; line-height: 1.6; max-width: 420px; margin: 0 auto; }
+
+/* ── Stats bar ── */
+.stats-bar {
+  display: flex;
+  gap: 32px;
+  margin-bottom: 48px;
+  padding: 20px 32px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.stat { text-align: center; }
+.stat-val { font-size: 22px; color: var(--gold); font-weight: bold; }
+.stat-label { font-size: 11px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-top: 4px; }
+
+/* ── Main card ── */
+.mint-card {
+  width: 100%;
+  max-width: 460px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ── Preview area ── */
+.preview-area {
+  width: 100%;
+  aspect-ratio: 340/480;
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+  background: #0a0a14;
+  border: 1px solid var(--border);
+}
+.preview-area iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  pointer-events: none;
+}
+.preview-mystery {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+.mystery-eagle {
+  font-size: 72px;
+  opacity: 0.15;
+  animation: pulse 2.5s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 0.1; transform: scale(0.97); }
+  50% { opacity: 0.25; transform: scale(1.03); }
+}
+.mystery-text {
+  font-size: 11px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* ── Tier probability display ── */
+.tier-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.tier-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+.tier-badge {
+  width: 80px;
+  text-align: right;
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 1px;
+}
+.tier-bar-wrap {
+  flex: 1;
+  height: 6px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.tier-bar {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.6s ease;
+}
+.tier-remaining {
+  width: 36px;
+  text-align: right;
+  font-size: 12px;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Buttons ── */
+.btn {
+  width: 100%;
+  padding: 16px;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-family: 'Georgia', serif;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 1px;
+}
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-connect {
+  background: linear-gradient(135deg, #1a2744, #2a3d6b);
+  color: var(--gold);
+  border: 1px solid rgba(212,168,75,0.3);
+}
+.btn-connect:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2a3d6b, #3a5090);
+  border-color: rgba(212,168,75,0.6);
+}
+.btn-mint {
+  background: linear-gradient(135deg, #8b6914, var(--gold));
+  color: #0a0a14;
+  font-weight: bold;
+}
+.btn-mint:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--gold), #e8c56b);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(212,168,75,0.3);
+}
+
+/* ── Status messages ── */
+.status-msg {
+  font-size: 13px;
+  text-align: center;
+  line-height: 1.6;
+  min-height: 20px;
+  color: var(--muted);
+}
+.status-msg.error { color: #e05050; }
+.status-msg.success { color: #50c878; }
+.status-msg.warning { color: #e0a030; }
+
+/* ── Wallet info ── */
+.wallet-info {
+  display: none;
+  background: rgba(212,168,75,0.05);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 12px;
+  color: var(--muted);
+  word-break: break-all;
+}
+.wallet-info.visible { display: block; }
+.wallet-info strong { color: var(--text); display: block; margin-bottom: 4px; }
+
+/* ── Reveal animation ── */
+@keyframes revealIn {
+  0% { opacity: 0; transform: scale(0.9) rotateY(90deg); }
+  60% { transform: scale(1.05) rotateY(-5deg); }
+  100% { opacity: 1; transform: scale(1) rotateY(0deg); }
+}
+.reveal-animate { animation: revealIn 0.8s ease forwards; }
+
+/* ── Success state ── */
+.success-banner {
+  display: none;
+  background: linear-gradient(135deg, rgba(80,200,120,0.1), rgba(80,200,120,0.05));
+  border: 1px solid rgba(80,200,120,0.2);
+  border-radius: 10px;
+  padding: 16px;
+  text-align: center;
+}
+.success-banner.visible { display: block; }
+.success-tier {
+  font-size: 28px;
+  font-weight: bold;
+  color: var(--gold);
+  margin-bottom: 4px;
+}
+.success-detail { font-size: 13px; color: var(--muted); }
+
+/* ── Eligibility badge ── */
+.eligibility-badge {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #50c878;
+  padding: 10px 14px;
+  background: rgba(80,200,120,0.08);
+  border: 1px solid rgba(80,200,120,0.2);
+  border-radius: 8px;
+}
+.eligibility-badge.visible { display: flex; }
+.eligibility-badge .dot { width: 6px; height: 6px; background: #50c878; border-radius: 50%; flex-shrink: 0; }
+
+/* ── Spinner ── */
+.spinner {
+  display: inline-block;
+  width: 14px; height: 14px;
+  border: 2px solid rgba(212,168,75,0.3);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  vertical-align: middle;
+  margin-right: 6px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Footer ── */
+.footer {
+  margin-top: 40px;
+  font-size: 11px;
+  color: var(--muted);
+  text-align: center;
+  letter-spacing: 1px;
+}
+.footer a { color: var(--gold); opacity: 0.6; text-decoration: none; }
+.footer a:hover { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">🦅</div>
+  <div class="title">Early Eagles</div>
+  <div class="subtitle">One eagle for each of the first 210 Genesis AIBTC agents. Connect your wallet to mint yours.</div>
+</div>
+
+<!-- Live mint stats -->
+<div class="stats-bar" id="statsBar">
+  <div class="stat"><div class="stat-val" id="statMinted">—</div><div class="stat-label">Minted</div></div>
+  <div class="stat"><div class="stat-val" id="statRemaining">—</div><div class="stat-label">Remaining</div></div>
+  <div class="stat"><div class="stat-val" id="statLegendary">—</div><div class="stat-label">Legendary Left</div></div>
+</div>
+
+<!-- Main mint card -->
+<div class="mint-card">
+
+  <!-- Preview -->
+  <div class="preview-area" id="previewArea">
+    <div class="preview-mystery" id="previewMystery">
+      <div class="mystery-eagle">🦅</div>
+      <div class="mystery-text">Your eagle awaits</div>
+    </div>
+    <iframe id="previewFrame" style="display:none;"></iframe>
+  </div>
+
+  <!-- Success banner (shown after mint) -->
+  <div class="success-banner" id="successBanner">
+    <div class="success-tier" id="successTier">—</div>
+    <div class="success-detail" id="successDetail">—</div>
+  </div>
+
+  <!-- Tier odds -->
+  <div class="tier-grid" id="tierGrid">
+    <div class="tier-row">
+      <div class="tier-badge">Legendary</div>
+      <div class="tier-bar-wrap"><div class="tier-bar" id="barLeg" style="background:#d4a84b;width:0%"></div></div>
+      <div class="tier-remaining" id="remLeg">—</div>
+    </div>
+    <div class="tier-row">
+      <div class="tier-badge">Epic</div>
+      <div class="tier-bar-wrap"><div class="tier-bar" id="barEpc" style="background:#a855f7;width:0%"></div></div>
+      <div class="tier-remaining" id="remEpc">—</div>
+    </div>
+    <div class="tier-row">
+      <div class="tier-badge">Rare</div>
+      <div class="tier-bar-wrap"><div class="tier-bar" id="barRar" style="background:#3b82f6;width:0%"></div></div>
+      <div class="tier-remaining" id="remRar">—</div>
+    </div>
+    <div class="tier-row">
+      <div class="tier-badge">Uncommon</div>
+      <div class="tier-bar-wrap"><div class="tier-bar" id="barUnc" style="background:#22c55e;width:0%"></div></div>
+      <div class="tier-remaining" id="remUnc">—</div>
+    </div>
+    <div class="tier-row">
+      <div class="tier-badge">Common</div>
+      <div class="tier-bar-wrap"><div class="tier-bar" id="barCom" style="background:#555568;width:0%"></div></div>
+      <div class="tier-remaining" id="remCom">—</div>
+    </div>
+  </div>
+
+  <!-- Eligibility badge -->
+  <div class="eligibility-badge" id="eligibilityBadge">
+    <div class="dot"></div>
+    <span id="eligibilityText">Genesis agent verified</span>
+  </div>
+
+  <!-- Wallet info -->
+  <div class="wallet-info" id="walletInfo">
+    <strong id="agentName">—</strong>
+    <span id="walletAddr">—</span>
+  </div>
+
+  <!-- Status -->
+  <div class="status-msg" id="statusMsg">Connect your Leather or Xverse wallet to check eligibility.</div>
+
+  <!-- Buttons -->
+  <button class="btn btn-connect" id="btnConnect" onclick="connectWallet()">
+    Connect Wallet
+  </button>
+  <button class="btn btn-mint" id="btnMint" onclick="doMint()" style="display:none" disabled>
+    Mint My Eagle
+  </button>
+
+</div>
+
+<div class="footer">
+  <a href="https://github.com/Iskander-Agent/early-eagles" target="_blank">Contract & Source</a>
+  &nbsp;·&nbsp;
+  <a href="https://aibtc.com" target="_blank">AIBTC Network</a>
+  &nbsp;·&nbsp;
+  Stacks Mainnet
+</div>
+
+<script>
+// ── Config ────────────────────────────────────────────────────────────────────
+const CONFIG = {
+  workerUrl: 'https://early-eagles.vercel.app',
+  contractAddress: 'ST3JR7JXFT7ZM9JKSQPBQG1HPT0D365MA5TX3DS8N', // testnet
+  contractName: 'early-eagles',
+  stacksApiUrl: 'https://api.testnet.hiro.so',
+  network: 'testnet',
+};
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let state = {
+  wallet: null,         // connected STX address
+  auth: null,           // { nonce, expiry, signature } from worker
+  agent: null,          // agent data from worker
+  minted: false,
+};
+
+// ── Stacks Connect helpers ────────────────────────────────────────────────────
+// Using @stacks/connect via CDN
+function getProvider() {
+  if (window.LeatherProvider) return 'leather';
+  if (window.XverseProviders?.StacksProvider) return 'xverse';
+  return null;
+}
+
+async function connectWallet() {
+  setStatus('');
+  const btn = document.getElementById('btnConnect');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Connecting...';
+
+  try {
+    // Use stacks/connect openSTXTransfer pattern or direct provider
+    if (!window.StacksProvider && !window.LeatherProvider && !window.XverseProviders) {
+      // Load stacks/connect dynamically
+      await loadScript('https://unpkg.com/@stacks/connect@7/dist/connect.js');
+    }
+
+    const { showConnect, AppConfig, UserSession } = window.StacksConnect || {};
+
+    if (showConnect) {
+      const appConfig = new AppConfig(['store_write', 'publish_data']);
+      const userSession = new UserSession({ appConfig });
+
+      showConnect({
+        appDetails: { name: 'Early Eagles', icon: 'https://fav.farm/🦅' },
+        userSession,
+        onFinish: async ({ userSession }) => {
+          const userData = userSession.loadUserData();
+          const addr = userData.profile.stxAddress.mainnet;
+          await onWalletConnected(addr, userSession);
+        },
+        onCancel: () => {
+          btn.disabled = false;
+          btn.innerHTML = 'Connect Wallet';
+        },
+      });
+    } else {
+      setStatus('No Stacks wallet found. Install <a href="https://leather.io" target="_blank">Leather</a> or <a href="https://www.xverse.app" target="_blank">Xverse</a>.', 'error');
+      btn.disabled = false;
+      btn.innerHTML = 'Connect Wallet';
+    }
+  } catch (e) {
+    setStatus('Connection failed: ' + e.message, 'error');
+    btn.disabled = false;
+    btn.innerHTML = 'Connect Wallet';
+  }
+}
+
+async function onWalletConnected(stxAddress, userSession) {
+  state.wallet = stxAddress;
+
+  document.getElementById('walletAddr').textContent = stxAddress;
+  document.getElementById('walletInfo').classList.add('visible');
+  document.getElementById('btnConnect').style.display = 'none';
+
+  setStatus('<span class="spinner"></span> Checking eligibility...', '');
+
+  try {
+    const res = await fetch(CONFIG.workerUrl + '/authorize', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ stxAddress }),
+    });
+    const data = await res.json();
+
+    if (!data.eligible) {
+      setStatus('❌ ' + (data.reason || 'Not eligible to mint.'), 'error');
+      return;
+    }
+
+    // Eligible!
+    state.auth = data.auth;
+    state.agent = data.agent;
+
+    document.getElementById('agentName').textContent =
+      (data.agent.displayName || 'Unknown Agent') +
+      (data.agent.bnsName ? ' · ' + data.agent.bnsName : '') +
+      ' · Agent #' + data.agent.agentId;
+
+    document.getElementById('eligibilityText').textContent =
+      'Genesis agent verified · ERC-8004 #' + data.agent.agentId;
+    document.getElementById('eligibilityBadge').classList.add('visible');
+
+    // Check if already minted
+    const hasMinted = await checkAlreadyMinted(stxAddress);
+    if (hasMinted) {
+      setStatus('You already minted your Early Eagle 🦅', 'success');
+      return;
+    }
+
+    setStatus('You\'re eligible! Click below to mint your eagle.', 'success');
+    document.getElementById('btnMint').style.display = 'block';
+    document.getElementById('btnMint').disabled = false;
+
+  } catch (e) {
+    setStatus('Error checking eligibility: ' + e.message, 'error');
+  }
+}
+
+async function checkAlreadyMinted(addr) {
+  try {
+    const res = await fetch(
+      `${CONFIG.stacksApiUrl}/v2/contracts/call-read/${CONFIG.contractAddress}/${CONFIG.contractName}/has-minted`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sender: addr,
+          arguments: [`0x${principalToHex(addr)}`],
+        }),
+      }
+    );
+    const data = await res.json();
+    return data.result === '0x03'; // Clarity true
+  } catch { return false; }
+}
+
+// ── Mint ──────────────────────────────────────────────────────────────────────
+async function doMint() {
+  if (!state.auth || !state.agent || !state.wallet) return;
+
+  const btn = document.getElementById('btnMint');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Minting...';
+  setStatus('Submitting transaction... please approve in your wallet.', '');
+
+  // Show mystery card animation
+  showMystery();
+
+  try {
+    const { openContractCall } = window.StacksConnect || {};
+
+    const { nonce, expiry, signature } = state.auth;
+    const { agentId, displayName, btcAddress } = state.agent;
+
+    const txOptions = {
+      contractAddress: CONFIG.contractAddress,
+      contractName: CONFIG.contractName,
+      functionName: 'mint',
+      functionArgs: [
+        // nonce (buff 16)
+        { type: 'buffer', value: hexToBytes(nonce) },
+        // expiry (uint)
+        { type: 'uint', value: BigInt(expiry) },
+        // signature (buff 65)
+        { type: 'buffer', value: hexToBytes(signature) },
+        // agent-id (uint)
+        { type: 'uint', value: BigInt(agentId) },
+        // display-name (string-utf8 64)
+        { type: 'string-utf8', value: displayName.slice(0, 64) },
+        // btc-address (string-ascii 62)
+        { type: 'string-ascii', value: btcAddress.slice(0, 62) },
+      ],
+      network: 'mainnet',
+      onFinish: async ({ txId }) => {
+        setStatus('<span class="spinner"></span> Transaction sent! Waiting for confirmation...', '');
+        await pollTxResult(txId);
+      },
+      onCancel: () => {
+        setStatus('Transaction cancelled.', 'warning');
+        btn.disabled = false;
+        btn.innerHTML = 'Mint My Eagle';
+      },
+    };
+
+    openContractCall(txOptions);
+
+  } catch (e) {
+    setStatus('Mint failed: ' + e.message, 'error');
+    btn.disabled = false;
+    btn.innerHTML = 'Mint My Eagle';
+  }
+}
+
+async function pollTxResult(txId) {
+  // Poll Hiro API until confirmed
+  const maxAttempts = 60;
+  for (let i = 0; i < maxAttempts; i++) {
+    await sleep(5000);
+    try {
+      const res = await fetch(`${CONFIG.stacksApiUrl}/extended/v1/tx/${txId}`);
+      const tx = await res.json();
+
+      if (tx.tx_status === 'success') {
+        // Extract minted token-id from events
+        const mintEvent = tx.events?.find(e => e.type === 'nft_mint_event');
+        const tokenId = mintEvent ? parseInt(mintEvent.value) : null;
+
+        await onMintSuccess(tokenId, txId);
+        return;
+      } else if (tx.tx_status === 'abort_by_response' || tx.tx_status === 'abort_by_post_condition') {
+        setStatus('❌ Transaction failed on-chain: ' + (tx.tx_result?.repr || 'unknown error'), 'error');
+        document.getElementById('btnMint').disabled = false;
+        document.getElementById('btnMint').innerHTML = 'Try Again';
+        return;
+      }
+      // Still pending — keep polling
+    } catch (e) { /* network hiccup, keep polling */ }
+  }
+  setStatus('Transaction is taking a while. Check <a href="https://explorer.hiro.so/txid/' + txId + '" target="_blank">Hiro Explorer</a>.', 'warning');
+}
+
+async function onMintSuccess(tokenId, txId) {
+  state.minted = true;
+
+  // Fetch traits from contract
+  try {
+    const traits = await fetchTraits(tokenId);
+    if (traits) {
+      const tierNames = ['Legendary', 'Epic', 'Rare', 'Uncommon', 'Common'];
+      const tierEmoji = ['🔱', '◈', '◇', '○', '●'];
+      const colorNames = ['Azure','Amethyst','Fuchsia','Crimson','Amber','Jade','Forest','Teal','Prism','Cobalt','Chartreuse','Violet','Gold','Pearl','Sepia','Shadow','Negative','Thermal','X-Ray','Aurora','Psychedelic'];
+
+      const tierIdx = parseInt(traits.tier);
+      const colorIdx = parseInt(traits['color-id']);
+
+      // Reveal animation
+      await revealCard(tierIdx, colorIdx, traits);
+
+      const banner = document.getElementById('successBanner');
+      document.getElementById('successTier').textContent =
+        tierEmoji[tierIdx] + ' ' + tierNames[tierIdx] + ' · ' + colorNames[colorIdx];
+      document.getElementById('successDetail').textContent =
+        'Early Eagle #' + tokenId + ' · ' +
+        '<a href="https://explorer.hiro.so/txid/' + txId + '" target="_blank" style="color:var(--gold)">View TX</a>';
+      banner.classList.add('visible');
+      banner.querySelector('.success-detail').innerHTML = document.getElementById('successDetail').textContent;
+
+      setStatus('🦅 Your eagle has landed!', 'success');
+    } else {
+      setStatus('✅ Minted! Token #' + tokenId + ' · <a href="https://explorer.hiro.so/txid/' + txId + '" target="_blank">View TX</a>', 'success');
+    }
+  } catch (e) {
+    setStatus('✅ Minted successfully! <a href="https://explorer.hiro.so/txid/' + txId + '" target="_blank">View TX</a>', 'success');
+  }
+
+  document.getElementById('btnMint').style.display = 'none';
+  await loadMintStats();
+}
+
+// ── Card reveal ───────────────────────────────────────────────────────────────
+function showMystery() {
+  document.getElementById('previewMystery').style.display = 'flex';
+  document.getElementById('previewFrame').style.display = 'none';
+}
+
+async function revealCard(tierIdx, colorIdx, traits) {
+  // Animate mystery → reveal
+  const mystery = document.getElementById('previewMystery');
+  const frame = document.getElementById('previewFrame');
+
+  // Fade out mystery
+  mystery.style.transition = 'opacity 0.4s';
+  mystery.style.opacity = '0';
+  await sleep(400);
+  mystery.style.display = 'none';
+
+  // Build card HTML from traits and inject into iframe
+  // We use the same rendering logic as early-eagles-final.html
+  const cardHtml = buildCardHtml(tierIdx, colorIdx, traits);
+  const blob = new Blob([cardHtml], { type: 'text/html' });
+  frame.src = URL.createObjectURL(blob);
+  frame.style.display = 'block';
+  frame.classList.add('reveal-animate');
+}
+
+function buildCardHtml(tierIdx, colorIdx, traits) {
+  const tierNames = ['LEGENDARY','EPIC','RARE','UNCOMMON','COMMON'];
+  const colorNames = ['Azure','Amethyst','Fuchsia','Crimson','Amber','Jade','Forest','Teal','Prism','Cobalt','Chartreuse','Violet','Gold','Pearl','Sepia','Shadow','Negative','Thermal','X-Ray','Aurora','Psychedelic'];
+  const tierColors = ['#d4a84b','#a855f7','#3b82f6','#22c55e','#6b7280'];
+
+  // Minimal card for now — will be replaced with full render from early-eagles-final.html art engine
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { width:340px; height:480px; background:#05050a; display:flex; align-items:center; justify-content:center; font-family:'Georgia',serif; }
+    .card { width:320px; height:460px; border-radius:16px; background:linear-gradient(135deg,#0d0d1a,#1a1a2e); border:1px solid ${tierColors[tierIdx]}44; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; padding:24px; }
+    .eagle { font-size:72px; }
+    .tier { font-size:11px; letter-spacing:4px; color:${tierColors[tierIdx]}; text-transform:uppercase; }
+    .color { font-size:18px; color:#c8c8d8; }
+    .name { font-size:13px; color:#555568; text-align:center; }
+    .rank { font-size:11px; color:${tierColors[tierIdx]}; opacity:0.5; }
+  </style></head><body>
+  <div class="card">
+    <div class="eagle">🦅</div>
+    <div class="tier">${tierNames[tierIdx]}</div>
+    <div class="color">${colorNames[colorIdx]}</div>
+    <div class="name">${traits['display-name'] || ''}</div>
+    <div class="rank">Early Eagle #${traits['minted-at'] || ''}</div>
+  </div>
+  </body></html>`;
+}
+
+// ── Stats ─────────────────────────────────────────────────────────────────────
+async function loadMintStats() {
+  try {
+    const res = await fetch(
+      `${CONFIG.stacksApiUrl}/v2/contracts/call-read/${CONFIG.contractAddress}/${CONFIG.contractName}/get-mint-stats`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sender: CONFIG.contractAddress, arguments: [] }),
+      }
+    );
+    const data = await res.json();
+    if (data.okay) {
+      // Parse Clarity tuple from hex — simplified
+      // TODO: use @stacks/transactions to decode properly
+      const stats = parseMintStats(data.result);
+      if (stats) {
+        const total = stats.totalMinted;
+        const remaining = 210 - total;
+        const leg = stats.legendaryRemaining;
+        const epc = stats.epicRemaining;
+        const rar = stats.rareRemaining;
+        const unc = stats.uncommonRemaining;
+        const com = stats.commonRemaining;
+
+        document.getElementById('statMinted').textContent = total;
+        document.getElementById('statRemaining').textContent = remaining;
+        document.getElementById('statLegendary').textContent = leg;
+
+        const totalRem = leg + epc + rar + unc + com;
+        const pct = v => totalRem > 0 ? (v / totalRem * 100).toFixed(1) + '%' : '0%';
+        document.getElementById('barLeg').style.width = pct(leg);
+        document.getElementById('barEpc').style.width = pct(epc);
+        document.getElementById('barRar').style.width = pct(rar);
+        document.getElementById('barUnc').style.width = pct(unc);
+        document.getElementById('barCom').style.width = pct(com);
+
+        document.getElementById('remLeg').textContent = leg;
+        document.getElementById('remEpc').textContent = epc;
+        document.getElementById('remRar').textContent = rar;
+        document.getElementById('remUnc').textContent = unc;
+        document.getElementById('remCom').textContent = com;
+      }
+    }
+  } catch (e) { /* stats not critical */ }
+}
+
+function parseMintStats(hexResult) {
+  // Stub — proper decode uses @stacks/transactions ClarityValue parser
+  // Returns hardcoded defaults until contract is deployed
+  return {
+    totalMinted: 1, // Iskander's reserve mint
+    legendaryRemaining: 9,
+    epicRemaining: 30,
+    rareRemaining: 40,
+    uncommonRemaining: 70,
+    commonRemaining: 60,
+  };
+}
+
+async function fetchTraits(tokenId) {
+  if (!tokenId) return null;
+  try {
+    const tokenIdHex = '0x' + tokenId.toString(16).padStart(32, '0').replace(/^/, '01');
+    const res = await fetch(
+      `${CONFIG.stacksApiUrl}/v2/contracts/call-read/${CONFIG.contractAddress}/${CONFIG.contractName}/get-traits`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sender: CONFIG.contractAddress, arguments: [tokenIdHex] }),
+      }
+    );
+    const data = await res.json();
+    if (data.okay) {
+      // TODO: decode Clarity tuple
+      return null;
+    }
+  } catch (e) {}
+  return null;
+}
+
+// ── Utils ─────────────────────────────────────────────────────────────────────
+function setStatus(msg, type = '') {
+  const el = document.getElementById('statusMsg');
+  el.innerHTML = msg;
+  el.className = 'status-msg' + (type ? ' ' + type : '');
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function hexToBytes(hex) {
+  const bytes = [];
+  for (let i = 0; i < hex.length; i += 2) {
+    bytes.push(parseInt(hex.substr(i, 2), 16));
+  }
+  return new Uint8Array(bytes);
+}
+
+function principalToHex(addr) {
+  // Minimal: encode as raw bytes for Clarity call
+  // In production use @stacks/transactions serializeCV(principalCV(addr))
+  return '05' + Array.from(new TextEncoder().encode(addr))
+    .map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = src; s.onload = resolve; s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+loadMintStats();
+// Poll stats every 30s
+setInterval(loadMintStats, 30000);
+
+// Load Stacks Connect
+loadScript('https://unpkg.com/@stacks/connect@7/dist/connect.js')
+  .then(() => { window.StacksConnect = window.stacksConnect || window.StacksConnect; })
+  .catch(() => {});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Early Eagles 🦅 — Gallery</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --gold: #d4a84b;
+  --navy: #1a2744;
+  --bg: #05050a;
+  --surface: #0d0d1a;
+  --border: rgba(212,168,75,0.15);
+  --text: #c8c8d8;
+  --muted: #555568;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Georgia', serif;
+  min-height: 100vh;
+  padding: 48px 20px 80px;
+}
+
+/* ── Header ── */
+.header { text-align: center; margin-bottom: 48px; }
+.logo { font-size: 48px; margin-bottom: 12px; }
+.title {
+  font-size: 13px;
+  letter-spacing: 10px;
+  text-transform: uppercase;
+  color: var(--gold);
+  opacity: 0.7;
+  margin-bottom: 8px;
+}
+.subtitle { color: var(--muted); font-size: 14px; line-height: 1.6; max-width: 500px; margin: 0 auto 24px; }
+
+.nav-links { display: flex; gap: 16px; justify-content: center; margin-bottom: 32px; }
+.nav-links a {
+  color: var(--gold);
+  text-decoration: none;
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+.nav-links a:hover { opacity: 1; }
+.nav-links a.active { opacity: 1; border-bottom: 1px solid var(--gold); padding-bottom: 2px; }
+
+/* ── Stats bar ── */
+.stats-bar {
+  display: flex;
+  gap: 32px;
+  justify-content: center;
+  margin-bottom: 40px;
+  flex-wrap: wrap;
+}
+.stat {
+  text-align: center;
+  padding: 16px 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  min-width: 100px;
+}
+.stat-val { font-size: 22px; color: var(--gold); font-weight: bold; }
+.stat-label { font-size: 10px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-top: 4px; }
+
+/* ── Filter bar ── */
+.filter-bar {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 40px;
+}
+.filter-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.filter-btn:hover { border-color: var(--gold); color: var(--text); }
+.filter-btn.active {
+  background: rgba(212,168,75,0.1);
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+/* ── Grid ── */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* ── NFT Card ── */
+.nft-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+  position: relative;
+}
+.nft-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(212,168,75,0.4);
+  box-shadow: 0 8px 32px rgba(212,168,75,0.08);
+}
+.nft-card.tier-legendary { border-color: rgba(212,168,75,0.5); }
+.nft-card.tier-epic { border-color: rgba(147,112,219,0.4); }
+.nft-card.tier-rare { border-color: rgba(100,149,237,0.3); }
+
+.card-image {
+  width: 100%;
+  aspect-ratio: 340/480;
+  background: #0a0a14;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+.card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.card-image iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  pointer-events: none;
+}
+.card-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  inset: 0;
+  background: #0a0a14;
+}
+.card-loading .spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid rgba(212,168,75,0.15);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+.card-loading .eagle-placeholder {
+  font-size: 32px;
+  opacity: 0.15;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.card-info {
+  padding: 12px 14px;
+}
+.card-token-id {
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.card-name {
+  font-size: 13px;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 6px;
+}
+.card-badges {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.badge {
+  font-size: 9px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 10px;
+  border: 1px solid;
+}
+.badge-legendary { color: #d4a84b; border-color: rgba(212,168,75,0.3); background: rgba(212,168,75,0.06); }
+.badge-epic       { color: #9370db; border-color: rgba(147,112,219,0.3); background: rgba(147,112,219,0.06); }
+.badge-rare       { color: #6495ed; border-color: rgba(100,149,237,0.3); background: rgba(100,149,237,0.06); }
+.badge-uncommon   { color: #98d493; border-color: rgba(152,212,147,0.3); background: rgba(152,212,147,0.06); }
+.badge-common     { color: #888; border-color: rgba(136,136,136,0.25); background: rgba(136,136,136,0.05); }
+.badge-color      { color: var(--muted); border-color: rgba(255,255,255,0.1); background: transparent; }
+
+/* ── Tier badge on image corner ── */
+.tier-corner {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid;
+  backdrop-filter: blur(4px);
+  z-index: 2;
+}
+
+/* ── Empty state ── */
+.empty-state {
+  text-align: center;
+  padding: 80px 20px;
+  grid-column: 1 / -1;
+}
+.empty-eagle { font-size: 64px; opacity: 0.1; margin-bottom: 16px; }
+.empty-title { color: var(--muted); font-size: 16px; margin-bottom: 8px; }
+.empty-sub { color: #333; font-size: 13px; }
+.empty-cta {
+  display: inline-block;
+  margin-top: 24px;
+  padding: 12px 28px;
+  border: 1px solid rgba(212,168,75,0.4);
+  border-radius: 8px;
+  color: var(--gold);
+  text-decoration: none;
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  transition: background 0.2s;
+}
+.empty-cta:hover { background: rgba(212,168,75,0.08); }
+
+/* ── Loading state for grid ── */
+.grid-loading {
+  text-align: center;
+  padding: 80px 20px;
+  grid-column: 1 / -1;
+  color: var(--muted);
+  font-size: 14px;
+}
+.grid-loading .spinner-large {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(212,168,75,0.1);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 16px;
+}
+
+/* ── Modal ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 20px;
+  backdrop-filter: blur(4px);
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  max-width: 700px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.modal-inner {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 0;
+}
+@media (max-width: 600px) {
+  .modal-inner { grid-template-columns: 1fr; }
+}
+.modal-image-col { padding: 24px; border-right: 1px solid var(--border); }
+.modal-image {
+  width: 100%;
+  aspect-ratio: 340/480;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #0a0a14;
+}
+.modal-image img { width: 100%; height: 100%; object-fit: cover; }
+.modal-image iframe { width: 100%; height: 100%; border: none; }
+.modal-details { padding: 24px; }
+.modal-close {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 20px;
+  cursor: pointer;
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  line-height: 1;
+}
+.modal-close:hover { color: var(--text); }
+.modal-id { font-size: 11px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; }
+.modal-name { font-size: 20px; color: var(--text); margin-bottom: 16px; }
+.modal-tier {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 1px solid;
+  margin-bottom: 20px;
+}
+.attr-list { display: flex; flex-direction: column; gap: 12px; }
+.attr-row { display: flex; flex-direction: column; gap: 2px; }
+.attr-key { font-size: 10px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; }
+.attr-val { font-size: 14px; color: var(--text); word-break: break-all; }
+.attr-val.mono { font-family: monospace; font-size: 11px; color: #888; }
+
+/* ── Animations ── */
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes pulse { 0%,100% { opacity: 0.1; } 50% { opacity: 0.25; } }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.nft-card { animation: fadeIn 0.3s ease both; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">🦅</div>
+  <div class="title">Early Eagles</div>
+  <div class="subtitle">Genesis AIBTC agent NFTs — one eagle for each of the first 210 agents on the network.</div>
+  <div class="nav-links">
+    <a href="index.html">Mint</a>
+    <a href="gallery.html" class="active">Gallery</a>
+  </div>
+</div>
+
+<div class="stats-bar" id="statsBar">
+  <div class="stat"><div class="stat-val" id="statMinted">—</div><div class="stat-label">Minted</div></div>
+  <div class="stat"><div class="stat-val" id="statSupply">210</div><div class="stat-label">Max Supply</div></div>
+  <div class="stat"><div class="stat-val" id="statLegendary">—</div><div class="stat-label">Legendary Left</div></div>
+  <div class="stat"><div class="stat-val" id="statEpic">—</div><div class="stat-label">Epic Left</div></div>
+</div>
+
+<div class="filter-bar">
+  <button class="filter-btn active" data-tier="all">All</button>
+  <button class="filter-btn" data-tier="0">🔱 Legendary</button>
+  <button class="filter-btn" data-tier="1">◈ Epic</button>
+  <button class="filter-btn" data-tier="2">◇ Rare</button>
+  <button class="filter-btn" data-tier="3">○ Uncommon</button>
+  <button class="filter-btn" data-tier="4">● Common</button>
+</div>
+
+<div class="grid" id="grid">
+  <div class="grid-loading">
+    <div class="spinner-large"></div>
+    Scanning for minted eagles...
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal" style="position:relative">
+    <button class="modal-close" onclick="closeModalBtn()">✕</button>
+    <div class="modal-inner">
+      <div class="modal-image-col">
+        <div class="modal-image" id="modalImage"></div>
+      </div>
+      <div class="modal-details" id="modalDetails"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Config ────────────────────────────────────────────────────────────────
+const CONFIG = {
+  contractAddress: 'SP3JR7JXFT7ZM9JKSQPBQG1HPT0D365MA5TN0P12E',
+  contractName:   'early-eagles-test-v5',
+  stacksApiUrl:   'https://api.hiro.so',
+  metaApiBase:    'https://early-eagles.vercel.app/api/test-token',
+};
+
+const TIER_NAMES   = ['Legendary', 'Epic', 'Rare', 'Uncommon', 'Common'];
+const TIER_SYMBOLS = ['🔱', '◈', '◇', '○', '●'];
+const TIER_CLASSES = ['legendary', 'epic', 'rare', 'uncommon', 'common'];
+const TIER_COLORS  = ['#d4a84b', '#9370db', '#6495ed', '#98d493', '#888'];
+const COLOR_NAMES  = [
+  'Azure', 'Amethyst', 'Fuchsia', 'Crimson', 'Amber', 'Jade', 'Forest',
+  'Teal', 'Prism', 'Cobalt', 'Chartreuse', 'Violet', 'Gold', 'Pearl',
+  'Sepia', 'Shadow', 'Negative', 'Thermal', 'X-Ray', 'Aurora', 'Psychedelic'
+];
+
+// ── State ─────────────────────────────────────────────────────────────────
+let allNfts = [];
+let activeFilter = 'all';
+
+// ── Boot ──────────────────────────────────────────────────────────────────
+window.addEventListener('load', async () => {
+  await loadStats();
+  await loadNfts();
+});
+
+// ── Load stats from chain ─────────────────────────────────────────────────
+async function loadStats() {
+  try {
+    const res = await callReadOnly('get-mint-stats', []);
+    if (!res.okay) return;
+    const stats = decodeTuple(res.result);
+    document.getElementById('statMinted').textContent    = stats['total-minted']       ?? '—';
+    document.getElementById('statLegendary').textContent = stats['legendary-remaining'] ?? '—';
+    document.getElementById('statEpic').textContent      = stats['epic-remaining']      ?? '—';
+  } catch (e) { console.warn('Stats load failed:', e); }
+}
+
+// ── Load all minted NFTs ──────────────────────────────────────────────────
+async function loadNfts() {
+  const grid = document.getElementById('grid');
+
+  // Get last-token-id to know how far to scan
+  let lastId = 0;
+  try {
+    const res = await callReadOnly('get-last-token-id', []);
+    if (res.okay) {
+      lastId = decodeUint(res.result);
+    }
+  } catch (e) {
+    grid.innerHTML = `<div class="empty-state">
+      <div class="empty-eagle">🦅</div>
+      <div class="empty-title">Contract not deployed yet</div>
+      <div class="empty-sub">Deploy the contract and mint some eagles first.</div>
+      <a href="index.html" class="empty-cta">Go to Mint</a>
+    </div>`;
+    return;
+  }
+
+  if (lastId === 0) {
+    // Check if token 0 exists (reserve mint)
+    const owner = await getOwner(0);
+    if (!owner) {
+      grid.innerHTML = `<div class="empty-state">
+        <div class="empty-eagle">🦅</div>
+        <div class="empty-title">No eagles minted yet</div>
+        <div class="empty-sub">Be the first to claim your genesis eagle.</div>
+        <a href="index.html" class="empty-cta">Mint Now</a>
+      </div>`;
+      return;
+    }
+  }
+
+  // Scan all token IDs from 0 to lastId, fetch traits
+  // If lastId=0 that could be token #0 OR an unresolved lastId, scan at least up to totalMinted-1
+  const scanTo = Math.max(lastId, 9); // scan at least 0-9 to catch any minted tokens
+  grid.innerHTML = '';
+  const tokenIds = [];
+  for (let i = 0; i <= scanTo; i++) tokenIds.push(i);
+
+  // Fetch traits for all tokens in parallel (batched)
+  const BATCH = 5;
+  for (let b = 0; b < tokenIds.length; b += BATCH) {
+    const batch = tokenIds.slice(b, b + BATCH);
+    const results = await Promise.all(batch.map(id => fetchTokenTraits(id)));
+    results.forEach(nft => {
+      if (nft) {
+        allNfts.push(nft);
+        const card = buildCard(nft);
+        grid.appendChild(card);
+        // Stagger animation
+        card.style.animationDelay = `${allNfts.length * 40}ms`;
+      }
+    });
+  }
+
+  if (allNfts.length === 0) {
+    grid.innerHTML = `<div class="empty-state">
+      <div class="empty-eagle">🦅</div>
+      <div class="empty-title">No eagles minted yet</div>
+      <div class="empty-sub">Be the first to claim your genesis eagle.</div>
+      <a href="index.html" class="empty-cta">Mint Now</a>
+    </div>`;
+  }
+}
+
+// ── Fetch traits for a single token ──────────────────────────────────────
+async function fetchTokenTraits(tokenId) {
+  try {
+    const uintHex = encodeUint(tokenId);
+    const res = await callReadOnly('get-traits', ['0x' + uintHex]);
+    if (!res.okay || res.result === '0x09') return null; // none = not minted
+
+    const traits = decodeTuple(decodeOption(res.result));
+    if (!traits) return null;
+
+    return {
+      tokenId,
+      tier:        traits['tier']           ?? 4,
+      colorId:     traits['color-id']       ?? 0,
+      agentId:     traits['agent-id']       ?? 0,
+      displayName: traits['display-name']   ?? `Eagle #${tokenId}`,
+      btcAddress:  traits['btc-address']    ?? '',
+      stxAddress:  traits['stx-address']    ?? '',
+      sigilSeed:   traits['sigil-seed']     ?? '',
+      mintedAt:    traits['minted-at']      ?? 0,
+    };
+  } catch (e) {
+    console.warn(`Failed to fetch token ${tokenId}:`, e);
+    return null;
+  }
+}
+
+// ── Build NFT card ─────────────────────────────────────────────────────────
+function buildCard(nft) {
+  const tierName  = TIER_NAMES[nft.tier]   || 'Unknown';
+  const tierClass = TIER_CLASSES[nft.tier] || 'common';
+  const tierColor = TIER_COLORS[nft.tier]  || '#888';
+  const tierSym   = TIER_SYMBOLS[nft.tier] || '●';
+  const colorName = COLOR_NAMES[nft.colorId] || `Color ${nft.colorId}`;
+
+  const card = document.createElement('div');
+  card.className = `nft-card tier-${tierClass}`;
+  card.setAttribute('data-tier', nft.tier);
+  card.onclick = () => openModal(nft);
+
+  card.innerHTML = `
+    <div class="card-image" id="img-${nft.tokenId}">
+      <div class="card-loading">
+        <div class="eagle-placeholder">🦅</div>
+        <div class="spinner"></div>
+      </div>
+    </div>
+    <div class="card-info">
+      <div class="card-token-id">Eagle #${nft.tokenId}</div>
+      <div class="card-name">${escHtml(nft.displayName)}</div>
+      <div class="card-badges">
+        <span class="badge badge-${tierClass}">${tierSym} ${tierName}</span>
+        <span class="badge badge-color">${colorName}</span>
+      </div>
+    </div>
+  `;
+
+  // Lazy-load the image from metadata API
+  loadCardImage(nft.tokenId, card.querySelector(`#img-${nft.tokenId}`));
+
+  return card;
+}
+
+async function loadCardImage(tokenId, container) {
+  try {
+    const meta = await fetch(`${CONFIG.metaApiBase}/${tokenId}`).then(r => r.json());
+    if (!meta.image) return;
+
+    container.innerHTML = '';
+    if (meta.image.startsWith('data:image/svg+xml')) {
+      // Render as img
+      const img = document.createElement('img');
+      img.src = meta.image;
+      img.alt = meta.name || `Eagle #${tokenId}`;
+      container.appendChild(img);
+    } else {
+      const img = document.createElement('img');
+      img.src = meta.image;
+      img.alt = `Eagle #${tokenId}`;
+      container.appendChild(img);
+    }
+  } catch (e) {
+    // Keep placeholder on failure
+    container.innerHTML = `<div class="card-loading"><div class="eagle-placeholder">🦅</div></div>`;
+  }
+}
+
+// ── Modal ─────────────────────────────────────────────────────────────────
+async function openModal(nft) {
+  const tierName  = TIER_NAMES[nft.tier]   || 'Unknown';
+  const tierClass = TIER_CLASSES[nft.tier] || 'common';
+  const tierColor = TIER_COLORS[nft.tier]  || '#888';
+  const tierSym   = TIER_SYMBOLS[nft.tier] || '●';
+  const colorName = COLOR_NAMES[nft.colorId] || `Color ${nft.colorId}`;
+
+  // Image col — load from API
+  const imgCol = document.getElementById('modalImage');
+  imgCol.innerHTML = `<div class="card-loading" style="height:100%"><div class="eagle-placeholder">🦅</div><div class="spinner"></div></div>`;
+
+  try {
+    const meta = await fetch(`${CONFIG.metaApiBase}/${nft.tokenId}`).then(r => r.json());
+    if (meta.image) {
+      imgCol.innerHTML = `<img src="${escAttr(meta.image)}" alt="Eagle #${nft.tokenId}" style="width:100%;height:100%;object-fit:cover">`;
+    }
+  } catch (e) {}
+
+  // Details col
+  document.getElementById('modalDetails').innerHTML = `
+    <div class="modal-id">Eagle #${nft.tokenId}</div>
+    <div class="modal-name">${escHtml(nft.displayName)}</div>
+    <div class="modal-tier" style="color:${tierColor};border-color:${tierColor}40;background:${tierColor}0a">
+      ${tierSym} ${tierName}
+    </div>
+    <div class="attr-list">
+      <div class="attr-row">
+        <div class="attr-key">Color</div>
+        <div class="attr-val">${colorName}</div>
+      </div>
+      <div class="attr-row">
+        <div class="attr-key">Agent ID</div>
+        <div class="attr-val">#${nft.agentId}</div>
+      </div>
+      <div class="attr-row">
+        <div class="attr-key">BTC Address</div>
+        <div class="attr-val mono">${escHtml(nft.btcAddress || '—')}</div>
+      </div>
+      <div class="attr-row">
+        <div class="attr-key">Minted at Block</div>
+        <div class="attr-val">${nft.mintedAt}</div>
+      </div>
+      <div class="attr-row">
+        <div class="attr-key">Sigil Seed</div>
+        <div class="attr-val mono">${escHtml((nft.sigilSeed || '').slice(0, 24))}${nft.sigilSeed?.length > 24 ? '…' : ''}</div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('modalOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('modalOverlay')) closeModalBtn();
+}
+function closeModalBtn() {
+  document.getElementById('modalOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// ── Filter ────────────────────────────────────────────────────────────────
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeFilter = btn.dataset.tier;
+    applyFilter();
+  });
+});
+
+function applyFilter() {
+  document.querySelectorAll('.nft-card').forEach(card => {
+    const tier = card.getAttribute('data-tier');
+    const show = activeFilter === 'all' || tier === activeFilter;
+    card.style.display = show ? '' : 'none';
+  });
+}
+
+// ── Clarity helpers ───────────────────────────────────────────────────────
+async function callReadOnly(functionName, args) {
+  const url = `${CONFIG.stacksApiUrl}/v2/contracts/call-read/${CONFIG.contractAddress}/${CONFIG.contractName}/${functionName}`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ sender: CONFIG.contractAddress, arguments: args }),
+  });
+  return res.json();
+}
+
+async function getOwner(tokenId) {
+  try {
+    const uintHex = encodeUint(tokenId);
+    const res = await callReadOnly('get-owner', ['0x' + uintHex]);
+    return res.okay && res.result !== '0x09';
+  } catch { return false; }
+}
+
+function encodeUint(n) {
+  const buf = new Uint8Array(17);
+  buf[0] = 0x01;
+  const view = new DataView(buf.buffer);
+  view.setBigUint64(1, 0n);
+  view.setBigUint64(9, BigInt(n));
+  return Array.from(buf).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function decodeUint(hex) {
+  const h = hex.startsWith('0x') ? hex.slice(2) : hex;
+  const bytes = h.match(/../g).map(b => parseInt(b, 16));
+  let pos = 0;
+  // unwrap ok wrapper (0x07)
+  if (bytes[pos] === 0x07) pos++;
+  // must be uint (0x01)
+  if (bytes[pos] !== 0x01) return 0;
+  pos++;
+  // 16-byte big-endian uint, take last 8
+  let v = 0n;
+  for (let i = pos + 8; i < pos + 16; i++) v = (v << 8n) | BigInt(bytes[i] || 0);
+  return Number(v);
+}
+
+function decodeOption(hex) {
+  const h = hex.startsWith('0x') ? hex.slice(2) : hex;
+  const bytes = h.match(/../g).map(b => parseInt(b, 16));
+  if (bytes[0] === 0x09) return null; // none
+  if (bytes[0] === 0x0a) return '0x' + bytes.slice(1).map(b => b.toString(16).padStart(2,'0')).join(''); // some
+  return hex;
+}
+
+function decodeTuple(hex) {
+  if (!hex) return null;
+  const h = hex.startsWith('0x') ? hex.slice(2) : hex;
+  const bytes = h.match(/../g).map(b => parseInt(b, 16));
+  if (!bytes || bytes.length < 5) return null;
+
+  let pos = 0;
+  const type = bytes[pos++];
+  // Handle ok wrapper
+  if (type === 0x07) { return decodeTuple('0x' + bytes.slice(pos).map(b => b.toString(16).padStart(2,'0')).join('')); }
+  // Handle some wrapper
+  if (type === 0x0a) { return decodeTuple('0x' + bytes.slice(pos).map(b => b.toString(16).padStart(2,'0')).join('')); }
+  if (type !== 0x0c) return null; // must be tuple
+
+  const numFields = (bytes[pos] << 24) | (bytes[pos+1] << 16) | (bytes[pos+2] << 8) | bytes[pos+3];
+  pos += 4;
+
+  const obj = {};
+  for (let i = 0; i < numFields; i++) {
+    if (pos >= bytes.length) break;
+    const nameLen = bytes[pos++];
+    const name = String.fromCharCode(...bytes.slice(pos, pos + nameLen));
+    pos += nameLen;
+    const [value, newPos] = decodeValue(bytes, pos);
+    obj[name] = value;
+    pos = newPos;
+  }
+  return obj;
+}
+
+function decodeValue(bytes, pos) {
+  if (pos >= bytes.length) return [null, pos];
+  const type = bytes[pos++];
+  switch (type) {
+    case 0x01: { // uint
+      let v = 0n;
+      for (let i = 0; i < 16; i++) v = (v << 8n) | BigInt(bytes[pos + i] || 0);
+      return [Number(v), pos + 16];
+    }
+    case 0x00: { // int
+      let v = 0n;
+      for (let i = 0; i < 16; i++) v = (v << 8n) | BigInt(bytes[pos + i] || 0);
+      return [Number(BigInt.asIntN(128, v)), pos + 16];
+    }
+    case 0x02: case 0x0d: { // buffer / string-ascii
+      const len = (bytes[pos] << 24) | (bytes[pos+1] << 16) | (bytes[pos+2] << 8) | bytes[pos+3];
+      const data = bytes.slice(pos + 4, pos + 4 + len);
+      const str = type === 0x02
+        ? data.map(b => b.toString(16).padStart(2,'0')).join('')
+        : String.fromCharCode(...data);
+      return [str, pos + 4 + len];
+    }
+    case 0x0e: { // string-utf8
+      const len = (bytes[pos] << 24) | (bytes[pos+1] << 16) | (bytes[pos+2] << 8) | bytes[pos+3];
+      const data = bytes.slice(pos + 4, pos + 4 + len);
+      return [new TextDecoder().decode(new Uint8Array(data)), pos + 4 + len];
+    }
+    case 0x05: case 0x06: { // standard/contract principal
+      return ['principal', pos + 21];
+    }
+    case 0x03: { // bool true
+      return [true, pos];
+    }
+    case 0x04: { // bool false
+      return [false, pos];
+    }
+    case 0x09: { // none
+      return [null, pos];
+    }
+    case 0x0a: { // some
+      return decodeValue(bytes, pos);
+    }
+    case 0x07: case 0x08: { // ok / err
+      return decodeValue(bytes, pos);
+    }
+    case 0x0c: { // nested tuple — recurse
+      const numFields = (bytes[pos] << 24) | (bytes[pos+1] << 16) | (bytes[pos+2] << 8) | bytes[pos+3];
+      pos += 4;
+      const obj = {};
+      for (let i = 0; i < numFields; i++) {
+        if (pos >= bytes.length) break;
+        const nameLen = bytes[pos++];
+        const name = String.fromCharCode(...bytes.slice(pos, pos + nameLen));
+        pos += nameLen;
+        const [value, newPos] = decodeValue(bytes, pos);
+        obj[name] = value;
+        pos = newPos;
+      }
+      return [obj, pos];
+    }
+    default:
+      return [null, pos];
+  }
+}
+
+// ── Escape helpers ────────────────────────────────────────────────────────
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function escAttr(s) {
+  return String(s).replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
