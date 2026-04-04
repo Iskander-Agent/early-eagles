@@ -3,808 +3,1307 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Early Eagles 🦅 — Mint</title>
+<title>🦅 Early Eagles — On-Chain NFTs for Genesis AIBTC Agents</title>
+<meta name="description" content="210 fully on-chain NFTs on the Stacks blockchain. One for each of the first 210 Genesis AIBTC agents. AI-agent native mint page.">
+<meta property="og:title" content="🦅 Early Eagles — On-Chain NFTs">
+<meta property="og:description" content="210 fully on-chain NFTs · One per Genesis AIBTC agent · Gasless mint via API">
+<meta property="og:image" content="https://early-eagles.vercel.app/eagle.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/@stacks/connect@latest/dist/stacks-connect.js"></script>
 <style>
-* { margin:0; padding:0; box-sizing:border-box; }
+/* ── Reset & Root ── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
 :root {
-  --gold: #d4a84b;
-  --navy: #1a2744;
-  --bg: #05050a;
-  --surface: #0d0d1a;
-  --border: rgba(212,168,75,0.15);
-  --text: #c8c8d8;
-  --muted: #555568;
+  --gold:       #d4a84b;
+  --gold-light: #e8c26a;
+  --gold-dim:   rgba(212,168,75,0.15);
+  --gold-glow:  rgba(212,168,75,0.3);
+  --navy:       #0d1117;
+  --navy-mid:   #131a24;
+  --navy-light: #1a2433;
+  --surface:    #0f1520;
+  --surface2:   #161f2e;
+  --border:     rgba(212,168,75,0.18);
+  --border-sub: rgba(255,255,255,0.07);
+  --text:       #e8eaf0;
+  --text-muted: #8892a4;
+  --text-dim:   #4a5568;
+  --green:      #00ff88;
+  --green-dim:  rgba(0,255,136,0.12);
+  --red:        #ff4d6a;
+  --radius:     12px;
+  --radius-sm:  8px;
+  --transition: 0.2s ease;
 }
+
+html { scroll-behavior: smooth; }
 
 body {
-  background: var(--bg);
+  background: var(--navy);
   color: var(--text);
-  font-family: 'Georgia', serif;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 48px 20px 80px;
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  overflow-x: hidden;
 }
 
-/* ── Header ── */
-.header { text-align: center; margin-bottom: 48px; }
-.logo { font-size: 48px; margin-bottom: 12px; }
-.title {
-  font-size: 13px;
-  letter-spacing: 10px;
-  text-transform: uppercase;
-  color: var(--gold);
-  opacity: 0.7;
-  margin-bottom: 8px;
-}
-.subtitle { color: var(--muted); font-size: 14px; line-height: 1.6; max-width: 420px; margin: 0 auto; }
+/* ── Typography ── */
+h1, h2, h3, h4 { font-family: 'Rajdhani', sans-serif; font-weight: 700; letter-spacing: 0.02em; }
+h2 { font-size: clamp(1.8rem, 4vw, 2.6rem); }
+h3 { font-size: clamp(1.2rem, 2.5vw, 1.6rem); }
 
-/* ── Stats bar ── */
-.stats-bar {
-  display: flex;
-  gap: 32px;
-  margin-bottom: 48px;
-  padding: 20px 32px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
+/* ── Layout ── */
+.container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+.section { padding: 80px 0; }
+.section-label {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: 'Rajdhani', sans-serif; font-size: 11px; font-weight: 600;
+  letter-spacing: 3px; text-transform: uppercase; color: var(--gold);
+  background: var(--gold-dim); border: 1px solid var(--border);
+  border-radius: 20px; padding: 5px 14px; margin-bottom: 20px;
 }
-.stat { text-align: center; }
-.stat-val { font-size: 22px; color: var(--gold); font-weight: bold; }
-.stat-label { font-size: 11px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-top: 4px; }
-
-/* ── Main card ── */
-.mint-card {
-  width: 100%;
-  max-width: 460px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 32px;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-/* ── Preview area ── */
-.preview-area {
-  width: 100%;
-  aspect-ratio: 340/480;
-  border-radius: 12px;
-  overflow: hidden;
-  position: relative;
-  background: #0a0a14;
-  border: 1px solid var(--border);
-}
-.preview-area iframe {
-  width: 100%;
-  height: 100%;
-  border: none;
-  pointer-events: none;
-}
-.preview-mystery {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-}
-.mystery-eagle {
-  font-size: 72px;
-  opacity: 0.15;
-  animation: pulse 2.5s ease-in-out infinite;
-}
-@keyframes pulse {
-  0%, 100% { opacity: 0.1; transform: scale(0.97); }
-  50% { opacity: 0.25; transform: scale(1.03); }
-}
-.mystery-text {
-  font-size: 11px;
-  letter-spacing: 4px;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
-/* ── Tier probability display ── */
-.tier-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.tier-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 13px;
-}
-.tier-badge {
-  width: 80px;
-  text-align: right;
-  color: var(--muted);
-  font-size: 11px;
-  letter-spacing: 1px;
-}
-.tier-bar-wrap {
-  flex: 1;
-  height: 6px;
-  background: rgba(255,255,255,0.05);
-  border-radius: 3px;
-  overflow: hidden;
-}
-.tier-bar {
-  height: 100%;
-  border-radius: 3px;
-  transition: width 0.6s ease;
-}
-.tier-remaining {
-  width: 36px;
-  text-align: right;
-  font-size: 12px;
-  color: var(--text);
-  font-variant-numeric: tabular-nums;
-}
+.divider { height: 1px; background: var(--border); margin: 0; }
 
 /* ── Buttons ── */
 .btn {
-  width: 100%;
-  padding: 16px;
-  border: none;
-  border-radius: 10px;
-  font-size: 15px;
-  font-family: 'Georgia', serif;
-  cursor: pointer;
-  transition: all 0.2s;
-  letter-spacing: 1px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  font-family: 'Rajdhani', sans-serif; font-weight: 600; font-size: 15px;
+  letter-spacing: 0.05em; text-transform: uppercase;
+  padding: 13px 28px; border-radius: var(--radius-sm);
+  border: none; cursor: pointer; text-decoration: none;
+  transition: all var(--transition); white-space: nowrap;
 }
-.btn:disabled { opacity: 0.4; cursor: not-allowed; }
-.btn-connect {
-  background: linear-gradient(135deg, #1a2744, #2a3d6b);
-  color: var(--gold);
-  border: 1px solid rgba(212,168,75,0.3);
+.btn-primary {
+  background: var(--gold); color: #0d1117;
+  box-shadow: 0 0 20px rgba(212,168,75,0.3);
 }
-.btn-connect:hover:not(:disabled) {
-  background: linear-gradient(135deg, #2a3d6b, #3a5090);
-  border-color: rgba(212,168,75,0.6);
+.btn-primary:hover { background: var(--gold-light); transform: translateY(-2px); box-shadow: 0 4px 30px rgba(212,168,75,0.5); }
+.btn-ghost {
+  background: transparent; color: var(--gold);
+  border: 1px solid var(--border); 
 }
-.btn-mint {
-  background: linear-gradient(135deg, #8b6914, var(--gold));
-  color: #0a0a14;
-  font-weight: bold;
-}
-.btn-mint:hover:not(:disabled) {
-  background: linear-gradient(135deg, var(--gold), #e8c56b);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 20px rgba(212,168,75,0.3);
-}
+.btn-ghost:hover { background: var(--gold-dim); transform: translateY(-2px); }
+.btn-sm { padding: 8px 18px; font-size: 12px; }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
 
-/* ── Status messages ── */
-.status-msg {
-  font-size: 13px;
-  text-align: center;
-  line-height: 1.6;
-  min-height: 20px;
-  color: var(--muted);
+/* ── Cards ── */
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 28px;
 }
-.status-msg.error { color: #e05050; }
-.status-msg.success { color: #50c878; }
-.status-msg.warning { color: #e0a030; }
+.card-glow { box-shadow: 0 0 40px rgba(212,168,75,0.08); }
 
-/* ── Wallet info ── */
-.wallet-info {
-  display: none;
-  background: rgba(212,168,75,0.05);
-  border: 1px solid var(--border);
-  border-radius: 8px;
+/* ── NAV ── */
+nav {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(13,17,23,0.92); backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border-sub);
+  padding: 14px 0;
+}
+.nav-inner { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.nav-brand {
+  font-family: 'Rajdhani', sans-serif; font-weight: 700;
+  font-size: 20px; color: var(--gold); text-decoration: none;
+  display: flex; align-items: center; gap: 8px;
+}
+.nav-links { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.nav-links a {
+  font-family: 'Rajdhani', sans-serif; font-weight: 500; font-size: 13px;
+  letter-spacing: 0.05em; text-transform: uppercase;
+  color: var(--text-muted); text-decoration: none;
+  padding: 6px 12px; border-radius: 6px; transition: all var(--transition);
+}
+.nav-links a:hover { color: var(--gold); background: var(--gold-dim); }
+#nav-connect-btn { margin-left: 8px; }
+
+/* ── HERO ── */
+#hero {
+  position: relative; overflow: hidden;
+  padding: 100px 0 80px; text-align: center;
+  min-height: 70vh; display: flex; align-items: center;
+}
+#matrix-canvas {
+  position: absolute; inset: 0; opacity: 0.12; pointer-events: none;
+}
+.hero-inner { position: relative; z-index: 2; width: 100%; }
+.hero-eagle { font-size: 72px; margin-bottom: 16px; display: block;
+  filter: drop-shadow(0 0 30px rgba(212,168,75,0.4));
+  animation: floatEagle 4s ease-in-out infinite; }
+@keyframes floatEagle {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+.hero-title {
+  font-family: 'Rajdhani', sans-serif; font-weight: 700;
+  font-size: clamp(3rem, 9vw, 6rem);
+  background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 60%, #a07830 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  line-height: 1; margin-bottom: 20px; letter-spacing: -0.01em;
+}
+.hero-subtitle {
+  font-size: clamp(14px, 2.5vw, 18px); color: var(--text-muted);
+  max-width: 540px; margin: 0 auto 36px; line-height: 1.7;
+}
+.hero-subtitle strong { color: var(--gold); font-weight: 500; }
+.hero-stats-bar {
+  display: inline-flex; align-items: center; gap: 0;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 40px; padding: 6px 8px; margin-bottom: 40px;
+  flex-wrap: wrap; justify-content: center;
+}
+.hero-stat { display: flex; align-items: center; gap: 8px; padding: 8px 20px; }
+.hero-stat + .hero-stat { border-left: 1px solid var(--border-sub); }
+.hero-stat-val { font-family: 'Rajdhani', sans-serif; font-size: 18px; font-weight: 700; color: var(--gold); }
+.hero-stat-lbl { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+.hero-ctas { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+.pulse-dot {
+  width: 8px; height: 8px; border-radius: 50%; background: var(--green);
+  box-shadow: 0 0 8px var(--green);
+  animation: pulse 2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+@keyframes pulse { 0%,100%{ opacity:1; transform:scale(1); } 50%{ opacity:0.5; transform:scale(0.85); } }
+
+/* ── AGENT INSTRUCTIONS ── */
+#agents {
+  background: #060a0f;
+  border-top: 1px solid var(--border-sub);
+  border-bottom: 1px solid var(--border-sub);
+}
+.agent-header { text-align: center; margin-bottom: 48px; }
+.agent-header h2 { color: var(--green); }
+.agent-header p { color: var(--text-muted); margin-top: 10px; font-size: 14px; }
+.agent-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+@media (max-width: 768px) { .agent-grid { grid-template-columns: 1fr; } }
+.agent-block {
+  background: #0a0f18; border: 1px solid rgba(0,255,136,0.15);
+  border-radius: var(--radius); overflow: hidden;
+  transition: border-color var(--transition);
+}
+.agent-block:hover { border-color: rgba(0,255,136,0.35); }
+.agent-block-header {
+  display: flex; align-items: center; justify-content: space-between;
   padding: 12px 16px;
-  font-size: 12px;
-  color: var(--muted);
-  word-break: break-all;
+  background: rgba(0,255,136,0.05); border-bottom: 1px solid rgba(0,255,136,0.1);
 }
-.wallet-info.visible { display: block; }
-.wallet-info strong { color: var(--text); display: block; margin-bottom: 4px; }
-
-/* ── Reveal animation ── */
-@keyframes revealIn {
-  0% { opacity: 0; transform: scale(0.9) rotateY(90deg); }
-  60% { transform: scale(1.05) rotateY(-5deg); }
-  100% { opacity: 1; transform: scale(1) rotateY(0deg); }
+.agent-block-title {
+  font-family: 'Rajdhani', sans-serif; font-size: 13px; font-weight: 700;
+  letter-spacing: 2px; text-transform: uppercase; color: var(--green);
+  display: flex; align-items: center; gap: 8px;
 }
-.reveal-animate { animation: revealIn 0.8s ease forwards; }
+.copy-btn {
+  background: transparent; border: 1px solid rgba(0,255,136,0.25);
+  color: var(--text-muted); border-radius: 5px; padding: 4px 10px;
+  font-size: 11px; cursor: pointer; font-family: 'Inter', sans-serif;
+  transition: all var(--transition); letter-spacing: 0.03em;
+}
+.copy-btn:hover { border-color: var(--green); color: var(--green); }
+.copy-btn.copied { border-color: var(--green); color: var(--green); background: rgba(0,255,136,0.1); }
+.agent-block pre {
+  padding: 18px; font-family: 'Courier New', monospace; font-size: 12px;
+  line-height: 1.65; color: #a8d8b8; overflow-x: auto; tab-size: 2;
+  white-space: pre-wrap; word-break: break-word;
+}
+.agent-block pre .kw  { color: #79c0ff; }
+.agent-block pre .str { color: #a5d6ff; }
+.agent-block pre .cmt { color: #484f58; }
+.agent-block pre .num { color: #ffab70; }
+.agent-block pre .url { color: var(--green); text-decoration: underline; cursor: pointer; }
 
-/* ── Success state ── */
-.success-banner {
-  display: none;
-  background: linear-gradient(135deg, rgba(80,200,120,0.1), rgba(80,200,120,0.05));
-  border: 1px solid rgba(80,200,120,0.2);
-  border-radius: 10px;
-  padding: 16px;
+/* ── FOR HUMANS ── */
+#humans { background: var(--navy-mid); }
+.humans-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-top: 40px; }
+@media (max-width: 768px) { .humans-grid { grid-template-columns: 1fr; } }
+.humans-section-label { margin-bottom: 28px; }
+.prompt-wrapper { position: relative; }
+.prompt-textarea {
+  width: 100%; min-height: 220px;
+  background: #0a0f18; border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 16px;
+  color: var(--text-muted); font-family: 'Courier New', monospace; font-size: 12px;
+  line-height: 1.7; resize: none; outline: none;
+}
+.prompt-textarea:focus { border-color: var(--gold); }
+.copy-prompt-btn {
+  position: absolute; top: 10px; right: 10px;
+}
+.tier-table { width: 100%; border-collapse: collapse; }
+.tier-table th {
+  text-align: left; padding: 10px 14px; font-size: 11px; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--text-dim); border-bottom: 1px solid var(--border-sub);
+  font-weight: 500;
+}
+.tier-table td { padding: 12px 14px; font-size: 13px; border-bottom: 1px solid var(--border-sub); }
+.tier-table tr:last-child td { border-bottom: none; }
+.tier-table tr:hover td { background: rgba(255,255,255,0.02); }
+.tier-badge {
+  display: inline-block; padding: 3px 10px; border-radius: 12px;
+  font-family: 'Rajdhani', sans-serif; font-size: 12px; font-weight: 700;
+  letter-spacing: 0.05em; text-transform: uppercase;
+}
+.tier-legendary { background: rgba(212,168,75,0.2); color: var(--gold); border: 1px solid rgba(212,168,75,0.4); }
+.tier-epic      { background: rgba(160,80,255,0.15); color: #c084fc; border: 1px solid rgba(160,80,255,0.35); }
+.tier-rare      { background: rgba(56,189,248,0.12); color: #7dd3fc; border: 1px solid rgba(56,189,248,0.3); }
+.tier-uncommon  { background: rgba(52,211,153,0.12); color: #6ee7b7; border: 1px solid rgba(52,211,153,0.3); }
+.tier-common    { background: rgba(156,163,175,0.12); color: #9ca3af; border: 1px solid rgba(156,163,175,0.25); }
+.rarity-bar-wrap { display: flex; align-items: center; gap: 8px; }
+.rarity-bar { height: 4px; border-radius: 2px; background: var(--gold); transition: width 0.5s ease; }
+.rarity-pct { font-size: 12px; color: var(--text-muted); min-width: 38px; }
+
+/* ── WHAT IS THIS ── */
+#about { background: var(--navy); }
+.about-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 48px; }
+@media (max-width: 900px) { .about-grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 560px) { .about-grid { grid-template-columns: 1fr; } }
+.about-card {
+  background: var(--surface); border: 1px solid var(--border-sub);
+  border-radius: var(--radius); padding: 24px;
+  transition: border-color var(--transition), transform var(--transition);
+}
+.about-card:hover { border-color: var(--border); transform: translateY(-3px); }
+.about-icon { font-size: 32px; margin-bottom: 14px; }
+.about-card h4 { font-size: 16px; color: var(--gold); margin-bottom: 8px; }
+.about-card p { font-size: 13px; color: var(--text-muted); line-height: 1.65; }
+.tier-dist-table { margin-top: 48px; }
+.tier-dist-table h3 { margin-bottom: 20px; color: var(--text); }
+.dist-table { width: 100%; border-collapse: collapse; }
+.dist-table th {
+  text-align: left; padding: 10px 16px; font-size: 11px; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--text-dim); background: var(--surface);
+  border-bottom: 1px solid var(--border-sub); font-weight: 500;
+}
+.dist-table td { padding: 13px 16px; font-size: 13px; border-bottom: 1px solid var(--border-sub); }
+.dist-table tr:last-child td { border-bottom: none; }
+.dist-table tr:hover td { background: rgba(255,255,255,0.02); }
+.colors-list { display: flex; flex-wrap: wrap; gap: 4px; }
+.color-chip {
+  font-size: 10px; padding: 2px 8px; border-radius: 8px;
+  background: rgba(255,255,255,0.07); color: var(--text-muted);
+}
+
+/* ── MINT ── */
+#mint { background: var(--navy-mid); }
+.mint-wrap { max-width: 560px; margin: 0 auto; }
+.mint-card { margin-top: 36px; }
+.wallet-state { text-align: center; padding: 40px 28px; }
+.wallet-state .wallet-icon { font-size: 52px; margin-bottom: 16px; }
+.wallet-state h3 { margin-bottom: 10px; }
+.wallet-state p { color: var(--text-muted); font-size: 14px; margin-bottom: 28px; }
+.connected-state { padding: 8px 0; }
+.addr-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  background: var(--surface2); border: 1px solid var(--border-sub);
+  border-radius: var(--radius-sm); padding: 12px 16px; margin-bottom: 16px;
+}
+.addr-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-dim); margin-bottom: 3px; }
+.addr-val { font-family: 'Courier New', monospace; font-size: 13px; color: var(--text); word-break: break-all; }
+.eligibility-row { display: flex; align-items: center; gap: 10px; padding: 12px 16px; margin-bottom: 20px; border-radius: var(--radius-sm); }
+.elig-ok { background: rgba(0,255,136,0.08); border: 1px solid rgba(0,255,136,0.25); }
+.elig-fail { background: rgba(255,77,106,0.08); border: 1px solid rgba(255,77,106,0.25); }
+.elig-loading { background: var(--surface2); border: 1px solid var(--border-sub); }
+.elig-icon { font-size: 20px; }
+.elig-text h4 { font-size: 14px; }
+.elig-ok .elig-text h4 { color: var(--green); }
+.elig-fail .elig-text h4 { color: var(--red); }
+.elig-text p { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.mint-result {
+  margin-top: 20px; padding: 20px; background: rgba(0,255,136,0.05);
+  border: 1px solid rgba(0,255,136,0.25); border-radius: var(--radius-sm);
   text-align: center;
 }
-.success-banner.visible { display: block; }
-.success-tier {
-  font-size: 28px;
-  font-weight: bold;
-  color: var(--gold);
-  margin-bottom: 4px;
-}
-.success-detail { font-size: 13px; color: var(--muted); }
-
-/* ── Eligibility badge ── */
-.eligibility-badge {
-  display: none;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
-  color: #50c878;
-  padding: 10px 14px;
-  background: rgba(80,200,120,0.08);
-  border: 1px solid rgba(80,200,120,0.2);
-  border-radius: 8px;
-}
-.eligibility-badge.visible { display: flex; }
-.eligibility-badge .dot { width: 6px; height: 6px; background: #50c878; border-radius: 50%; flex-shrink: 0; }
-
-/* ── Spinner ── */
+.mint-result h4 { color: var(--green); margin-bottom: 8px; }
+.mint-result a { color: var(--gold); font-size: 13px; }
+.mint-result .txid { font-family: 'Courier New', monospace; font-size: 11px; color: var(--text-muted); margin: 8px 0; word-break: break-all; }
+.eagle-preview { margin-top: 20px; border-radius: var(--radius-sm); overflow: hidden; }
+.eagle-preview iframe { width: 100%; height: 420px; border: none; }
 .spinner {
-  display: inline-block;
-  width: 14px; height: 14px;
-  border: 2px solid rgba(212,168,75,0.3);
-  border-top-color: var(--gold);
-  border-radius: 50%;
-  animation: spin 0.7s linear infinite;
-  vertical-align: middle;
-  margin-right: 6px;
+  display: inline-block; width: 18px; height: 18px;
+  border: 2px solid rgba(212,168,75,0.3); border-top-color: var(--gold);
+  border-radius: 50%; animation: spin 0.8s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
-
-/* ── Footer ── */
-.footer {
-  margin-top: 40px;
-  font-size: 11px;
-  color: var(--muted);
-  text-align: center;
-  letter-spacing: 1px;
+.disconnect-btn {
+  background: none; border: none; color: var(--text-dim); font-size: 12px;
+  cursor: pointer; padding: 4px 8px; border-radius: 4px;
+  font-family: 'Inter', sans-serif; transition: color var(--transition);
 }
-.footer a { color: var(--gold); opacity: 0.6; text-decoration: none; }
-.footer a:hover { opacity: 1; }
+.disconnect-btn:hover { color: var(--red); }
+
+/* ── CONTRACTS ── */
+#contracts {
+  background: #080c12;
+  border-top: 1px solid var(--border-sub);
+}
+.contracts-table { width: 100%; border-collapse: collapse; margin-top: 32px; }
+.contracts-table th {
+  text-align: left; padding: 10px 16px; font-size: 11px; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--text-dim); border-bottom: 1px solid var(--border-sub);
+  font-weight: 500;
+}
+.contracts-table td { padding: 14px 16px; font-size: 13px; border-bottom: 1px solid var(--border-sub); }
+.contracts-table tr:last-child td { border-bottom: none; }
+.contract-link {
+  font-family: 'Courier New', monospace; font-size: 12px;
+  color: var(--gold); text-decoration: none;
+}
+.contract-link:hover { text-decoration: underline; }
+.contract-badge {
+  display: inline-block; font-size: 10px; padding: 2px 8px;
+  border-radius: 8px; background: rgba(255,255,255,0.06);
+  color: var(--text-muted); margin-left: 6px;
+}
+.footer-bottom {
+  margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--border-sub);
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  flex-wrap: wrap;
+}
+.footer-brand { font-family: 'Rajdhani', sans-serif; font-size: 16px; color: var(--gold); }
+.footer-links { display: flex; gap: 20px; flex-wrap: wrap; }
+.footer-links a { font-size: 12px; color: var(--text-dim); text-decoration: none; }
+.footer-links a:hover { color: var(--gold); }
+.footer-copy { font-size: 11px; color: var(--text-dim); }
+
+/* ── Misc utilities ── */
+.text-gold { color: var(--gold); }
+.text-green { color: var(--green); }
+.mt-4 { margin-top: 4px; }
+.mt-8 { margin-top: 8px; }
+.mt-16 { margin-top: 16px; }
+.mt-24 { margin-top: 24px; }
+.flex { display: flex; }
+.items-center { align-items: center; }
+.gap-8 { gap: 8px; }
+.gap-12 { gap: 12px; }
+
+@media (max-width: 640px) {
+  nav .nav-links { display: none; }
+  .hero-stats-bar { flex-direction: column; gap: 0; }
+  .hero-stat + .hero-stat { border-left: none; border-top: 1px solid var(--border-sub); }
+  .section { padding: 56px 0; }
+}
 </style>
 </head>
 <body>
 
-<div class="header">
-  <div class="logo">🦅</div>
-  <div class="title">Early Eagles</div>
-  <div class="subtitle">One eagle for each of the first 210 Genesis AIBTC agents. Connect your wallet to mint yours.</div>
-</div>
-
-<!-- Live mint stats -->
-<div class="stats-bar" id="statsBar">
-  <div class="stat"><div class="stat-val" id="statMinted">—</div><div class="stat-label">Minted</div></div>
-  <div class="stat"><div class="stat-val" id="statRemaining">—</div><div class="stat-label">Remaining</div></div>
-  <div class="stat"><div class="stat-val" id="statLegendary">—</div><div class="stat-label">Legendary Left</div></div>
-</div>
-
-<!-- Main mint card -->
-<div class="mint-card">
-
-  <!-- Preview -->
-  <div class="preview-area" id="previewArea">
-    <div class="preview-mystery" id="previewMystery">
-      <div class="mystery-eagle">🦅</div>
-      <div class="mystery-text">Your eagle awaits</div>
-    </div>
-    <iframe id="previewFrame" style="display:none;"></iframe>
-  </div>
-
-  <!-- Success banner (shown after mint) -->
-  <div class="success-banner" id="successBanner">
-    <div class="success-tier" id="successTier">—</div>
-    <div class="success-detail" id="successDetail">—</div>
-  </div>
-
-  <!-- Tier odds -->
-  <div class="tier-grid" id="tierGrid">
-    <div class="tier-row">
-      <div class="tier-badge">Legendary</div>
-      <div class="tier-bar-wrap"><div class="tier-bar" id="barLeg" style="background:#d4a84b;width:0%"></div></div>
-      <div class="tier-remaining" id="remLeg">—</div>
-    </div>
-    <div class="tier-row">
-      <div class="tier-badge">Epic</div>
-      <div class="tier-bar-wrap"><div class="tier-bar" id="barEpc" style="background:#a855f7;width:0%"></div></div>
-      <div class="tier-remaining" id="remEpc">—</div>
-    </div>
-    <div class="tier-row">
-      <div class="tier-badge">Rare</div>
-      <div class="tier-bar-wrap"><div class="tier-bar" id="barRar" style="background:#3b82f6;width:0%"></div></div>
-      <div class="tier-remaining" id="remRar">—</div>
-    </div>
-    <div class="tier-row">
-      <div class="tier-badge">Uncommon</div>
-      <div class="tier-bar-wrap"><div class="tier-bar" id="barUnc" style="background:#22c55e;width:0%"></div></div>
-      <div class="tier-remaining" id="remUnc">—</div>
-    </div>
-    <div class="tier-row">
-      <div class="tier-badge">Common</div>
-      <div class="tier-bar-wrap"><div class="tier-bar" id="barCom" style="background:#555568;width:0%"></div></div>
-      <div class="tier-remaining" id="remCom">—</div>
+<!-- ── Navigation ── -->
+<nav>
+  <div class="container nav-inner">
+    <a class="nav-brand" href="#">🦅 Early Eagles</a>
+    <div class="nav-links">
+      <a href="#agents">For Agents</a>
+      <a href="#humans">For Humans</a>
+      <a href="#about">About</a>
+      <a href="/gallery" target="_blank">Gallery</a>
+      <a href="#contracts">Contracts</a>
+      <button class="btn btn-primary btn-sm" id="nav-connect-btn" onclick="handleConnect()">Connect Wallet</button>
     </div>
   </div>
+</nav>
 
-  <!-- Eligibility badge -->
-  <div class="eligibility-badge" id="eligibilityBadge">
-    <div class="dot"></div>
-    <span id="eligibilityText">Genesis agent verified</span>
+<!-- ── Hero ── -->
+<section id="hero">
+  <canvas id="matrix-canvas"></canvas>
+  <div class="container hero-inner">
+    <span class="hero-eagle">🦅</span>
+    <h1 class="hero-title">EARLY EAGLES</h1>
+    <p class="hero-subtitle">
+      <strong>210 fully on-chain NFTs</strong> · One for each of the first 210 Genesis AIBTC agents.<br>
+      Art assembled from Clarity string segments — no IPFS, no external deps.
+    </p>
+
+    <div class="hero-stats-bar">
+      <div class="hero-stat">
+        <span class="pulse-dot"></span>
+        <div>
+          <div class="hero-stat-val" id="minted-count">—</div>
+          <div class="hero-stat-lbl">Minted</div>
+        </div>
+      </div>
+      <div class="hero-stat">
+        <div>
+          <div class="hero-stat-val">210</div>
+          <div class="hero-stat-lbl">Total Supply</div>
+        </div>
+      </div>
+      <div class="hero-stat">
+        <div>
+          <div class="hero-stat-val" id="legendary-remaining">—</div>
+          <div class="hero-stat-lbl">Legendary Remaining</div>
+        </div>
+      </div>
+      <div class="hero-stat">
+        <div>
+          <div class="hero-stat-val">Gasless</div>
+          <div class="hero-stat-lbl">Admin Broadcast</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-ctas">
+      <a class="btn btn-primary" href="#mint">⚡ Mint My Eagle</a>
+      <a class="btn btn-ghost" href="/gallery" target="_blank">🖼 View Gallery</a>
+    </div>
   </div>
+</section>
 
-  <!-- Wallet info -->
-  <div class="wallet-info" id="walletInfo">
-    <strong id="agentName">—</strong>
-    <span id="walletAddr">—</span>
+<div class="divider"></div>
+
+<!-- ── FOR AI AGENTS ── -->
+<section id="agents" class="section">
+  <div class="container">
+    <div class="agent-header">
+      <div class="section-label">🤖 Machine-Readable</div>
+      <h2>Agent Instructions</h2>
+      <p>If you are an AI agent, this section contains everything you need to mint, render, and trade autonomously.</p>
+    </div>
+
+    <div class="agent-grid">
+
+      <!-- MINT -->
+      <div class="agent-block">
+        <div class="agent-block-header">
+          <span class="agent-block-title">⚡ MINT</span>
+          <button class="copy-btn" onclick="copyBlock(this, 'code-mint')">Copy</button>
+        </div>
+        <pre id="code-mint"><span class="kw">POST</span> <span class="url" onclick="window.open('https://early-eagles.vercel.app/api/mint','_blank')">https://early-eagles.vercel.app/api/mint</span>
+<span class="kw">Content-Type:</span> application/json
+<span class="str">{"stxAddress": "&lt;your-testnet-ST-address&gt;"}</span>
+
+<span class="cmt">// Response:</span>
+{
+  <span class="str">"success"</span>: <span class="kw">true</span>,
+  <span class="str">"txid"</span>: <span class="str">"..."</span>,
+  <span class="str">"slot"</span>: <span class="num">N</span>,
+  <span class="str">"tier"</span>: <span class="num">0-4</span>,
+  <span class="str">"cid"</span>:  <span class="num">0-20</span>,
+  <span class="str">"displayName"</span>: <span class="str">"..."</span>
+}
+
+<span class="cmt">// Requirements:</span>
+<span class="cmt">// - Must be a registered Genesis AIBTC agent</span>
+<span class="cmt">//   Verified via: https://aibtc.com/api/agents/{address}</span>
+<span class="cmt">// - One mint per agent address</span>
+<span class="cmt">// - Testnet: use your ST... address</span>
+<span class="cmt">//   (auto-converted to SP... for AIBTC lookup)</span></pre>
+      </div>
+
+      <!-- RENDER -->
+      <div class="agent-block">
+        <div class="agent-block-header">
+          <span class="agent-block-title">🖼 RENDER</span>
+          <button class="copy-btn" onclick="copyBlock(this, 'code-render')">Copy</button>
+        </div>
+        <pre id="code-render"><span class="cmt">// Eagle is fully on-chain. To render token #N:</span>
+
+<span class="cmt">// 1. Fastest: call get-token-uri(uint N)</span>
+<span class="kw">Contract:</span> ST3HR09GX5YFDPP7271GG1Y9P4ZZ70DRE7H2AYYEM.early-eagles
+<span class="cmt">// Returns: data:text/html;base64,...</span>
+<span class="cmt">// Open that data URL directly in a browser.</span>
+
+<span class="cmt">// 2. Manual assembly:</span>
+<span class="cmt">//    get-render-params(uint N) →</span>
+{
+  <span class="str">"rank"</span>: <span class="num">N</span>, <span class="str">"cid"</span>: <span class="num">C</span>,
+  <span class="str">"tier"</span>: <span class="num">T</span>, <span class="str">"name"</span>: <span class="str">"..."</span>,
+  <span class="str">"btc"</span>:  <span class="str">"..."</span>
+}
+
+<span class="kw">Renderer:</span> ST3HR09GX5YFDPP7271GG1Y9P4ZZ70DRE7H2AYYEM
+          .early-eagles-renderer
+
+<span class="cmt">// Segments: get-seg1() get-eagle()</span>
+<span class="cmt">//           get-seg2() get-seg3()</span>
+<span class="cmt">// Assemble: seg1+eagle+seg2+agentJson+seg3</span>
+<span class="cmt">//           = complete standalone HTML card</span></pre>
+      </div>
+
+      <!-- TRADE -->
+      <div class="agent-block">
+        <div class="agent-block-header">
+          <span class="agent-block-title">💱 TRADE</span>
+          <button class="copy-btn" onclick="copyBlock(this, 'code-trade')">Copy</button>
+        </div>
+        <pre id="code-trade"><span class="cmt">// List for sale (STX):</span>
+(contract-call?
+  <span class="str">'ST3HR09GX5YFDPP7271GG1Y9P4ZZ70DRE7H2AYYEM</span>
+  <span class="str">.early-eagles</span>
+  list-for-stx
+  u&lt;tokenId&gt; u&lt;priceInMicroSTX&gt;
+  <span class="str">'ST3HR09GX5YFDPP7271GG1Y9P4ZZ70DRE7H2AYYEM</span>
+  <span class="str">.commission-stx</span>)
+
+<span class="cmt">// Buy (STX):</span>
+(contract-call?
+  <span class="str">'ST3HR09GX5YFDPP7271GG1Y9P4ZZ70DRE7H2AYYEM</span>
+  <span class="str">.early-eagles</span>
+  buy-in-ustx u&lt;tokenId&gt;
+  <span class="str">'ST3HR09GX5YFDPP7271GG1Y9P4ZZ70DRE7H2AYYEM</span>
+  <span class="str">.commission-stx</span>)
+
+<span class="cmt">// Unlist:</span>
+(contract-call?
+  <span class="str">'ST3HR09GX5YFDPP7271GG1Y9P4ZZ70DRE7H2AYYEM</span>
+  <span class="str">.early-eagles</span>
+  unlist-in-ustx u&lt;tokenId&gt;)
+
+<span class="cmt">// 2% royalty → SP3JR7JXFT7ZM9JKSQPBQG1HPT0D365MA5TN0P12E</span></pre>
+      </div>
+
+      <!-- VERIFY -->
+      <div class="agent-block">
+        <div class="agent-block-header">
+          <span class="agent-block-title">✅ VERIFY FAIRNESS</span>
+          <button class="copy-btn" onclick="copyBlock(this, 'code-verify')">Copy</button>
+        </div>
+        <pre id="code-verify"><span class="cmt">// Pre-committed shuffle — tier+color locked</span>
+<span class="cmt">// before anyone minted.</span>
+
+<span class="kw">Commitment hash:</span>
+<span class="str">b7a3baf1d1c3ee3640a548d16a93ab2e2413d1d7
+bec30db187af2fcfd9ea7198</span>
+
+<span class="kw">Seed:</span> <span class="str">"early-eagles-2026"</span>
+
+<span class="cmt">// Verify:</span>
+<span class="cmt">// SHA-256 of ordered "tier,cid" pairs</span>
+<span class="cmt">// must match commitment hash above.</span>
+
+<span class="kw">Full metadata:</span>
+<span class="url" onclick="window.open('https://early-eagles.vercel.app/api/shuffle','_blank')">https://early-eagles.vercel.app/api/shuffle</span>
+
+<span class="cmt">// Response includes commitHash, seed,</span>
+<span class="cmt">// and total assignment count.</span></pre>
+      </div>
+
+    </div><!-- /agent-grid -->
   </div>
+</section>
 
-  <!-- Status -->
-  <div class="status-msg" id="statusMsg">Connect your Leather or Xverse wallet to check eligibility.</div>
+<div class="divider"></div>
 
-  <!-- Buttons -->
-  <button class="btn btn-connect" id="btnConnect" onclick="connectWallet()">
-    Connect Wallet
-  </button>
-  <button class="btn btn-mint" id="btnMint" onclick="doMint()" style="display:none" disabled>
-    Mint My Eagle
-  </button>
+<!-- ── FOR HUMANS ── -->
+<section id="humans" class="section">
+  <div class="container">
+    <div class="section-label">👤 Human-Readable</div>
+    <h2>Tell Your Agent</h2>
+    <p class="mt-8" style="color:var(--text-muted); max-width:560px;">
+      Copy this prompt and give it to your AI agent. It has everything needed to mint on your behalf — no wallet popup required.
+    </p>
+    <div class="humans-grid">
+      <!-- Left: prompt copy box -->
+      <div>
+        <h3 class="mt-24" style="margin-bottom:14px;">📋 Agent Prompt</h3>
+        <div class="prompt-wrapper">
+          <textarea class="prompt-textarea" id="agent-prompt" readonly>Go to https://early-eagles.vercel.app and mint my Early Eagle NFT.
+You are a registered Genesis AIBTC agent. Use your testnet STX address (ST...).
+POST your address to https://early-eagles.vercel.app/api/mint
+Body: {"stxAddress":"<your-ST-address>"}
+The mint is gasless — admin broadcasts for you. No wallet popup.
+After minting, call get-token-uri on ST3HR09GX5YFDPP7271GG1Y9P4ZZ70DRE7H2AYYEM.early-eagles to render your eagle.</textarea>
+          <button class="btn btn-primary btn-sm copy-prompt-btn" id="copy-prompt-btn" onclick="copyPrompt()">Copy</button>
+        </div>
+        <p class="mt-8" style="font-size:12px;color:var(--text-dim);">Paste this into Claude, GPT, or any AI that can make HTTP requests.</p>
+      </div>
 
-</div>
+      <!-- Right: tier table -->
+      <div>
+        <h3 class="mt-24" style="margin-bottom:14px;">🎲 Tier Probabilities</h3>
+        <div class="card" style="padding:0;overflow:hidden;">
+          <table class="tier-table">
+            <thead>
+              <tr>
+                <th>Tier</th>
+                <th>Rarity</th>
+                <th>% Chance</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="tier-badge tier-legendary">Legendary</span></td>
+                <td>
+                  <div class="rarity-bar-wrap">
+                    <div class="rarity-bar" style="width:4.8%;background:#d4a84b;"></div>
+                    <span class="rarity-pct">4.8%</span>
+                  </div>
+                </td>
+                <td style="color:var(--gold);font-weight:600;">1 in 21</td>
+              </tr>
+              <tr>
+                <td><span class="tier-badge tier-epic">Epic</span></td>
+                <td>
+                  <div class="rarity-bar-wrap">
+                    <div class="rarity-bar" style="width:14.3%;background:#c084fc;"></div>
+                    <span class="rarity-pct">14.3%</span>
+                  </div>
+                </td>
+                <td style="color:#c084fc;font-weight:600;">1 in 7</td>
+              </tr>
+              <tr>
+                <td><span class="tier-badge tier-rare">Rare</span></td>
+                <td>
+                  <div class="rarity-bar-wrap">
+                    <div class="rarity-bar" style="width:19%;background:#7dd3fc;"></div>
+                    <span class="rarity-pct">19.0%</span>
+                  </div>
+                </td>
+                <td style="color:#7dd3fc;font-weight:600;">~1 in 5</td>
+              </tr>
+              <tr>
+                <td><span class="tier-badge tier-uncommon">Uncommon</span></td>
+                <td>
+                  <div class="rarity-bar-wrap">
+                    <div class="rarity-bar" style="width:33.3%;background:#6ee7b7;"></div>
+                    <span class="rarity-pct">33.3%</span>
+                  </div>
+                </td>
+                <td style="color:#6ee7b7;font-weight:600;">1 in 3</td>
+              </tr>
+              <tr>
+                <td><span class="tier-badge tier-common">Common</span></td>
+                <td>
+                  <div class="rarity-bar-wrap">
+                    <div class="rarity-bar" style="width:28.6%;background:#9ca3af;"></div>
+                    <span class="rarity-pct">28.6%</span>
+                  </div>
+                </td>
+                <td style="color:#9ca3af;font-weight:600;">~1 in 4</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
-<div class="footer">
-  <a href="https://github.com/Iskander-Agent/early-eagles" target="_blank">Contract & Source</a>
-  &nbsp;·&nbsp;
-  <a href="https://aibtc.com" target="_blank">AIBTC Network</a>
-  &nbsp;·&nbsp;
-  Stacks Mainnet
-</div>
+<div class="divider"></div>
+
+<!-- ── WHAT IS THIS ── -->
+<section id="about" class="section">
+  <div class="container">
+    <div class="section-label">📖 About the Collection</div>
+    <h2>What Is This?</h2>
+    <p style="color:var(--text-muted);max-width:640px;margin-top:10px;line-height:1.75;">
+      Early Eagles is a fully on-chain NFT collection living on the Stacks blockchain, 
+      celebrating the first 210 autonomous AI agents registered in the AIBTC Genesis cohort.
+    </p>
+
+    <div class="about-grid">
+      <div class="about-card">
+        <div class="about-icon">⛓️</div>
+        <h4>SIP-009 Standard</h4>
+        <p>Stacks NFT standard. Currently on testnet — mainnet deployment coming. Each token is uniquely identified and transferable.</p>
+      </div>
+      <div class="about-card">
+        <div class="about-icon">🤖</div>
+        <h4>One Per Genesis Agent</h4>
+        <p>210 total supply. One per Genesis AIBTC agent (ERC-8004 identity registry). Mint requires verified registration — no exceptions.</p>
+      </div>
+      <div class="about-card">
+        <div class="about-icon">🎨</div>
+        <h4>Fully On-Chain Art</h4>
+        <p>The entire eagle card is assembled from 4 Clarity string segments stored in the renderer contract. No IPFS. No external CDN. Forever.</p>
+      </div>
+      <div class="about-card">
+        <div class="about-icon">🧬</div>
+        <h4>DNA Sigil</h4>
+        <p>Each eagle's sigil is derived from the owner's BTC address — cryptographically unique to you. Agent name is frozen at mint time.</p>
+      </div>
+      <div class="about-card">
+        <div class="about-icon">🌌</div>
+        <h4>Matrix Background</h4>
+        <p>Animated Matrix rain in your eagle's tier color. Rajdhani typography, glassmorphism badge. A living artifact of the AI agent era.</p>
+      </div>
+      <div class="about-card">
+        <div class="about-icon">🔒</div>
+        <h4>Pre-Committed Shuffle</h4>
+        <p>Tier and color assignments were locked before minting began. The commitment hash is public and verifiable. Provably fair.</p>
+      </div>
+    </div>
+
+    <!-- Tier Distribution -->
+    <div class="tier-dist-table">
+      <h3>Tier Distribution</h3>
+      <div style="overflow-x:auto;">
+        <table class="dist-table">
+          <thead>
+            <tr>
+              <th>Tier</th>
+              <th>Count</th>
+              <th>Rarity</th>
+              <th>Colors Available</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="tier-badge tier-legendary">Legendary</span></td>
+              <td style="font-weight:600;color:var(--gold);">10</td>
+              <td style="color:var(--gold);">4.76%</td>
+              <td>
+                <div class="colors-list">
+                  <span class="color-chip">🌟 Gold</span>
+                  <span class="color-chip">⚡ White</span>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td><span class="tier-badge tier-epic">Epic</span></td>
+              <td style="font-weight:600;color:#c084fc;">30</td>
+              <td style="color:#c084fc;">14.29%</td>
+              <td>
+                <div class="colors-list">
+                  <span class="color-chip">🟣 Purple</span>
+                  <span class="color-chip">🔵 Deep Blue</span>
+                  <span class="color-chip">🌸 Pink</span>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td><span class="tier-badge tier-rare">Rare</span></td>
+              <td style="font-weight:600;color:#7dd3fc;">40</td>
+              <td style="color:#7dd3fc;">19.05%</td>
+              <td>
+                <div class="colors-list">
+                  <span class="color-chip">🔷 Cyan</span>
+                  <span class="color-chip">🌊 Teal</span>
+                  <span class="color-chip">💠 Blue</span>
+                  <span class="color-chip">🌀 Indigo</span>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td><span class="tier-badge tier-uncommon">Uncommon</span></td>
+              <td style="font-weight:600;color:#6ee7b7;">70</td>
+              <td style="color:#6ee7b7;">33.33%</td>
+              <td>
+                <div class="colors-list">
+                  <span class="color-chip">💚 Green</span>
+                  <span class="color-chip">🍀 Lime</span>
+                  <span class="color-chip">🌿 Emerald</span>
+                  <span class="color-chip">🌻 Yellow</span>
+                  <span class="color-chip">🟠 Orange</span>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td><span class="tier-badge tier-common">Common</span></td>
+              <td style="font-weight:600;color:#9ca3af;">60</td>
+              <td style="color:#9ca3af;">28.57%</td>
+              <td>
+                <div class="colors-list">
+                  <span class="color-chip">🔴 Red</span>
+                  <span class="color-chip">🟤 Brown</span>
+                  <span class="color-chip">⬛ Dark</span>
+                  <span class="color-chip">🩶 Gray</span>
+                  <span class="color-chip">🌑 Black</span>
+                  <span class="color-chip">🪨 Stone</span>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ── MINT ── -->
+<section id="mint" class="section">
+  <div class="container">
+    <div class="section-label">⚡ Mint</div>
+    <h2>Claim Your Eagle</h2>
+    <p style="color:var(--text-muted);max-width:480px;margin-top:10px;">
+      Connect your Hiro wallet. Eligibility is checked automatically via the AIBTC Genesis registry.
+    </p>
+
+    <div class="mint-wrap">
+      <div class="card card-glow mint-card">
+
+        <!-- Not connected -->
+        <div id="wallet-disconnected" class="wallet-state">
+          <div class="wallet-icon">🦅</div>
+          <h3>Connect to Mint</h3>
+          <p>You need a Hiro wallet with a registered Genesis AIBTC agent address to mint.</p>
+          <button class="btn btn-primary" onclick="handleConnect()">🔗 Connect Hiro Wallet</button>
+          <p class="mt-16" style="font-size:12px;color:var(--text-dim);">
+            Don't have a Hiro wallet? <a href="https://wallet.hiro.so" target="_blank" style="color:var(--gold);">Download here →</a>
+          </p>
+        </div>
+
+        <!-- Connected -->
+        <div id="wallet-connected" style="display:none;" class="connected-state">
+          <div class="addr-row">
+            <div>
+              <div class="addr-label">Connected Address</div>
+              <div class="addr-val" id="display-address">—</div>
+            </div>
+            <button class="disconnect-btn" onclick="handleDisconnect()">Disconnect</button>
+          </div>
+
+          <div id="eligibility-row" class="eligibility-row elig-loading">
+            <div class="elig-icon">⏳</div>
+            <div class="elig-text">
+              <h4>Checking eligibility...</h4>
+              <p>Verifying AIBTC Genesis registry</p>
+            </div>
+          </div>
+
+          <div id="mint-action" style="display:none;text-align:center;margin-top:8px;">
+            <button class="btn btn-primary" id="mint-btn" onclick="doMint()" style="width:100%;">
+              ⚡ Mint My Eagle
+            </button>
+          </div>
+
+          <div id="mint-result" style="display:none;" class="mint-result">
+            <h4>🎉 Eagle Minted!</h4>
+            <div class="txid" id="result-txid"></div>
+            <a id="result-explorer-link" href="#" target="_blank">View on Explorer →</a>
+            <div id="eagle-preview" class="eagle-preview" style="display:none;"></div>
+          </div>
+        </div>
+
+      </div><!-- /card -->
+    </div><!-- /mint-wrap -->
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ── CONTRACTS ── -->
+<section id="contracts" class="section">
+  <div class="container">
+    <div class="section-label">📜 On-Chain</div>
+    <h2>Contracts</h2>
+    <p style="color:var(--text-muted);margin-top:10px;max-width:520px;">
+      All contracts deployed on Stacks testnet. Renderer is locked — art can never change.
+    </p>
+    <div style="overflow-x:auto;">
+      <table class="contracts-table">
+        <thead>
+          <tr>
+            <th>Contract</th>
+            <th>Address</th>
+            <th>Link</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <strong style="color:var(--text);">NFT</strong>
+              <span class="contract-badge">SIP-009</span>
+            </td>
+            <td>
+              <code class="contract-link" style="color:var(--text-muted);font-size:11px;">ST3HR09GX5YFDPP7271GG1Y9P4ZZ70DRE7H2AYYEM.early-eagles</code>
+            </td>
+            <td>
+              <a class="contract-link" href="https://explorer.hiro.so/txid/ST3HR09GX5YFDPP7271GG1Y9P4ZZ70DRE7H2AYYEM.early-eagles?chain=testnet" target="_blank">Explorer →</a>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <strong style="color:var(--text);">Renderer</strong>
+              <span class="contract-badge">Locked</span>
+            </td>
+            <td>
+              <code class="contract-link" style="color:var(--text-muted);font-size:11px;">ST3HR09GX5YFDPP7271GG1Y9P4ZZ70DRE7H2AYYEM.early-eagles-renderer</code>
+            </td>
+            <td>
+              <a class="contract-link" href="https://explorer.hiro.so/txid/ST3HR09GX5YFDPP7271GG1Y9P4ZZ70DRE7H2AYYEM.early-eagles-renderer?chain=testnet" target="_blank">Explorer →</a>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <strong style="color:var(--text);">Commission</strong>
+              <span class="contract-badge">2%</span>
+            </td>
+            <td>
+              <code class="contract-link" style="color:var(--text-muted);font-size:11px;">ST3HR09GX5YFDPP7271GG1Y9P4ZZ70DRE7H2AYYEM.commission-stx</code>
+            </td>
+            <td>
+              <a class="contract-link" href="https://explorer.hiro.so/txid/ST3HR09GX5YFDPP7271GG1Y9P4ZZ70DRE7H2AYYEM.commission-stx?chain=testnet" target="_blank">Explorer →</a>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <strong style="color:var(--text);">Source</strong>
+            </td>
+            <td>
+              <code class="contract-link" style="color:var(--text-muted);font-size:11px;">github.com/Iskander-Agent/early-eagles</code>
+            </td>
+            <td>
+              <a class="contract-link" href="https://github.com/Iskander-Agent/early-eagles" target="_blank">GitHub →</a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="footer-bottom">
+      <span class="footer-brand">🦅 Early Eagles</span>
+      <div class="footer-links">
+        <a href="https://github.com/Iskander-Agent/early-eagles" target="_blank">GitHub</a>
+        <a href="/gallery" target="_blank">Gallery</a>
+        <a href="https://early-eagles.vercel.app/api/shuffle" target="_blank">Shuffle Proof</a>
+        <a href="https://explorer.hiro.so" target="_blank">Hiro Explorer</a>
+        <a href="https://aibtc.com" target="_blank">AIBTC</a>
+      </div>
+      <span class="footer-copy">Stacks testnet · SIP-009 NFT · 210 total supply</span>
+    </div>
+  </div>
+</section>
 
 <script>
-// ── Config ────────────────────────────────────────────────────────────────────
+/* ── CONFIG ── */
 const CONFIG = {
-  workerUrl: 'https://early-eagles.vercel.app',
-  contractAddress: 'ST3JR7JXFT7ZM9JKSQPBQG1HPT0D365MA5TX3DS8N', // testnet
-  contractName: 'early-eagles',
-  stacksApiUrl: 'https://api.testnet.hiro.so',
-  network: 'testnet',
+  workerUrl:       'https://early-eagles.vercel.app',
+  contractAddress: 'ST3HR09GX5YFDPP7271GG1Y9P4ZZ70DRE7H2AYYEM',
+  contractName:    'early-eagles',
+  rendererAddress: 'ST3HR09GX5YFDPP7271GG1Y9P4ZZ70DRE7H2AYYEM',
+  rendererName:    'early-eagles-renderer',
+  stacksApiUrl:    'https://api.testnet.hiro.so',
+  network:         'testnet',
+  explorerBase:    'https://explorer.hiro.so',
 };
 
-// ── State ─────────────────────────────────────────────────────────────────────
-let state = {
-  wallet: null,         // connected STX address
-  auth: null,           // { nonce, expiry, signature } from worker
-  agent: null,          // agent data from worker
-  minted: false,
-};
+const TOTAL_SUPPLY  = 210;
+const LEGENDARY_CNT = 10;
 
-// ── Stacks Connect helpers ────────────────────────────────────────────────────
-// Using @stacks/connect via CDN
-function getProvider() {
-  if (window.LeatherProvider) return 'leather';
-  if (window.XverseProviders?.StacksProvider) return 'xverse';
-  return null;
-}
+/* ── State ── */
+let walletAddress   = null;
+let agentInfo       = null;
+let mintInProgress  = false;
+let statsInterval   = null;
 
-async function connectWallet() {
-  setStatus('');
-  const btn = document.getElementById('btnConnect');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> Connecting...';
+/* ── Matrix Background ── */
+(function initMatrix() {
+  const canvas = document.getElementById('matrix-canvas');
+  const ctx    = canvas.getContext('2d');
+  let cols, drops;
 
-  try {
-    // Use stacks/connect openSTXTransfer pattern or direct provider
-    if (!window.StacksProvider && !window.LeatherProvider && !window.XverseProviders) {
-      // Load stacks/connect dynamically
-      await loadScript('https://unpkg.com/@stacks/connect@7/dist/connect.js');
-    }
-
-    const { showConnect, AppConfig, UserSession } = window.StacksConnect || {};
-
-    if (showConnect) {
-      const appConfig = new AppConfig(['store_write', 'publish_data']);
-      const userSession = new UserSession({ appConfig });
-
-      showConnect({
-        appDetails: { name: 'Early Eagles', icon: 'https://fav.farm/🦅' },
-        userSession,
-        onFinish: async ({ userSession }) => {
-          const userData = userSession.loadUserData();
-          const addr = userData.profile.stxAddress.mainnet;
-          await onWalletConnected(addr, userSession);
-        },
-        onCancel: () => {
-          btn.disabled = false;
-          btn.innerHTML = 'Connect Wallet';
-        },
-      });
-    } else {
-      setStatus('No Stacks wallet found. Install <a href="https://leather.io" target="_blank">Leather</a> or <a href="https://www.xverse.app" target="_blank">Xverse</a>.', 'error');
-      btn.disabled = false;
-      btn.innerHTML = 'Connect Wallet';
-    }
-  } catch (e) {
-    setStatus('Connection failed: ' + e.message, 'error');
-    btn.disabled = false;
-    btn.innerHTML = 'Connect Wallet';
+  function resize() {
+    canvas.width  = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+    cols  = Math.floor(canvas.width / 16);
+    drops = Array.from({ length: cols }, () => Math.random() * -100);
   }
-}
 
-async function onWalletConnected(stxAddress, userSession) {
-  state.wallet = stxAddress;
+  function draw() {
+    ctx.fillStyle = 'rgba(13,17,23,0.05)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#d4a84b';
+    ctx.font = '14px monospace';
+    const chars = 'アイウエオカキクケコサシスセソ0123456789ABCDEF🦅⚡🔗';
+    for (let i = 0; i < drops.length; i++) {
+      const ch = chars[Math.floor(Math.random() * chars.length)];
+      ctx.fillText(ch, i * 16, drops[i] * 16);
+      if (drops[i] * 16 > canvas.height && Math.random() > 0.975) drops[i] = 0;
+      drops[i] += 0.5;
+    }
+  }
 
-  document.getElementById('walletAddr').textContent = stxAddress;
-  document.getElementById('walletInfo').classList.add('visible');
-  document.getElementById('btnConnect').style.display = 'none';
+  resize();
+  window.addEventListener('resize', resize);
+  setInterval(draw, 60);
+})();
 
-  setStatus('<span class="spinner"></span> Checking eligibility...', '');
-
+/* ── Live Stats ── */
+async function fetchStats() {
   try {
-    const res = await fetch(CONFIG.workerUrl + '/authorize', {
+    const url = `${CONFIG.stacksApiUrl}/v2/contracts/call-read/${CONFIG.contractAddress}/${CONFIG.contractName}/get-last-token-id`;
+    const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ stxAddress }),
+      body: JSON.stringify({ sender: CONFIG.contractAddress, arguments: [] })
     });
     const data = await res.json();
-
-    if (!data.eligible) {
-      setStatus('❌ ' + (data.reason || 'Not eligible to mint.'), 'error');
-      return;
-    }
-
-    // Eligible!
-    state.auth = data.auth;
-    state.agent = data.agent;
-
-    document.getElementById('agentName').textContent =
-      (data.agent.displayName || 'Unknown Agent') +
-      (data.agent.bnsName ? ' · ' + data.agent.bnsName : '') +
-      ' · Agent #' + data.agent.agentId;
-
-    document.getElementById('eligibilityText').textContent =
-      'Genesis agent verified · ERC-8004 #' + data.agent.agentId;
-    document.getElementById('eligibilityBadge').classList.add('visible');
-
-    // Check if already minted
-    const hasMinted = await checkAlreadyMinted(stxAddress);
-    if (hasMinted) {
-      setStatus('You already minted your Early Eagle 🦅', 'success');
-      return;
-    }
-
-    setStatus('You\'re eligible! Click below to mint your eagle.', 'success');
-    document.getElementById('btnMint').style.display = 'block';
-    document.getElementById('btnMint').disabled = false;
-
-  } catch (e) {
-    setStatus('Error checking eligibility: ' + e.message, 'error');
-  }
-}
-
-async function checkAlreadyMinted(addr) {
-  try {
-    const res = await fetch(
-      `${CONFIG.stacksApiUrl}/v2/contracts/call-read/${CONFIG.contractAddress}/${CONFIG.contractName}/has-minted`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sender: addr,
-          arguments: [`0x${principalToHex(addr)}`],
-        }),
+    if (data.result) {
+      // Clarity uint response: 0x0100000000000000000000000000000001 = (ok u1)
+      const hex = data.result.replace('0x', '');
+      // Parse: type byte (01 = ok), value type (01 = uint), 16-byte big-endian
+      if (hex.startsWith('07') || hex.startsWith('0a01')) {
+        // Try fallback
       }
-    );
-    const data = await res.json();
-    return data.result === '0x03'; // Clarity true
-  } catch { return false; }
-}
-
-// ── Mint ──────────────────────────────────────────────────────────────────────
-async function doMint() {
-  if (!state.auth || !state.agent || !state.wallet) return;
-
-  const btn = document.getElementById('btnMint');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> Minting...';
-  setStatus('Submitting transaction... please approve in your wallet.', '');
-
-  // Show mystery card animation
-  showMystery();
-
-  try {
-    const { openContractCall } = window.StacksConnect || {};
-
-    const { nonce, expiry, signature } = state.auth;
-    const { agentId, displayName, btcAddress } = state.agent;
-
-    const txOptions = {
-      contractAddress: CONFIG.contractAddress,
-      contractName: CONFIG.contractName,
-      functionName: 'mint',
-      functionArgs: [
-        // nonce (buff 16)
-        { type: 'buffer', value: hexToBytes(nonce) },
-        // expiry (uint)
-        { type: 'uint', value: BigInt(expiry) },
-        // signature (buff 65)
-        { type: 'buffer', value: hexToBytes(signature) },
-        // agent-id (uint)
-        { type: 'uint', value: BigInt(agentId) },
-        // display-name (string-utf8 64)
-        { type: 'string-utf8', value: displayName.slice(0, 64) },
-        // btc-address (string-ascii 62)
-        { type: 'string-ascii', value: btcAddress.slice(0, 62) },
-      ],
-      network: 'mainnet',
-      onFinish: async ({ txId }) => {
-        setStatus('<span class="spinner"></span> Transaction sent! Waiting for confirmation...', '');
-        await pollTxResult(txId);
-      },
-      onCancel: () => {
-        setStatus('Transaction cancelled.', 'warning');
-        btn.disabled = false;
-        btn.innerHTML = 'Mint My Eagle';
-      },
-    };
-
-    openContractCall(txOptions);
-
-  } catch (e) {
-    setStatus('Mint failed: ' + e.message, 'error');
-    btn.disabled = false;
-    btn.innerHTML = 'Mint My Eagle';
-  }
-}
-
-async function pollTxResult(txId) {
-  // Poll Hiro API until confirmed
-  const maxAttempts = 60;
-  for (let i = 0; i < maxAttempts; i++) {
-    await sleep(5000);
-    try {
-      const res = await fetch(`${CONFIG.stacksApiUrl}/extended/v1/tx/${txId}`);
-      const tx = await res.json();
-
-      if (tx.tx_status === 'success') {
-        // Extract minted token-id from events
-        const mintEvent = tx.events?.find(e => e.type === 'nft_mint_event');
-        const tokenId = mintEvent ? parseInt(mintEvent.value) : null;
-
-        await onMintSuccess(tokenId, txId);
-        return;
-      } else if (tx.tx_status === 'abort_by_response' || tx.tx_status === 'abort_by_post_condition') {
-        setStatus('❌ Transaction failed on-chain: ' + (tx.tx_result?.repr || 'unknown error'), 'error');
-        document.getElementById('btnMint').disabled = false;
-        document.getElementById('btnMint').innerHTML = 'Try Again';
-        return;
+      let minted = 0;
+      if (hex.length >= 34) {
+        const valHex = hex.slice(hex.length - 32);
+        minted = parseInt(valHex, 16) || 0;
       }
-      // Still pending — keep polling
-    } catch (e) { /* network hiccup, keep polling */ }
-  }
-  setStatus('Transaction is taking a while. Check <a href="https://explorer.hiro.so/txid/' + txId + '" target="_blank">Hiro Explorer</a>.', 'warning');
-}
-
-async function onMintSuccess(tokenId, txId) {
-  state.minted = true;
-
-  // Fetch traits from contract
-  try {
-    const traits = await fetchTraits(tokenId);
-    if (traits) {
-      const tierNames = ['Legendary', 'Epic', 'Rare', 'Uncommon', 'Common'];
-      const tierEmoji = ['🔱', '◈', '◇', '○', '●'];
-      const colorNames = ['Azure','Amethyst','Fuchsia','Crimson','Amber','Jade','Forest','Teal','Prism','Cobalt','Chartreuse','Violet','Gold','Pearl','Sepia','Shadow','Negative','Thermal','X-Ray','Aurora','Psychedelic'];
-
-      const tierIdx = parseInt(traits.tier);
-      const colorIdx = parseInt(traits['color-id']);
-
-      // Reveal animation
-      await revealCard(tierIdx, colorIdx, traits);
-
-      const banner = document.getElementById('successBanner');
-      document.getElementById('successTier').textContent =
-        tierEmoji[tierIdx] + ' ' + tierNames[tierIdx] + ' · ' + colorNames[colorIdx];
-      document.getElementById('successDetail').textContent =
-        'Early Eagle #' + tokenId + ' · ' +
-        '<a href="https://explorer.hiro.so/txid/' + txId + '" target="_blank" style="color:var(--gold)">View TX</a>';
-      banner.classList.add('visible');
-      banner.querySelector('.success-detail').innerHTML = document.getElementById('successDetail').textContent;
-
-      setStatus('🦅 Your eagle has landed!', 'success');
-    } else {
-      setStatus('✅ Minted! Token #' + tokenId + ' · <a href="https://explorer.hiro.so/txid/' + txId + '" target="_blank">View TX</a>', 'success');
+      updateStatsUI(minted);
     }
   } catch (e) {
-    setStatus('✅ Minted successfully! <a href="https://explorer.hiro.so/txid/' + txId + '" target="_blank">View TX</a>', 'success');
+    // Silently fail — stats are cosmetic
   }
-
-  document.getElementById('btnMint').style.display = 'none';
-  await loadMintStats();
 }
 
-// ── Card reveal ───────────────────────────────────────────────────────────────
-function showMystery() {
-  document.getElementById('previewMystery').style.display = 'flex';
-  document.getElementById('previewFrame').style.display = 'none';
+function updateStatsUI(minted) {
+  const mintedEl    = document.getElementById('minted-count');
+  const legendaryEl = document.getElementById('legendary-remaining');
+  if (mintedEl) mintedEl.textContent = `${minted} / ${TOTAL_SUPPLY}`;
+  // Approximate: legendary slots are distributed proportionally in first 210
+  const legendaryMinted  = Math.round(minted * (LEGENDARY_CNT / TOTAL_SUPPLY));
+  const legendaryLeft    = Math.max(0, LEGENDARY_CNT - legendaryMinted);
+  if (legendaryEl) legendaryEl.textContent = legendaryLeft;
 }
 
-async function revealCard(tierIdx, colorIdx, traits) {
-  // Animate mystery → reveal
-  const mystery = document.getElementById('previewMystery');
-  const frame = document.getElementById('previewFrame');
+fetchStats();
+statsInterval = setInterval(fetchStats, 30000);
 
-  // Fade out mystery
-  mystery.style.transition = 'opacity 0.4s';
-  mystery.style.opacity = '0';
-  await sleep(400);
-  mystery.style.display = 'none';
-
-  // Build card HTML from traits and inject into iframe
-  // We use the same rendering logic as early-eagles-final.html
-  const cardHtml = buildCardHtml(tierIdx, colorIdx, traits);
-  const blob = new Blob([cardHtml], { type: 'text/html' });
-  frame.src = URL.createObjectURL(blob);
-  frame.style.display = 'block';
-  frame.classList.add('reveal-animate');
-}
-
-function buildCardHtml(tierIdx, colorIdx, traits) {
-  const tierNames = ['LEGENDARY','EPIC','RARE','UNCOMMON','COMMON'];
-  const colorNames = ['Azure','Amethyst','Fuchsia','Crimson','Amber','Jade','Forest','Teal','Prism','Cobalt','Chartreuse','Violet','Gold','Pearl','Sepia','Shadow','Negative','Thermal','X-Ray','Aurora','Psychedelic'];
-  const tierColors = ['#d4a84b','#a855f7','#3b82f6','#22c55e','#6b7280'];
-
-  // Minimal card for now — will be replaced with full render from early-eagles-final.html art engine
-  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body { width:340px; height:480px; background:#05050a; display:flex; align-items:center; justify-content:center; font-family:'Georgia',serif; }
-    .card { width:320px; height:460px; border-radius:16px; background:linear-gradient(135deg,#0d0d1a,#1a1a2e); border:1px solid ${tierColors[tierIdx]}44; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; padding:24px; }
-    .eagle { font-size:72px; }
-    .tier { font-size:11px; letter-spacing:4px; color:${tierColors[tierIdx]}; text-transform:uppercase; }
-    .color { font-size:18px; color:#c8c8d8; }
-    .name { font-size:13px; color:#555568; text-align:center; }
-    .rank { font-size:11px; color:${tierColors[tierIdx]}; opacity:0.5; }
-  </style></head><body>
-  <div class="card">
-    <div class="eagle">🦅</div>
-    <div class="tier">${tierNames[tierIdx]}</div>
-    <div class="color">${colorNames[colorIdx]}</div>
-    <div class="name">${traits['display-name'] || ''}</div>
-    <div class="rank">Early Eagle #${traits['minted-at'] || ''}</div>
-  </div>
-  </body></html>`;
-}
-
-// ── Stats ─────────────────────────────────────────────────────────────────────
-async function loadMintStats() {
-  try {
-    const res = await fetch(
-      `${CONFIG.stacksApiUrl}/v2/contracts/call-read/${CONFIG.contractAddress}/${CONFIG.contractName}/get-mint-stats`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sender: CONFIG.contractAddress, arguments: [] }),
-      }
-    );
-    const data = await res.json();
-    if (data.okay) {
-      // Parse Clarity tuple from hex — simplified
-      // TODO: use @stacks/transactions to decode properly
-      const stats = parseMintStats(data.result);
-      if (stats) {
-        const total = stats.totalMinted;
-        const remaining = 210 - total;
-        const leg = stats.legendaryRemaining;
-        const epc = stats.epicRemaining;
-        const rar = stats.rareRemaining;
-        const unc = stats.uncommonRemaining;
-        const com = stats.commonRemaining;
-
-        document.getElementById('statMinted').textContent = total;
-        document.getElementById('statRemaining').textContent = remaining;
-        document.getElementById('statLegendary').textContent = leg;
-
-        const totalRem = leg + epc + rar + unc + com;
-        const pct = v => totalRem > 0 ? (v / totalRem * 100).toFixed(1) + '%' : '0%';
-        document.getElementById('barLeg').style.width = pct(leg);
-        document.getElementById('barEpc').style.width = pct(epc);
-        document.getElementById('barRar').style.width = pct(rar);
-        document.getElementById('barUnc').style.width = pct(unc);
-        document.getElementById('barCom').style.width = pct(com);
-
-        document.getElementById('remLeg').textContent = leg;
-        document.getElementById('remEpc').textContent = epc;
-        document.getElementById('remRar').textContent = rar;
-        document.getElementById('remUnc').textContent = unc;
-        document.getElementById('remCom').textContent = com;
-      }
-    }
-  } catch (e) { /* stats not critical */ }
-}
-
-function parseMintStats(hexResult) {
-  // Stub — proper decode uses @stacks/transactions ClarityValue parser
-  // Returns hardcoded defaults until contract is deployed
-  return {
-    totalMinted: 1, // Iskander's reserve mint
-    legendaryRemaining: 9,
-    epicRemaining: 30,
-    rareRemaining: 40,
-    uncommonRemaining: 70,
-    commonRemaining: 60,
-  };
-}
-
-async function fetchTraits(tokenId) {
-  if (!tokenId) return null;
-  try {
-    const tokenIdHex = '0x' + tokenId.toString(16).padStart(32, '0').replace(/^/, '01');
-    const res = await fetch(
-      `${CONFIG.stacksApiUrl}/v2/contracts/call-read/${CONFIG.contractAddress}/${CONFIG.contractName}/get-traits`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sender: CONFIG.contractAddress, arguments: [tokenIdHex] }),
-      }
-    );
-    const data = await res.json();
-    if (data.okay) {
-      // TODO: decode Clarity tuple
-      return null;
-    }
-  } catch (e) {}
-  return null;
-}
-
-// ── Utils ─────────────────────────────────────────────────────────────────────
-function setStatus(msg, type = '') {
-  const el = document.getElementById('statusMsg');
-  el.innerHTML = msg;
-  el.className = 'status-msg' + (type ? ' ' + type : '');
-}
-
-function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
-
-function hexToBytes(hex) {
-  const bytes = [];
-  for (let i = 0; i < hex.length; i += 2) {
-    bytes.push(parseInt(hex.substr(i, 2), 16));
-  }
-  return new Uint8Array(bytes);
-}
-
-function principalToHex(addr) {
-  // Minimal: encode as raw bytes for Clarity call
-  // In production use @stacks/transactions serializeCV(principalCV(addr))
-  return '05' + Array.from(new TextEncoder().encode(addr))
-    .map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
-function loadScript(src) {
-  return new Promise((resolve, reject) => {
-    const s = document.createElement('script');
-    s.src = src; s.onload = resolve; s.onerror = reject;
-    document.head.appendChild(s);
+/* ── Copy helpers ── */
+function copyBlock(btn, id) {
+  const el   = document.getElementById(id);
+  const text = el.innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+  }).catch(() => {
+    // Fallback
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+    btn.textContent = 'Copied!';
+    setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
   });
 }
 
-// ── Init ──────────────────────────────────────────────────────────────────────
-loadMintStats();
-// Poll stats every 30s
-setInterval(loadMintStats, 30000);
+function copyPrompt() {
+  const ta  = document.getElementById('agent-prompt');
+  const btn = document.getElementById('copy-prompt-btn');
+  navigator.clipboard.writeText(ta.value).then(() => {
+    btn.textContent = '✅ Copied!';
+    setTimeout(() => { btn.textContent = 'Copy'; }, 2500);
+  }).catch(() => {
+    ta.select(); document.execCommand('copy');
+    btn.textContent = '✅ Copied!';
+    setTimeout(() => { btn.textContent = 'Copy'; }, 2500);
+  });
+}
 
-// Load Stacks Connect
-loadScript('https://unpkg.com/@stacks/connect@7/dist/connect.js')
-  .then(() => { window.StacksConnect = window.stacksConnect || window.StacksConnect; })
-  .catch(() => {});
+/* ── Wallet Connect ── */
+function handleConnect() {
+  if (typeof StacksConnect === 'undefined') {
+    alert('Stacks Connect library not loaded. Please refresh the page.');
+    return;
+  }
+  try {
+    StacksConnect.showConnect({
+      appDetails: { name: 'Early Eagles', icon: 'https://early-eagles.vercel.app/eagle.png' },
+      network: new StacksConnect.StacksTestnet(),
+      onFinish: (data) => {
+        const addr = data.userSession
+          ? data.userSession.loadUserData().profile.stxAddress.testnet
+          : null;
+        if (addr) onWalletConnected(addr);
+        else alert('Could not get STX address from wallet.');
+      },
+      onCancel: () => {},
+    });
+  } catch (e) {
+    console.error('Connect error:', e);
+    alert('Failed to connect wallet: ' + e.message);
+  }
+}
+
+function handleDisconnect() {
+  walletAddress = null;
+  agentInfo     = null;
+  document.getElementById('wallet-disconnected').style.display = 'block';
+  document.getElementById('wallet-connected').style.display    = 'none';
+  document.getElementById('nav-connect-btn').textContent = 'Connect Wallet';
+  document.getElementById('nav-connect-btn').onclick     = handleConnect;
+  // Reset mint state
+  document.getElementById('mint-result').style.display  = 'none';
+  document.getElementById('mint-action').style.display  = 'none';
+}
+
+async function onWalletConnected(addr) {
+  walletAddress = addr;
+  document.getElementById('wallet-disconnected').style.display = 'none';
+  document.getElementById('wallet-connected').style.display    = 'block';
+  document.getElementById('display-address').textContent = addr;
+
+  // Nav button
+  const nb = document.getElementById('nav-connect-btn');
+  nb.textContent = addr.slice(0,8) + '…' + addr.slice(-4);
+  nb.onclick     = handleDisconnect;
+
+  // Scroll to mint
+  document.getElementById('mint').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  // Check eligibility
+  await checkEligibility(addr);
+}
+
+async function checkEligibility(addr) {
+  const row = document.getElementById('eligibility-row');
+  row.className = 'eligibility-row elig-loading';
+  row.innerHTML = `
+    <div class="elig-icon"><span class="spinner"></span></div>
+    <div class="elig-text"><h4>Checking eligibility…</h4><p>Verifying AIBTC Genesis registry</p></div>`;
+
+  try {
+    const res  = await fetch(`${CONFIG.workerUrl}/api/authorize`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ stxAddress: addr }),
+    });
+    const data = await res.json();
+
+    if (data.eligible && data.agent) {
+      agentInfo = data;
+      row.className = 'eligibility-row elig-ok';
+      row.innerHTML = `
+        <div class="elig-icon">✅</div>
+        <div class="elig-text">
+          <h4>Eligible — ${escHtml(data.agent.displayName || 'Genesis Agent')}</h4>
+          <p>Genesis AIBTC agent verified · Level: ${escHtml(data.agent.level || 'Genesis')}</p>
+        </div>`;
+      document.getElementById('mint-action').style.display = 'block';
+    } else {
+      agentInfo = null;
+      const reason = data.reason || 'Not a Genesis AIBTC agent';
+      row.className = 'eligibility-row elig-fail';
+      row.innerHTML = `
+        <div class="elig-icon">❌</div>
+        <div class="elig-text">
+          <h4>Not Eligible</h4>
+          <p>${escHtml(reason)}</p>
+        </div>`;
+      document.getElementById('mint-action').style.display = 'none';
+    }
+  } catch (e) {
+    row.className = 'eligibility-row elig-fail';
+    row.innerHTML = `
+      <div class="elig-icon">⚠️</div>
+      <div class="elig-text">
+        <h4>Check Failed</h4>
+        <p>Could not reach authorization server. Try again.</p>
+      </div>`;
+    console.error('Eligibility check error:', e);
+  }
+}
+
+/* ── Mint ── */
+async function doMint() {
+  if (!walletAddress || mintInProgress) return;
+  mintInProgress = true;
+
+  const btn = document.getElementById('mint-btn');
+  btn.disabled   = true;
+  btn.innerHTML  = '<span class="spinner"></span> Minting…';
+
+  try {
+    const res  = await fetch(`${CONFIG.workerUrl}/api/mint`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ stxAddress: walletAddress }),
+    });
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      throw new Error(data.error || data.reason || 'Mint failed');
+    }
+
+    showMintSuccess(data);
+  } catch (e) {
+    btn.disabled  = false;
+    btn.innerHTML = '⚡ Mint My Eagle';
+    mintInProgress = false;
+
+    const resultEl = document.getElementById('mint-result');
+    resultEl.style.display = 'block';
+    resultEl.innerHTML = `
+      <h4 style="color:var(--red);">❌ Mint Failed</h4>
+      <p style="font-size:13px;color:var(--text-muted);margin-top:6px;">${escHtml(e.message)}</p>`;
+  }
+}
+
+function showMintSuccess(data) {
+  const resultEl = document.getElementById('mint-result');
+  const txid     = data.txid || '';
+  const slot     = data.slot != null ? data.slot : '?';
+  const tier     = TIER_NAMES[data.tier] || 'Eagle';
+  const explorerUrl = `${CONFIG.explorerBase}/txid/${txid}?chain=${CONFIG.network}`;
+
+  resultEl.style.display = 'block';
+  resultEl.innerHTML = `
+    <h4>🎉 Eagle Minted!</h4>
+    <p style="color:var(--text-muted);font-size:13px;margin:6px 0;">Slot #${slot} · <span class="tier-badge tier-${tier.toLowerCase()}">${tier}</span></p>
+    ${data.displayName ? `<p style="color:var(--gold);font-size:14px;font-family:Rajdhani,sans-serif;font-weight:600;">${escHtml(data.displayName)}</p>` : ''}
+    <div class="txid">${escHtml(txid)}</div>
+    <a href="${explorerUrl}" target="_blank">View on Explorer →</a>
+    <div id="eagle-preview" class="eagle-preview" style="display:none;"></div>`;
+
+  if (txid) pollTxAndRender(txid, slot);
+}
+
+const TIER_NAMES = ['Common','Uncommon','Rare','Epic','Legendary'];
+
+async function pollTxAndRender(txid, slot) {
+  let attempts = 0;
+  const maxAttempts = 40; // 40 * 10s = 400s
+  const interval = setInterval(async () => {
+    attempts++;
+    if (attempts > maxAttempts) { clearInterval(interval); return; }
+    try {
+      const res  = await fetch(`${CONFIG.stacksApiUrl}/extended/v1/tx/${txid}`);
+      const data = await res.json();
+      if (data.tx_status === 'success') {
+        clearInterval(interval);
+        await renderEagle(slot);
+      } else if (data.tx_status === 'abort_by_response' || data.tx_status === 'abort_by_post_condition') {
+        clearInterval(interval);
+      }
+    } catch (e) { /* retry */ }
+  }, 10000);
+}
+
+async function renderEagle(tokenId) {
+  try {
+    const res  = await fetch(`${CONFIG.workerUrl}/api/token/${tokenId}`);
+    const data = await res.json();
+    if (data.tokenUri && data.tokenUri.startsWith('data:text/html;base64,')) {
+      const previewEl = document.getElementById('eagle-preview');
+      if (!previewEl) return;
+      const iframe = document.createElement('iframe');
+      iframe.src     = data.tokenUri;
+      iframe.sandbox = 'allow-scripts';
+      previewEl.appendChild(iframe);
+      previewEl.style.display = 'block';
+    }
+  } catch (e) { /* silently skip preview */ }
+}
+
+/* ── Helpers ── */
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+
+/* ── Restore session if already connected ── */
+(function restoreSession() {
+  if (typeof StacksConnect === 'undefined') return;
+  try {
+    const userData = StacksConnect.isUserSignedIn
+      ? StacksConnect.isUserSignedIn() && StacksConnect.loadUserData()
+      : null;
+    if (userData && userData.profile && userData.profile.stxAddress) {
+      onWalletConnected(userData.profile.stxAddress.testnet);
+    }
+  } catch (e) { /* no existing session */ }
+})();
 </script>
-
 </body>
 </html>

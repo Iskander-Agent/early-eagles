@@ -1,15 +1,23 @@
 {
-  "buildCommand": "echo 'Static site - skipping build'",
-  "outputDirectory": "public",
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
-  ],
-  "headers": [
+  "version": 2,
+  "builds": [
     {
-      "source": "/(.*)",
-      "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=3600" }
-      ]
+      "src": "api/**/*.js",
+      "use": "@vercel/node",
+      "config": { "includeFiles": ["api/shuffle.json"] }
+    },
+    {
+      "src": "mint-page/**/*.html",
+      "use": "@vercel/static"
     }
+  ],
+  "routes": [
+    { "src": "/api/authorize", "dest": "/api/authorize.js" },
+    { "src": "/api/shuffle",   "dest": "/api/shuffle.js" },
+    { "src": "/api/mint",      "dest": "/api/mint.js" },
+    { "src": "/api/token/([0-9]+)",      "dest": "/api/token/[id].js?id=$1" },
+    { "src": "/api/test-token/([0-9]+)", "dest": "/api/test-token/[id].js?id=$1" },
+    { "src": "/gallery", "dest": "/mint-page/gallery.html" },
+    { "src": "/(.*)",    "dest": "/mint-page/index.html" }
   ]
 }

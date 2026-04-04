@@ -64,13 +64,17 @@ module.exports = async function handler(req, res) {
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
-  const { stxAddress } = req.body || {};
-  if (!stxAddress || typeof stxAddress !== "string") {
+  const { stxAddress: rawAddr } = req.body || {};
+  if (!rawAddr || typeof rawAddr !== "string") {
     return res.status(400).json({ error: "Missing stxAddress" });
   }
-  if (!/^S[PMTN][A-Z0-9]{38,41}$/.test(stxAddress)) {
+  if (!/^S[PMTN][A-Z0-9]{38,41}$/.test(rawAddr)) {
     return res.status(400).json({ error: "Invalid Stacks address format" });
   }
+  // Normalize: convert testnet ST/SN addresses to mainnet SP/SM for AIBTC lookup
+  const stxAddress = rawAddr.startsWith('ST') ? 'SP' + rawAddr.slice(2)
+                   : rawAddr.startsWith('SN') ? 'SM' + rawAddr.slice(2)
+                   : rawAddr;
 
   // Check AIBTC API
   let agentData;
