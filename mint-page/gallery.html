@@ -518,37 +518,62 @@ function abbreviateAddress(addr) {
 let _rendererSegments = null;
 async function getRendererSegments() {
   if (_rendererSegments) return _rendererSegments;
-  async function rRead(fn) {
-    const url = `${CONFIG.stacksApiUrl}/v2/contracts/call-read/${CONFIG.rendererAddress}/${CONFIG.rendererName}/${fn}`;
-    const r = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ sender: CONFIG.rendererAddress, arguments: [] }) });
-    const d = await r.json();
+  function decodeSegment(d, fn) {
     if (!d.okay) throw new Error('renderer '+fn+' failed');
-    // Renderer returns string directly: 0d(string-utf8) + 4-byte len + bytes (no ok wrapper)
-    // But sometimes returns 07(ok) 0d + len + bytes — handle both
     let hex = d.result.replace('0x','');
-    if (hex.startsWith('07')) hex = hex.slice(2); // strip ok(07)
-    if (hex.startsWith('0d') || hex.startsWith('09')) hex = hex.slice(2); // strip type byte
+    if (hex.startsWith('07')) hex = hex.slice(2);
+    if (hex.startsWith('0d') || hex.startsWith('09')) hex = hex.slice(2);
     const len = parseInt(hex.slice(0,8),16);
     const strHex = hex.slice(8, 8+len*2);
     return (strHex.match(/.{2}/g)||[]).map(b=>parseInt(b,16)).reduce((a,c)=>a+String.fromCharCode(c),'');
   }
-  const [seg1, eagle, seg2, seg3] = await Promise.all([
-    rRead('get-seg1'), rRead('get-eagle'), rRead('get-seg2'), rRead('get-seg3')
-  ]);
+  // Load segments sequentially to avoid rate limits
+  const seg1  = decodeSegment(await callReadRenderer('get-seg1'),  'get-seg1');
+  const eagle = decodeSegment(await callReadRenderer('get-eagle'), 'get-eagle');
+  const seg2  = decodeSegment(await callReadRenderer('get-seg2'),  'get-seg2');
+  const seg3  = decodeSegment(await callReadRenderer('get-seg3'),  'get-seg3');
   _rendererSegments = { seg1, eagle, seg2, seg3 };
   return _rendererSegments;
 }
 
-async function callRead(fn, args) {
+async function callRead(fn, args, retries=4) {
   const url = `${CONFIG.stacksApiUrl}/v2/contracts/call-read/${CONFIG.contractAddress}/${CONFIG.contractName}/${fn}`;
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ sender: CONFIG.contractAddress, arguments: args }),
-  });
-  if (!res.ok) throw new Error(`API error ${res.status} for ${fn}`);
-  return res.json();
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sender: CONFIG.contractAddress, arguments: args }),
+    });
+    if (res.status === 429) {
+      const wait = attempt === 0 ? 15000 : 30000 * attempt;
+      console.log(`Rate limited on ${fn}, waiting ${wait/1000}s...`);
+      await new Promise(r => setTimeout(r, wait));
+      continue;
+    }
+    if (!res.ok) throw new Error(`API error ${res.status} for ${fn}`);
+    return res.json();
+  }
+  throw new Error(`Max retries exceeded for ${fn}`);
+}
+
+async function callReadRenderer(fn, retries=4) {
+  const url = `${CONFIG.stacksApiUrl}/v2/contracts/call-read/${CONFIG.rendererAddress}/${CONFIG.rendererName}/${fn}`;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sender: CONFIG.rendererAddress, arguments: [] }),
+    });
+    if (res.status === 429) {
+      const wait = attempt === 0 ? 15000 : 30000 * attempt;
+      console.log(`Rate limited on renderer/${fn}, waiting ${wait/1000}s...`);
+      await new Promise(r => setTimeout(r, wait));
+      continue;
+    }
+    if (!res.ok) throw new Error(`API error ${res.status} for renderer/${fn}`);
+    return res.json();
+  }
+  throw new Error(`Max retries exceeded for renderer/${fn}`);
 }
 
 /* ── Get total minted ── */
@@ -814,13 +839,21 @@ async function loadGallery(manual) {
       renderSkeletons(Math.min(minted, 8));
     }
 
-    // Fetch all eagles in parallel
-    const ids = Array.from({ length: minted }, (_, i) => i); // tokens are 0-indexed (0 to minted-1)
-    const results = await Promise.allSettled(ids.map(id => fetchEagle(id)));
-
-    eaglesData = results
-      .map((r, i) => r.status === 'fulfilled' ? r.value : null)
-      .filter(Boolean);
+    // Fetch eagles in small batches to avoid rate limits
+    const BATCH = 3;
+    const BATCH_DELAY = 1200; // ms between batches
+    const ids = Array.from({ length: minted }, (_, i) => i);
+    eaglesData = [];
+    for (let i = 0; i < ids.length; i += BATCH) {
+      const batch = ids.slice(i, i + BATCH);
+      const results = await Promise.allSettled(batch.map(id => fetchEagle(id)));
+      const loaded = results.map(r => r.status === 'fulfilled' ? r.value : null).filter(Boolean);
+      eaglesData.push(...loaded);
+      // Re-render after each batch so cards appear progressively
+      updateFilterCounts();
+      renderGrid();
+      if (i + BATCH < ids.length) await new Promise(r => setTimeout(r, BATCH_DELAY));
+    }
 
     updateFilterCounts();
     renderGrid();
