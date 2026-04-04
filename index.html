@@ -128,18 +128,50 @@
     pointer-events: none;
   }
   .gallery-item .item-overlay {
-    position:absolute; bottom:0; left:0; right:0;
-    padding:10px 14px;
-    background: rgba(0,0,0,0.6);
-    backdrop-filter: blur(8px);
-    display:flex; justify-content:space-between; align-items:center;
-    opacity:0; transition:.2s;
+    position:absolute; inset:0;
+    background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.3) 50%, transparent 100%);
+    backdrop-filter: blur(2px);
+    display:flex; flex-direction:column; justify-content:flex-end;
+    padding:18px 16px;
+    opacity:0; transition:opacity .22s ease;
+    pointer-events:none;
   }
-  .gallery-item:hover .item-overlay { opacity:1; }
-  .item-price { font-size:13px; font-weight:700; color:var(--gold); }
-  .item-buy { 
-    background:var(--gold); color:#000; border:none; border-radius:6px;
-    padding:5px 12px; font-size:12px; font-weight:700; cursor:pointer;
+  .gallery-item:hover .item-overlay { opacity:1; pointer-events:auto; }
+
+  .overlay-top {
+    position:absolute; top:0; left:0; right:0;
+    display:flex; justify-content:flex-end;
+    padding:12px;
+  }
+  .overlay-view-btn {
+    background: rgba(212,168,75,0.92); color:#0d1117;
+    border:none; border-radius:8px;
+    padding:6px 14px; font-size:11px; font-weight:700;
+    letter-spacing:.06em; text-transform:uppercase;
+    cursor:pointer; transition:background .15s;
+  }
+  .overlay-view-btn:hover { background: #e8c26a; }
+
+  .overlay-bottom {
+    display:flex; align-items:center; justify-content:space-between;
+    gap:8px;
+  }
+  .overlay-listing-price {
+    display:inline-flex; align-items:center; gap:6px;
+    background: rgba(212,168,75,0.15); border:1px solid rgba(212,168,75,0.4);
+    border-radius:20px; padding:4px 12px;
+    font-size:13px; font-weight:700; color:var(--gold);
+    letter-spacing:.03em;
+  }
+  .overlay-listing-price .price-cur { font-size:10px; font-weight:500; opacity:.75; }
+  .overlay-not-listed {
+    display:inline-flex; align-items:center; gap:6px;
+    font-size:11px; color:rgba(255,255,255,0.4);
+    letter-spacing:.03em;
+  }
+  .overlay-not-listed::before {
+    content:''; width:5px; height:5px; border-radius:50%;
+    background:rgba(255,255,255,0.2); flex-shrink:0;
   }
 
   .gallery-loading { 
@@ -542,13 +574,22 @@ async function loadGallery() {
     const blob = new Blob([html], {type:'text/html'});
     const blobUrl = URL.createObjectURL(blob);
 
+    // Build listing pill
+    const listingHtml = isListed
+      ? `<span class="overlay-listing-price">For Sale <span class="price-cur">sBTC</span></span>`
+      : `<span class="overlay-not-listed">Not listed</span>`;
+
     const item = document.createElement('div');
     item.className = 'gallery-item';
     item.innerHTML = `
       <iframe src="${blobUrl}" scrolling="no" loading="lazy"></iframe>
       <div class="item-overlay">
-        <span class="item-price">${isListed ? 'Listed' : '#' + (parsed.rank||i)}</span>
-        <button class="item-buy" onclick="openModal(${i})">View</button>
+        <div class="overlay-top">
+          <button class="overlay-view-btn" onclick="event.stopPropagation();openModal(${i})">View →</button>
+        </div>
+        <div class="overlay-bottom">
+          ${listingHtml}
+        </div>
       </div>
     `;
     item.onclick = () => openModal(i, agentJson, parsed);
