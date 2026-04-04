@@ -224,50 +224,43 @@ nav {
 }
 .card-iframe-wrap .iframe-loader.hidden { opacity: 0; pointer-events: none; }
 
-/* Card info below iframe */
-.card-info {
-  padding: 10px 14px;
-  border-top: 1px solid rgba(255,255,255,0.05);
-  background: rgba(255,255,255,0.02);
-  display: flex; align-items: center; justify-content: space-between;
-  min-height: 40px;
-  gap: 8px;
+/* Listing hover badge — floats over card bottom-right on hover */
+.listing-badge {
+  position: absolute;
+  bottom: 12px; right: 12px;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  pointer-events: none;
+  z-index: 10;
 }
+.eagle-card:hover .listing-badge { opacity: 1; transform: translateY(0); }
 
-/* Listing status */
-.card-not-listed {
-  display: flex; align-items: center; gap: 6px;
-  font-size: 11px; color: var(--text-dim);
-  font-family: 'Inter', sans-serif; letter-spacing: 0.02em;
-}
-.not-listed-dot {
-  width: 5px; height: 5px; border-radius: 50%;
-  background: rgba(255,255,255,0.12); flex-shrink: 0;
-}
-
-.card-listed {
-  display: flex; align-items: center; justify-content: space-between;
-  width: 100%; gap: 8px;
-}
-.listed-label {
-  font-size: 10px; font-weight: 600; letter-spacing: 0.08em;
-  text-transform: uppercase; color: rgba(100,220,120,0.7);
-  font-family: 'Rajdhani', sans-serif;
-}
-.listed-price {
+.listing-badge-inner {
   display: inline-flex; align-items: center; gap: 5px;
-  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 20px; padding: 3px 10px;
-  font-family: 'Rajdhani', sans-serif; font-weight: 700;
-  font-size: 13px; color: var(--text); letter-spacing: 0.03em;
+  backdrop-filter: blur(12px);
+  border-radius: 20px; padding: 4px 10px;
+  font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 600;
+  letter-spacing: 0.04em; white-space: nowrap;
 }
-.listed-price .price-currency {
-  font-size: 10px; color: var(--text-muted); font-weight: 500; text-transform: uppercase;
+.listing-badge-inner.not-listed {
+  background: rgba(0,0,0,0.55);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.4);
 }
-.listed-price.currency-sbtc { border-color: rgba(247,147,26,0.3); color: #f7931a; }
-.listed-price.currency-sbtc .price-currency { color: rgba(247,147,26,0.7); }
-.listed-price.currency-stx  { border-color: rgba(100,120,255,0.3); color: #8fa4ff; }
-.listed-price.currency-stx  .price-currency { color: rgba(100,120,255,0.7); }
+.listing-badge-inner.not-listed::before {
+  content: ''; width: 5px; height: 5px; border-radius: 50%;
+  background: rgba(255,255,255,0.2); flex-shrink: 0;
+}
+.listing-badge-inner.for-sale {
+  background: rgba(0,0,0,0.65);
+  border: 1px solid rgba(212,168,75,0.5);
+  color: #d4a84b;
+}
+.listing-badge-inner.for-sale-sbtc {
+  border-color: rgba(247,147,26,0.5);
+  color: #f7931a;
+}
 
 /* ── Skeleton Cards ── */
 .skeleton-card {
@@ -664,18 +657,14 @@ function buildEagleCard(eagle, index) {
     ? `${CONFIG.explorerBase}/address/${eagle.owner}?chain=${CONFIG.network}`
     : '#';
 
-  // Build listing strip
-  const listingHtml = eagle.listing
+  // Build listing hover badge
+  const listingBadge = eagle.listing
     ? (() => {
         const isSbtc = eagle.listing.currency === 'sBTC';
-        const curClass = isSbtc ? 'currency-sbtc' : 'currency-stx';
         const icon = isSbtc ? '₿' : '◈';
-        return `<div class="card-listed">
-          <span class="listed-label">For Sale</span>
-          <span class="listed-price ${curClass}">${icon} ${escHtml(String(eagle.listing.price))} <span class="price-currency">${escHtml(eagle.listing.currency)}</span></span>
-        </div>`;
+        return `<div class="listing-badge"><span class="listing-badge-inner for-sale ${isSbtc ? 'for-sale-sbtc' : ''}">${icon} ${escHtml(String(eagle.listing.price))} ${escHtml(eagle.listing.currency)}</span></div>`;
       })()
-    : `<div class="card-not-listed"><span class="not-listed-dot"></span><span>Not listed</span></div>`;
+    : `<div class="listing-badge"><span class="listing-badge-inner not-listed">Not listed</span></div>`;
 
   card.innerHTML = `
     <div class="card-iframe-wrap" id="wrap-${eagle.id}">
@@ -686,7 +675,7 @@ function buildEagleCard(eagle, index) {
         </div>
       </div>
     </div>
-    <div class="card-info">${listingHtml}</div>`;
+    ${listingBadge}`;
 
   // Inject iframe after element is attached (needs layout for scale calc)
   if (eagle.html) {
