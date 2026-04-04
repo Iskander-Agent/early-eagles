@@ -3,830 +3,889 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Early Eagles 🦅 — Gallery</title>
+<title>🦅 Early Eagles — Gallery</title>
+<meta name="description" content="Browse all minted Early Eagles — 210 fully on-chain NFTs on the Stacks blockchain.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-* { margin:0; padding:0; box-sizing:border-box; }
+/* ── Reset & Root ── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
 :root {
-  --gold: #d4a84b;
-  --navy: #1a2744;
-  --bg: #05050a;
-  --surface: #0d0d1a;
-  --border: rgba(212,168,75,0.15);
-  --text: #c8c8d8;
-  --muted: #555568;
+  --gold:        #d4a84b;
+  --gold-light:  #e8c26a;
+  --gold-dim:    rgba(212,168,75,0.15);
+  --gold-glow:   rgba(212,168,75,0.3);
+  --navy:        #0d1117;
+  --navy-mid:    #131a24;
+  --navy-light:  #1a2433;
+  --surface:     #0f1520;
+  --surface2:    #161f2e;
+  --border:      rgba(212,168,75,0.18);
+  --border-sub:  rgba(255,255,255,0.07);
+  --text:        #e8eaf0;
+  --text-muted:  #8892a4;
+  --text-dim:    #4a5568;
+  --green:       #00ff88;
+  --radius:      12px;
+  --radius-sm:   8px;
+  --transition:  0.2s ease;
 }
+
+html { scroll-behavior: smooth; }
 
 body {
-  background: var(--bg);
+  background: var(--navy);
   color: var(--text);
-  font-family: 'Georgia', serif;
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  overflow-x: hidden;
   min-height: 100vh;
-  padding: 48px 20px 80px;
 }
 
-/* ── Header ── */
-.header { text-align: center; margin-bottom: 48px; }
-.logo { font-size: 48px; margin-bottom: 12px; }
-.title {
-  font-size: 13px;
-  letter-spacing: 10px;
-  text-transform: uppercase;
-  color: var(--gold);
-  opacity: 0.7;
-  margin-bottom: 8px;
-}
-.subtitle { color: var(--muted); font-size: 14px; line-height: 1.6; max-width: 500px; margin: 0 auto 24px; }
+h1, h2, h3, h4 { font-family: 'Rajdhani', sans-serif; font-weight: 700; letter-spacing: 0.02em; }
 
-.nav-links { display: flex; gap: 16px; justify-content: center; margin-bottom: 32px; }
-.nav-links a {
-  color: var(--gold);
-  text-decoration: none;
-  font-size: 12px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  opacity: 0.6;
-  transition: opacity 0.2s;
-}
-.nav-links a:hover { opacity: 1; }
-.nav-links a.active { opacity: 1; border-bottom: 1px solid var(--gold); padding-bottom: 2px; }
+/* ── Layout ── */
+.container { max-width: 1280px; margin: 0 auto; padding: 0 24px; }
 
-/* ── Stats bar ── */
-.stats-bar {
-  display: flex;
-  gap: 32px;
-  justify-content: center;
-  margin-bottom: 40px;
+/* ── Buttons ── */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  font-family: 'Rajdhani', sans-serif; font-weight: 600; font-size: 15px;
+  letter-spacing: 0.05em; text-transform: uppercase;
+  padding: 11px 24px; border-radius: var(--radius-sm);
+  border: none; cursor: pointer; text-decoration: none;
+  transition: all var(--transition); white-space: nowrap;
+}
+.btn-primary {
+  background: var(--gold); color: #0d1117;
+  box-shadow: 0 0 20px rgba(212,168,75,0.3);
+}
+.btn-primary:hover { background: var(--gold-light); transform: translateY(-2px); box-shadow: 0 4px 30px rgba(212,168,75,0.5); }
+.btn-ghost {
+  background: transparent; color: var(--gold);
+  border: 1px solid var(--border);
+}
+.btn-ghost:hover { background: var(--gold-dim); transform: translateY(-2px); }
+.btn-sm { padding: 8px 16px; font-size: 12px; }
+
+/* ── NAV ── */
+nav {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(13,17,23,0.92); backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border-sub);
+  padding: 14px 0;
+}
+.nav-inner { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.nav-brand {
+  font-family: 'Rajdhani', sans-serif; font-weight: 700;
+  font-size: 20px; color: var(--gold); text-decoration: none;
+  display: flex; align-items: center; gap: 8px;
+}
+.nav-right { display: flex; align-items: center; gap: 10px; }
+
+/* ── Page header ── */
+.page-header {
+  position: relative; overflow: hidden;
+  padding: 60px 0 40px; text-align: center;
+}
+#matrix-canvas {
+  position: absolute; inset: 0; opacity: 0.1; pointer-events: none;
+}
+.page-header-inner { position: relative; z-index: 2; }
+.gallery-label {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: 'Rajdhani', sans-serif; font-size: 11px; font-weight: 600;
+  letter-spacing: 3px; text-transform: uppercase; color: var(--gold);
+  background: var(--gold-dim); border: 1px solid var(--border);
+  border-radius: 20px; padding: 5px 14px; margin-bottom: 16px;
+}
+.page-title {
+  font-family: 'Rajdhani', sans-serif; font-weight: 700;
+  font-size: clamp(2.4rem, 6vw, 4rem);
+  background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 60%, #a07830 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  line-height: 1; margin-bottom: 14px; letter-spacing: -0.01em;
+}
+.page-subtitle {
+  font-size: 15px; color: var(--text-muted);
+  display: flex; align-items: center; justify-content: center; gap: 16px;
   flex-wrap: wrap;
 }
-.stat {
-  text-align: center;
-  padding: 16px 24px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  min-width: 100px;
+.page-subtitle strong { color: var(--text); font-weight: 600; }
+.stat-sep { color: var(--text-dim); }
+.pulse-dot {
+  width: 7px; height: 7px; border-radius: 50%; background: var(--green);
+  box-shadow: 0 0 7px var(--green); flex-shrink: 0;
+  animation: pulse 2s ease-in-out infinite;
 }
-.stat-val { font-size: 22px; color: var(--gold); font-weight: bold; }
-.stat-label { font-size: 10px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-top: 4px; }
+@keyframes pulse { 0%,100%{ opacity:1; transform:scale(1); } 50%{ opacity:0.5; transform:scale(0.85); } }
 
 /* ── Filter bar ── */
 .filter-bar {
-  display: flex;
-  gap: 8px;
-  justify-content: center;
-  flex-wrap: wrap;
-  margin-bottom: 40px;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--border-sub);
+  position: sticky; top: 57px; z-index: 90;
+  background: rgba(13,17,23,0.95); backdrop-filter: blur(8px);
 }
-.filter-btn {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--muted);
-  font-size: 11px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  padding: 8px 16px;
-  border-radius: 20px;
-  cursor: pointer;
-  transition: all 0.2s;
+.filter-inner {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
 }
-.filter-btn:hover { border-color: var(--gold); color: var(--text); }
-.filter-btn.active {
-  background: rgba(212,168,75,0.1);
-  border-color: var(--gold);
+.filter-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: 'Rajdhani', sans-serif; font-size: 13px; font-weight: 600;
+  letter-spacing: 0.04em; text-transform: uppercase;
+  padding: 7px 16px; border-radius: 20px; border: none; cursor: pointer;
+  background: var(--surface2); border: 1px solid var(--border-sub);
+  color: var(--text-muted); transition: all var(--transition);
+}
+.filter-pill:hover { border-color: var(--border); color: var(--text); }
+.filter-pill.active {
+  background: var(--gold-dim); border-color: var(--border);
   color: var(--gold);
 }
+.filter-pill[data-tier="legendary"].active { color: var(--gold); border-color: rgba(212,168,75,0.5); background: rgba(212,168,75,0.12); }
+.filter-pill[data-tier="epic"].active      { color: #c084fc; border-color: rgba(160,80,255,0.4); background: rgba(160,80,255,0.1); }
+.filter-pill[data-tier="rare"].active      { color: #7dd3fc; border-color: rgba(56,189,248,0.4); background: rgba(56,189,248,0.1); }
+.filter-pill[data-tier="uncommon"].active  { color: #6ee7b7; border-color: rgba(52,211,153,0.4); background: rgba(52,211,153,0.1); }
+.filter-pill[data-tier="common"].active    { color: #9ca3af; border-color: rgba(156,163,175,0.35); background: rgba(156,163,175,0.08); }
 
-/* ── Grid ── */
-.grid {
+.filter-count {
+  font-size: 11px; padding: 1px 6px; border-radius: 8px;
+  background: rgba(255,255,255,0.08); color: var(--text-dim);
+}
+
+/* ── Gallery Grid ── */
+.gallery-section { padding: 32px 0 60px; }
+
+.eagles-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 20px;
-  max-width: 1200px;
-  margin: 0 auto;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
 }
+@media (max-width: 1100px) { .eagles-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 760px)  { .eagles-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; } }
+@media (max-width: 480px)  { .eagles-grid { grid-template-columns: 1fr; gap: 14px; } }
 
-/* ── NFT Card ── */
-.nft-card {
+/* ── Eagle Card ── */
+.eagle-card {
   background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 14px;
+  border: 1px solid var(--border-sub);
+  border-radius: var(--radius);
   overflow: hidden;
-  cursor: pointer;
-  transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
-  position: relative;
+  transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition);
+  opacity: 0;
+  transform: translateY(16px);
+  animation: cardIn 0.4s ease forwards;
 }
-.nft-card:hover {
+.eagle-card:hover {
+  border-color: var(--border);
   transform: translateY(-4px);
-  border-color: rgba(212,168,75,0.4);
-  box-shadow: 0 8px 32px rgba(212,168,75,0.08);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
 }
-.nft-card.tier-legendary { border-color: rgba(212,168,75,0.5); }
-.nft-card.tier-epic { border-color: rgba(147,112,219,0.4); }
-.nft-card.tier-rare { border-color: rgba(100,149,237,0.3); }
+.eagle-card.tier-legendary {
+  border-color: rgba(212,168,75,0.35);
+  box-shadow: 0 0 20px rgba(212,168,75,0.1);
+}
+.eagle-card.tier-legendary:hover {
+  border-color: rgba(212,168,75,0.6);
+  box-shadow: 0 0 40px rgba(212,168,75,0.2), 0 8px 32px rgba(0,0,0,0.4);
+}
 
-.card-image {
+@keyframes cardIn {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* iframe container — 340×480 scaled to fit card width */
+.card-iframe-wrap {
+  position: relative;
   width: 100%;
-  aspect-ratio: 340/480;
-  background: #0a0a14;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  /* 340:480 = 0.708 aspect ratio */
+  padding-bottom: calc(480 / 340 * 100%);
+  background: #0a0e18;
   overflow: hidden;
+}
+.card-iframe-wrap iframe {
+  position: absolute;
+  top: 0; left: 0;
+  width: 340px;
+  height: 480px;
+  border: none;
+  transform-origin: top left;
+  /* scale is set via JS based on rendered width */
+}
+.card-iframe-wrap .iframe-loader {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: #0a0e18;
+  z-index: 2; transition: opacity 0.3s ease;
+}
+.card-iframe-wrap .iframe-loader.hidden { opacity: 0; pointer-events: none; }
+
+/* Card info below iframe */
+.card-info {
+  padding: 10px 14px;
+  border-top: 1px solid rgba(255,255,255,0.05);
+  background: rgba(255,255,255,0.02);
+  display: flex; align-items: center; justify-content: space-between;
+  min-height: 40px;
+  gap: 8px;
+}
+
+/* Listing status */
+.card-not-listed {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px; color: var(--text-dim);
+  font-family: 'Inter', sans-serif; letter-spacing: 0.02em;
+}
+.not-listed-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: rgba(255,255,255,0.12); flex-shrink: 0;
+}
+
+.card-listed {
+  display: flex; align-items: center; justify-content: space-between;
+  width: 100%; gap: 8px;
+}
+.listed-label {
+  font-size: 10px; font-weight: 600; letter-spacing: 0.08em;
+  text-transform: uppercase; color: rgba(100,220,120,0.7);
+  font-family: 'Rajdhani', sans-serif;
+}
+.listed-price {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 20px; padding: 3px 10px;
+  font-family: 'Rajdhani', sans-serif; font-weight: 700;
+  font-size: 13px; color: var(--text); letter-spacing: 0.03em;
+}
+.listed-price .price-currency {
+  font-size: 10px; color: var(--text-muted); font-weight: 500; text-transform: uppercase;
+}
+.listed-price.currency-sbtc { border-color: rgba(247,147,26,0.3); color: #f7931a; }
+.listed-price.currency-sbtc .price-currency { color: rgba(247,147,26,0.7); }
+.listed-price.currency-stx  { border-color: rgba(100,120,255,0.3); color: #8fa4ff; }
+.listed-price.currency-stx  .price-currency { color: rgba(100,120,255,0.7); }
+
+/* ── Skeleton Cards ── */
+.skeleton-card {
+  background: var(--surface);
+  border: 1px solid var(--border-sub);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.skeleton-iframe {
+  width: 100%;
+  padding-bottom: calc(480 / 340 * 100%);
+  background: linear-gradient(90deg, var(--surface) 25%, var(--surface2) 50%, var(--surface) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
   position: relative;
 }
-.card-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+.skeleton-info { padding: 14px 16px 16px; }
+.skeleton-line {
+  height: 14px; border-radius: 6px; margin-bottom: 10px;
+  background: linear-gradient(90deg, var(--surface) 25%, var(--surface2) 50%, var(--surface) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
 }
-.card-image iframe {
-  width: 100%;
-  height: 100%;
-  border: none;
-  pointer-events: none;
-}
-.card-loading {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  width: 100%;
-  height: 100%;
-  position: absolute;
-  inset: 0;
-  background: #0a0a14;
-}
-.card-loading .spinner {
-  width: 24px;
-  height: 24px;
-  border: 2px solid rgba(212,168,75,0.15);
-  border-top-color: var(--gold);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-.card-loading .eagle-placeholder {
-  font-size: 32px;
-  opacity: 0.15;
-  animation: pulse 2s ease-in-out infinite;
-}
-
-.card-info {
-  padding: 12px 14px;
-}
-.card-token-id {
-  font-size: 10px;
-  color: var(--muted);
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  margin-bottom: 4px;
-}
-.card-name {
-  font-size: 13px;
-  color: var(--text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  margin-bottom: 6px;
-}
-.card-badges {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-.badge {
-  font-size: 9px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  padding: 3px 8px;
-  border-radius: 10px;
-  border: 1px solid;
-}
-.badge-legendary { color: #d4a84b; border-color: rgba(212,168,75,0.3); background: rgba(212,168,75,0.06); }
-.badge-epic       { color: #9370db; border-color: rgba(147,112,219,0.3); background: rgba(147,112,219,0.06); }
-.badge-rare       { color: #6495ed; border-color: rgba(100,149,237,0.3); background: rgba(100,149,237,0.06); }
-.badge-uncommon   { color: #98d493; border-color: rgba(152,212,147,0.3); background: rgba(152,212,147,0.06); }
-.badge-common     { color: #888; border-color: rgba(136,136,136,0.25); background: rgba(136,136,136,0.05); }
-.badge-color      { color: var(--muted); border-color: rgba(255,255,255,0.1); background: transparent; }
-
-/* ── Tier badge on image corner ── */
-.tier-corner {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  font-size: 9px;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  padding: 4px 8px;
-  border-radius: 6px;
-  border: 1px solid;
-  backdrop-filter: blur(4px);
-  z-index: 2;
+.skeleton-line.short { width: 55%; }
+.skeleton-line.thin  { height: 10px; }
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
 /* ── Empty state ── */
 .empty-state {
-  text-align: center;
-  padding: 80px 20px;
-  grid-column: 1 / -1;
+  text-align: center; padding: 100px 24px; grid-column: 1/-1;
 }
-.empty-eagle { font-size: 64px; opacity: 0.1; margin-bottom: 16px; }
-.empty-title { color: var(--muted); font-size: 16px; margin-bottom: 8px; }
-.empty-sub { color: #333; font-size: 13px; }
-.empty-cta {
-  display: inline-block;
-  margin-top: 24px;
-  padding: 12px 28px;
-  border: 1px solid rgba(212,168,75,0.4);
-  border-radius: 8px;
-  color: var(--gold);
-  text-decoration: none;
-  font-size: 12px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  transition: background 0.2s;
+.empty-eagle { font-size: 64px; margin-bottom: 20px; display: block; opacity: 0.5; }
+.empty-state h3 {
+  font-size: 1.6rem; color: var(--text-muted); margin-bottom: 12px;
 }
-.empty-cta:hover { background: rgba(212,168,75,0.08); }
+.empty-state p { color: var(--text-dim); font-size: 14px; margin-bottom: 28px; }
 
-/* ── Loading state for grid ── */
-.grid-loading {
-  text-align: center;
-  padding: 80px 20px;
-  grid-column: 1 / -1;
-  color: var(--muted);
-  font-size: 14px;
-}
-.grid-loading .spinner-large {
-  width: 40px;
-  height: 40px;
-  border: 3px solid rgba(212,168,75,0.1);
-  border-top-color: var(--gold);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin: 0 auto 16px;
+/* ── Error state ── */
+.error-banner {
+  background: rgba(255,77,106,0.08); border: 1px solid rgba(255,77,106,0.25);
+  border-radius: var(--radius-sm); padding: 16px 20px;
+  margin-bottom: 24px; display: none;
+  font-size: 14px; color: #ff8a9a;
 }
 
-/* ── Modal ── */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.85);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-  padding: 20px;
-  backdrop-filter: blur(4px);
-}
-.modal-overlay.open { display: flex; }
-.modal {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  max-width: 700px;
-  width: 100%;
-  max-height: 90vh;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-.modal-inner {
-  display: grid;
-  grid-template-columns: 280px 1fr;
-  gap: 0;
-}
-@media (max-width: 600px) {
-  .modal-inner { grid-template-columns: 1fr; }
-}
-.modal-image-col { padding: 24px; border-right: 1px solid var(--border); }
-.modal-image {
-  width: 100%;
-  aspect-ratio: 340/480;
-  border-radius: 12px;
-  overflow: hidden;
-  background: #0a0a14;
-}
-.modal-image img { width: 100%; height: 100%; object-fit: cover; }
-.modal-image iframe { width: 100%; height: 100%; border: none; }
-.modal-details { padding: 24px; }
-.modal-close {
-  background: none;
-  border: none;
-  color: var(--muted);
-  font-size: 20px;
-  cursor: pointer;
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  line-height: 1;
-}
-.modal-close:hover { color: var(--text); }
-.modal-id { font-size: 11px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; }
-.modal-name { font-size: 20px; color: var(--text); margin-bottom: 16px; }
-.modal-tier {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  padding: 6px 14px;
-  border-radius: 8px;
-  border: 1px solid;
+/* ── Refresh indicator ── */
+.refresh-bar {
+  display: flex; align-items: center; justify-content: flex-end; gap: 8px;
   margin-bottom: 20px;
 }
-.attr-list { display: flex; flex-direction: column; gap: 12px; }
-.attr-row { display: flex; flex-direction: column; gap: 2px; }
-.attr-key { font-size: 10px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; }
-.attr-val { font-size: 14px; color: var(--text); word-break: break-all; }
-.attr-val.mono { font-family: monospace; font-size: 11px; color: #888; }
-
-/* ── Animations ── */
+.refresh-text {
+  font-size: 12px; color: var(--text-dim);
+  font-family: 'Rajdhani', sans-serif; letter-spacing: 0.04em;
+}
+.refresh-btn {
+  background: none; border: 1px solid var(--border-sub);
+  color: var(--text-dim); font-size: 12px; padding: 4px 12px;
+  border-radius: 6px; cursor: pointer; font-family: 'Inter', sans-serif;
+  transition: all var(--transition);
+}
+.refresh-btn:hover { border-color: var(--border); color: var(--gold); }
+.refresh-btn.spinning svg { animation: spin 0.8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
-@keyframes pulse { 0%,100% { opacity: 0.1; } 50% { opacity: 0.25; } }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-.nft-card { animation: fadeIn 0.3s ease both; }
+
+/* ── No results (filtered) ── */
+.no-results {
+  text-align: center; padding: 60px 24px; grid-column: 1/-1;
+  color: var(--text-dim); font-size: 14px;
+}
+
+@media (max-width: 640px) {
+  .filter-bar { top: 52px; }
+  nav { padding: 10px 0; }
+}
 </style>
 </head>
 <body>
 
-<div class="header">
-  <div class="logo">🦅</div>
-  <div class="title">Early Eagles</div>
-  <div class="subtitle">Genesis AIBTC agent NFTs — one eagle for each of the first 210 agents on the network.</div>
-  <div class="nav-links">
-    <a href="index.html">Mint</a>
-    <a href="gallery.html" class="active">Gallery</a>
+<!-- ── Navigation ── -->
+<nav>
+  <div class="container nav-inner">
+    <a class="nav-brand" href="/">🦅 Early Eagles</a>
+    <div class="nav-right">
+      <a class="btn btn-primary btn-sm" href="/#mint">Mint Your Eagle →</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ── Page Header ── -->
+<div class="page-header">
+  <canvas id="matrix-canvas"></canvas>
+  <div class="container page-header-inner">
+    <div class="gallery-label">🖼 On-Chain Gallery</div>
+    <h1 class="page-title">GALLERY</h1>
+    <div class="page-subtitle" id="subtitle-stats">
+      <span class="pulse-dot"></span>
+      <span><strong id="stat-minted">—</strong> eagles minted</span>
+      <span class="stat-sep">·</span>
+      <span><strong id="stat-remaining">—</strong> remaining</span>
+    </div>
   </div>
 </div>
 
-<div class="stats-bar" id="statsBar">
-  <div class="stat"><div class="stat-val" id="statMinted">—</div><div class="stat-label">Minted</div></div>
-  <div class="stat"><div class="stat-val" id="statSupply">210</div><div class="stat-label">Max Supply</div></div>
-  <div class="stat"><div class="stat-val" id="statLegendary">—</div><div class="stat-label">Legendary Left</div></div>
-  <div class="stat"><div class="stat-val" id="statEpic">—</div><div class="stat-label">Epic Left</div></div>
-</div>
-
+<!-- ── Filter Bar ── */
 <div class="filter-bar">
-  <button class="filter-btn active" data-tier="all">All</button>
-  <button class="filter-btn" data-tier="0">🔱 Legendary</button>
-  <button class="filter-btn" data-tier="1">◈ Epic</button>
-  <button class="filter-btn" data-tier="2">◇ Rare</button>
-  <button class="filter-btn" data-tier="3">○ Uncommon</button>
-  <button class="filter-btn" data-tier="4">● Common</button>
-</div>
-
-<div class="grid" id="grid">
-  <div class="grid-loading">
-    <div class="spinner-large"></div>
-    Scanning for minted eagles...
+  <div class="container">
+    <div class="filter-inner" id="filter-bar">
+      <button class="filter-pill active" data-tier="all" onclick="setFilter('all', this)">All <span class="filter-count" id="count-all">—</span></button>
+      <button class="filter-pill" data-tier="legendary" onclick="setFilter('legendary', this)">🔱 Legendary <span class="filter-count" id="count-legendary">—</span></button>
+      <button class="filter-pill" data-tier="epic"      onclick="setFilter('epic', this)">◈ Epic <span class="filter-count" id="count-epic">—</span></button>
+      <button class="filter-pill" data-tier="rare"      onclick="setFilter('rare', this)">◇ Rare <span class="filter-count" id="count-rare">—</span></button>
+      <button class="filter-pill" data-tier="uncommon"  onclick="setFilter('uncommon', this)">○ Uncommon <span class="filter-count" id="count-uncommon">—</span></button>
+      <button class="filter-pill" data-tier="common"    onclick="setFilter('common', this)">● Common <span class="filter-count" id="count-common">—</span></button>
+    </div>
   </div>
 </div>
 
-<!-- Modal -->
-<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
-  <div class="modal" style="position:relative">
-    <button class="modal-close" onclick="closeModalBtn()">✕</button>
-    <div class="modal-inner">
-      <div class="modal-image-col">
-        <div class="modal-image" id="modalImage"></div>
-      </div>
-      <div class="modal-details" id="modalDetails"></div>
+<!-- ── Gallery ── -->
+<div class="gallery-section">
+  <div class="container">
+    <div class="refresh-bar">
+      <span class="refresh-text" id="refresh-text">Auto-refreshes every 60s</span>
+      <button class="refresh-btn" id="refresh-btn" onclick="loadGallery(true)" title="Refresh now">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+      </button>
+    </div>
+
+    <div class="error-banner" id="error-banner"></div>
+
+    <div class="eagles-grid" id="eagles-grid">
+      <!-- Skeleton placeholders shown while loading -->
     </div>
   </div>
 </div>
 
 <script>
-// ── Config ────────────────────────────────────────────────────────────────
+/* ── CONFIG ── */
 const CONFIG = {
-  contractAddress: 'SP3JR7JXFT7ZM9JKSQPBQG1HPT0D365MA5TN0P12E',
-  contractName:   'early-eagles-test-v5',
-  stacksApiUrl:   'https://api.hiro.so',
-  metaApiBase:    'https://early-eagles.vercel.app/api/test-token',
+  contractAddress:  'ST3HR09GX5YFDPP7271GG1Y9P4ZZ70DRE7H2AYYEM',
+  rendererAddress:  'ST3HR09GX5YFDPP7271GG1Y9P4ZZ70DRE7H2AYYEM',
+  rendererName:     'early-eagles-renderer',
+  contractName:    'early-eagles',
+  stacksApiUrl:    'https://api.testnet.hiro.so',
+  explorerBase:    'https://explorer.hiro.so',
+  network:         'testnet',
 };
 
+const TOTAL_SUPPLY = 210;
+// Contract tier IDs: 0=Legendary, 1=Epic, 2=Rare, 3=Uncommon, 4=Common
 const TIER_NAMES   = ['Legendary', 'Epic', 'Rare', 'Uncommon', 'Common'];
-const TIER_SYMBOLS = ['🔱', '◈', '◇', '○', '●'];
-const TIER_CLASSES = ['legendary', 'epic', 'rare', 'uncommon', 'common'];
-const TIER_COLORS  = ['#d4a84b', '#9370db', '#6495ed', '#98d493', '#888'];
-const COLOR_NAMES  = [
-  'Azure', 'Amethyst', 'Fuchsia', 'Crimson', 'Amber', 'Jade', 'Forest',
-  'Teal', 'Prism', 'Cobalt', 'Chartreuse', 'Violet', 'Gold', 'Pearl',
-  'Sepia', 'Shadow', 'Negative', 'Thermal', 'X-Ray', 'Aurora', 'Psychedelic'
-];
+const TIER_IDS     = ['legendary', 'epic', 'rare', 'uncommon', 'common'];
 
-// ── State ─────────────────────────────────────────────────────────────────
-let allNfts = [];
-let activeFilter = 'all';
+/* ── State ── */
+let eaglesData     = [];      // [{id, name, tier, tierName, tierId, owner, html}]
+let activeFilter   = 'all';
+let refreshTimer   = null;
+let isLoading      = false;
 
-// ── Boot ──────────────────────────────────────────────────────────────────
-window.addEventListener('load', async () => {
-  await loadStats();
-  await loadNfts();
-});
+/* ── Matrix Background ── */
+(function initMatrix() {
+  const canvas = document.getElementById('matrix-canvas');
+  const ctx    = canvas.getContext('2d');
+  let cols, drops;
 
-// ── Load stats from chain ─────────────────────────────────────────────────
-async function loadStats() {
-  try {
-    const res = await callReadOnly('get-mint-stats', []);
-    if (!res.okay) return;
-    const stats = decodeTuple(res.result);
-    document.getElementById('statMinted').textContent    = stats['total-minted']       ?? '—';
-    document.getElementById('statLegendary').textContent = stats['legendary-remaining'] ?? '—';
-    document.getElementById('statEpic').textContent      = stats['epic-remaining']      ?? '—';
-  } catch (e) { console.warn('Stats load failed:', e); }
-}
-
-// ── Load all minted NFTs ──────────────────────────────────────────────────
-async function loadNfts() {
-  const grid = document.getElementById('grid');
-
-  // Get last-token-id to know how far to scan
-  let lastId = 0;
-  try {
-    const res = await callReadOnly('get-last-token-id', []);
-    if (res.okay) {
-      lastId = decodeUint(res.result);
-    }
-  } catch (e) {
-    grid.innerHTML = `<div class="empty-state">
-      <div class="empty-eagle">🦅</div>
-      <div class="empty-title">Contract not deployed yet</div>
-      <div class="empty-sub">Deploy the contract and mint some eagles first.</div>
-      <a href="index.html" class="empty-cta">Go to Mint</a>
-    </div>`;
-    return;
+  function resize() {
+    canvas.width  = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+    cols  = Math.floor(canvas.width / 16);
+    drops = Array.from({ length: cols }, () => Math.random() * -100);
   }
 
-  if (lastId === 0) {
-    // Check if token 0 exists (reserve mint)
-    const owner = await getOwner(0);
-    if (!owner) {
-      grid.innerHTML = `<div class="empty-state">
-        <div class="empty-eagle">🦅</div>
-        <div class="empty-title">No eagles minted yet</div>
-        <div class="empty-sub">Be the first to claim your genesis eagle.</div>
-        <a href="index.html" class="empty-cta">Mint Now</a>
-      </div>`;
-      return;
+  function draw() {
+    ctx.fillStyle = 'rgba(13,17,23,0.05)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#d4a84b';
+    ctx.font = '13px monospace';
+    const chars = 'アイウエオカキクケコ0123456789ABCDEF🦅⚡';
+    for (let i = 0; i < drops.length; i++) {
+      const ch = chars[Math.floor(Math.random() * chars.length)];
+      ctx.fillText(ch, i * 16, drops[i] * 16);
+      if (drops[i] * 16 > canvas.height && Math.random() > 0.975) drops[i] = 0;
+      drops[i] += 0.4;
     }
   }
 
-  // Scan all token IDs from 0 to lastId, fetch traits
-  // If lastId=0 that could be token #0 OR an unresolved lastId, scan at least up to totalMinted-1
-  const scanTo = Math.max(lastId, 9); // scan at least 0-9 to catch any minted tokens
-  grid.innerHTML = '';
-  const tokenIds = [];
-  for (let i = 0; i <= scanTo; i++) tokenIds.push(i);
+  resize();
+  window.addEventListener('resize', resize);
+  setInterval(draw, 60);
+})();
 
-  // Fetch traits for all tokens in parallel (batched)
-  const BATCH = 5;
-  for (let b = 0; b < tokenIds.length; b += BATCH) {
-    const batch = tokenIds.slice(b, b + BATCH);
-    const results = await Promise.all(batch.map(id => fetchTokenTraits(id)));
-    results.forEach(nft => {
-      if (nft) {
-        allNfts.push(nft);
-        const card = buildCard(nft);
-        grid.appendChild(card);
-        // Stagger animation
-        card.style.animationDelay = `${allNfts.length * 40}ms`;
-      }
-    });
-  }
-
-  if (allNfts.length === 0) {
-    grid.innerHTML = `<div class="empty-state">
-      <div class="empty-eagle">🦅</div>
-      <div class="empty-title">No eagles minted yet</div>
-      <div class="empty-sub">Be the first to claim your genesis eagle.</div>
-      <a href="index.html" class="empty-cta">Mint Now</a>
-    </div>`;
-  }
+/* ── Encode uint for Clarity ── */
+function encodeUint(n) {
+  // 0x01 + 32-byte big-endian
+  const hex = n.toString(16).padStart(32, '0');
+  return '0x01' + hex;
 }
 
-// ── Fetch traits for a single token ──────────────────────────────────────
-async function fetchTokenTraits(tokenId) {
+/* ── Decode Clarity result hex to string ── */
+function decodeTokenUri(hexResult) {
+  const hex = hexResult.startsWith('0x') ? hexResult.slice(2) : hexResult;
+  // ok(07) + some(0a) + string-type(09 or 0d) = 3 bytes = 6 hex chars
+  const afterType = hex.slice(6);
+  const len = parseInt(afterType.slice(0, 8), 16);
+  const strHex = afterType.slice(8, 8 + len * 2);
+  const bytes = strHex.match(/.{2}/g) || [];
+  return bytes.map(b => parseInt(b, 16)).reduce((acc, c) => acc + String.fromCharCode(c), '');
+}
+
+/* Decode clarity result that wraps (ok (some (string-ascii ...))) same structure for render-params and owner */
+function decodeClarityString(hexResult) {
   try {
-    const uintHex = encodeUint(tokenId);
-    const res = await callReadOnly('get-traits', ['0x' + uintHex]);
-    if (!res.okay || res.result === '0x09') return null; // none = not minted
-
-    const traits = decodeTuple(decodeOption(res.result));
-    if (!traits) return null;
-
-    return {
-      tokenId,
-      tier:        traits['tier']           ?? 4,
-      colorId:     traits['color-id']       ?? 0,
-      agentId:     traits['agent-id']       ?? 0,
-      displayName: traits['display-name']   ?? `Eagle #${tokenId}`,
-      btcAddress:  traits['btc-address']    ?? '',
-      stxAddress:  traits['stx-address']    ?? '',
-      sigilSeed:   traits['sigil-seed']     ?? '',
-      mintedAt:    traits['minted-at']      ?? 0,
-    };
+    return decodeTokenUri(hexResult);
   } catch (e) {
-    console.warn(`Failed to fetch token ${tokenId}:`, e);
     return null;
   }
 }
 
-// ── Build NFT card ─────────────────────────────────────────────────────────
-function buildCard(nft) {
-  const tierName  = TIER_NAMES[nft.tier]   || 'Unknown';
-  const tierClass = TIER_CLASSES[nft.tier] || 'common';
-  const tierColor = TIER_COLORS[nft.tier]  || '#888';
-  const tierSym   = TIER_SYMBOLS[nft.tier] || '●';
-  const colorName = COLOR_NAMES[nft.colorId] || `Color ${nft.colorId}`;
-
-  const card = document.createElement('div');
-  card.className = `nft-card tier-${tierClass}`;
-  card.setAttribute('data-tier', nft.tier);
-  card.onclick = () => openModal(nft);
-
-  card.innerHTML = `
-    <div class="card-image" id="img-${nft.tokenId}">
-      <div class="card-loading">
-        <div class="eagle-placeholder">🦅</div>
-        <div class="spinner"></div>
-      </div>
-    </div>
-    <div class="card-info">
-      <div class="card-token-id">Eagle #${nft.tokenId}</div>
-      <div class="card-name">${escHtml(nft.displayName)}</div>
-      <div class="card-badges">
-        <span class="badge badge-${tierClass}">${tierSym} ${tierName}</span>
-        <span class="badge badge-color">${colorName}</span>
-      </div>
-    </div>
-  `;
-
-  // Lazy-load the image from metadata API
-  loadCardImage(nft.tokenId, card.querySelector(`#img-${nft.tokenId}`));
-
-  return card;
-}
-
-async function loadCardImage(tokenId, container) {
+/* Decode owner: (ok (some (principal ...))) */
+function decodeOwner(hexResult) {
   try {
-    const meta = await fetch(`${CONFIG.metaApiBase}/${tokenId}`).then(r => r.json());
-    if (!meta.image) return;
-
-    container.innerHTML = '';
-    if (meta.image.startsWith('data:image/svg+xml')) {
-      // Render as img
-      const img = document.createElement('img');
-      img.src = meta.image;
-      img.alt = meta.name || `Eagle #${tokenId}`;
-      container.appendChild(img);
-    } else {
-      const img = document.createElement('img');
-      img.src = meta.image;
-      img.alt = `Eagle #${tokenId}`;
-      container.appendChild(img);
-    }
+    const hex = hexResult.startsWith('0x') ? hexResult.slice(2) : hexResult;
+    // 07 = ok, 0a = some, 05 = principal
+    // 05 + 1 byte version + 20 bytes hash + optional contract name
+    if (!hex.startsWith('070a05')) return null;
+    const payload = hex.slice(6); // after ok+some+principal-type
+    // version byte
+    const version = parseInt(payload.slice(0, 2), 16);
+    // 20 bytes hash160
+    const hashHex = payload.slice(2, 42);
+    // Encode back to C32 (testnet = 26 → ST, mainnet = 22 → SP)
+    return c32encode(version, hashHex);
   } catch (e) {
-    // Keep placeholder on failure
-    container.innerHTML = `<div class="card-loading"><div class="eagle-placeholder">🦅</div></div>`;
+    return null;
   }
 }
 
-// ── Modal ─────────────────────────────────────────────────────────────────
-async function openModal(nft) {
-  const tierName  = TIER_NAMES[nft.tier]   || 'Unknown';
-  const tierClass = TIER_CLASSES[nft.tier] || 'common';
-  const tierColor = TIER_COLORS[nft.tier]  || '#888';
-  const tierSym   = TIER_SYMBOLS[nft.tier] || '●';
-  const colorName = COLOR_NAMES[nft.colorId] || `Color ${nft.colorId}`;
-
-  // Image col — load from API
-  const imgCol = document.getElementById('modalImage');
-  imgCol.innerHTML = `<div class="card-loading" style="height:100%"><div class="eagle-placeholder">🦅</div><div class="spinner"></div></div>`;
-
-  try {
-    const meta = await fetch(`${CONFIG.metaApiBase}/${nft.tokenId}`).then(r => r.json());
-    if (meta.image) {
-      imgCol.innerHTML = `<img src="${escAttr(meta.image)}" alt="Eagle #${nft.tokenId}" style="width:100%;height:100%;object-fit:cover">`;
-    }
-  } catch (e) {}
-
-  // Details col
-  document.getElementById('modalDetails').innerHTML = `
-    <div class="modal-id">Eagle #${nft.tokenId}</div>
-    <div class="modal-name">${escHtml(nft.displayName)}</div>
-    <div class="modal-tier" style="color:${tierColor};border-color:${tierColor}40;background:${tierColor}0a">
-      ${tierSym} ${tierName}
-    </div>
-    <div class="attr-list">
-      <div class="attr-row">
-        <div class="attr-key">Color</div>
-        <div class="attr-val">${colorName}</div>
-      </div>
-      <div class="attr-row">
-        <div class="attr-key">Agent ID</div>
-        <div class="attr-val">#${nft.agentId}</div>
-      </div>
-      <div class="attr-row">
-        <div class="attr-key">BTC Address</div>
-        <div class="attr-val mono">${escHtml(nft.btcAddress || '—')}</div>
-      </div>
-      <div class="attr-row">
-        <div class="attr-key">Minted at Block</div>
-        <div class="attr-val">${nft.mintedAt}</div>
-      </div>
-      <div class="attr-row">
-        <div class="attr-key">Sigil Seed</div>
-        <div class="attr-val mono">${escHtml((nft.sigilSeed || '').slice(0, 24))}${nft.sigilSeed?.length > 24 ? '…' : ''}</div>
-      </div>
-    </div>
-  `;
-
-  document.getElementById('modalOverlay').classList.add('open');
-  document.body.style.overflow = 'hidden';
+/* ── Minimal C32 encoder (for Stacks address display) ── */
+const C32_ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
+function c32encode(version, hashHex) {
+  // We just produce a display string from the hash for abbreviation purposes
+  // Full c32check would need a checksum — for display we abbreviate hash directly
+  return 'ST' + hashHex.toUpperCase().slice(0, 6) + '…' + hashHex.toUpperCase().slice(-4);
 }
 
-function closeModal(e) {
-  if (e.target === document.getElementById('modalOverlay')) closeModalBtn();
-}
-function closeModalBtn() {
-  document.getElementById('modalOverlay').classList.remove('open');
-  document.body.style.overflow = '';
+function abbreviateAddress(addr) {
+  if (!addr || addr.length < 12) return addr;
+  return addr.slice(0, 8) + '…' + addr.slice(-4);
 }
 
-// ── Filter ────────────────────────────────────────────────────────────────
-document.querySelectorAll('.filter-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    activeFilter = btn.dataset.tier;
-    applyFilter();
-  });
-});
-
-function applyFilter() {
-  document.querySelectorAll('.nft-card').forEach(card => {
-    const tier = card.getAttribute('data-tier');
-    const show = activeFilter === 'all' || tier === activeFilter;
-    card.style.display = show ? '' : 'none';
-  });
+/* ── API call helper ── */
+/* ── Renderer segment cache ── */
+let _rendererSegments = null;
+async function getRendererSegments() {
+  if (_rendererSegments) return _rendererSegments;
+  async function rRead(fn) {
+    const url = `${CONFIG.stacksApiUrl}/v2/contracts/call-read/${CONFIG.rendererAddress}/${CONFIG.rendererName}/${fn}`;
+    const r = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ sender: CONFIG.rendererAddress, arguments: [] }) });
+    const d = await r.json();
+    if (!d.okay) throw new Error('renderer '+fn+' failed');
+    // Renderer returns string directly: 0d(string-utf8) + 4-byte len + bytes (no ok wrapper)
+    // But sometimes returns 07(ok) 0d + len + bytes — handle both
+    let hex = d.result.replace('0x','');
+    if (hex.startsWith('07')) hex = hex.slice(2); // strip ok(07)
+    if (hex.startsWith('0d') || hex.startsWith('09')) hex = hex.slice(2); // strip type byte
+    const len = parseInt(hex.slice(0,8),16);
+    const strHex = hex.slice(8, 8+len*2);
+    return (strHex.match(/.{2}/g)||[]).map(b=>parseInt(b,16)).reduce((a,c)=>a+String.fromCharCode(c),'');
+  }
+  const [seg1, eagle, seg2, seg3] = await Promise.all([
+    rRead('get-seg1'), rRead('get-eagle'), rRead('get-seg2'), rRead('get-seg3')
+  ]);
+  _rendererSegments = { seg1, eagle, seg2, seg3 };
+  return _rendererSegments;
 }
 
-// ── Clarity helpers ───────────────────────────────────────────────────────
-async function callReadOnly(functionName, args) {
-  const url = `${CONFIG.stacksApiUrl}/v2/contracts/call-read/${CONFIG.contractAddress}/${CONFIG.contractName}/${functionName}`;
+async function callRead(fn, args) {
+  const url = `${CONFIG.stacksApiUrl}/v2/contracts/call-read/${CONFIG.contractAddress}/${CONFIG.contractName}/${fn}`;
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ sender: CONFIG.contractAddress, arguments: args }),
   });
+  if (!res.ok) throw new Error(`API error ${res.status} for ${fn}`);
   return res.json();
 }
 
-async function getOwner(tokenId) {
-  try {
-    const uintHex = encodeUint(tokenId);
-    const res = await callReadOnly('get-owner', ['0x' + uintHex]);
-    return res.okay && res.result !== '0x09';
-  } catch { return false; }
-}
-
-function encodeUint(n) {
-  const buf = new Uint8Array(17);
-  buf[0] = 0x01;
-  const view = new DataView(buf.buffer);
-  view.setBigUint64(1, 0n);
-  view.setBigUint64(9, BigInt(n));
-  return Array.from(buf).map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
-function decodeUint(hex) {
-  const h = hex.startsWith('0x') ? hex.slice(2) : hex;
-  const bytes = h.match(/../g).map(b => parseInt(b, 16));
-  let pos = 0;
-  // unwrap ok wrapper (0x07)
-  if (bytes[pos] === 0x07) pos++;
-  // must be uint (0x01)
-  if (bytes[pos] !== 0x01) return 0;
-  pos++;
-  // 16-byte big-endian uint, take last 8
-  let v = 0n;
-  for (let i = pos + 8; i < pos + 16; i++) v = (v << 8n) | BigInt(bytes[i] || 0);
-  return Number(v);
-}
-
-function decodeOption(hex) {
-  const h = hex.startsWith('0x') ? hex.slice(2) : hex;
-  const bytes = h.match(/../g).map(b => parseInt(b, 16));
-  if (bytes[0] === 0x09) return null; // none
-  if (bytes[0] === 0x0a) return '0x' + bytes.slice(1).map(b => b.toString(16).padStart(2,'0')).join(''); // some
-  return hex;
-}
-
-function decodeTuple(hex) {
-  if (!hex) return null;
-  const h = hex.startsWith('0x') ? hex.slice(2) : hex;
-  const bytes = h.match(/../g).map(b => parseInt(b, 16));
-  if (!bytes || bytes.length < 5) return null;
-
-  let pos = 0;
-  const type = bytes[pos++];
-  // Handle ok wrapper
-  if (type === 0x07) { return decodeTuple('0x' + bytes.slice(pos).map(b => b.toString(16).padStart(2,'0')).join('')); }
-  // Handle some wrapper
-  if (type === 0x0a) { return decodeTuple('0x' + bytes.slice(pos).map(b => b.toString(16).padStart(2,'0')).join('')); }
-  if (type !== 0x0c) return null; // must be tuple
-
-  const numFields = (bytes[pos] << 24) | (bytes[pos+1] << 16) | (bytes[pos+2] << 8) | bytes[pos+3];
-  pos += 4;
-
-  const obj = {};
-  for (let i = 0; i < numFields; i++) {
-    if (pos >= bytes.length) break;
-    const nameLen = bytes[pos++];
-    const name = String.fromCharCode(...bytes.slice(pos, pos + nameLen));
-    pos += nameLen;
-    const [value, newPos] = decodeValue(bytes, pos);
-    obj[name] = value;
-    pos = newPos;
+/* ── Get total minted ── */
+async function getTotalMinted() {
+  const data = await callRead('get-last-token-id', []);
+  if (!data.okay || !data.result) return 0;
+  const hex = data.result.replace('0x', '');
+  // result is (ok uint) = 0701 + 16-byte big-endian
+  if (hex.length >= 34) {
+    const valHex = hex.slice(hex.length - 32);
+    return parseInt(valHex, 16) || 0;
   }
-  return obj;
+  return 0;
 }
 
-function decodeValue(bytes, pos) {
-  if (pos >= bytes.length) return [null, pos];
-  const type = bytes[pos++];
-  switch (type) {
-    case 0x01: { // uint
-      let v = 0n;
-      for (let i = 0; i < 16; i++) v = (v << 8n) | BigInt(bytes[pos + i] || 0);
-      return [Number(v), pos + 16];
-    }
-    case 0x00: { // int
-      let v = 0n;
-      for (let i = 0; i < 16; i++) v = (v << 8n) | BigInt(bytes[pos + i] || 0);
-      return [Number(BigInt.asIntN(128, v)), pos + 16];
-    }
-    case 0x02: case 0x0d: { // buffer / string-ascii
-      const len = (bytes[pos] << 24) | (bytes[pos+1] << 16) | (bytes[pos+2] << 8) | bytes[pos+3];
-      const data = bytes.slice(pos + 4, pos + 4 + len);
-      const str = type === 0x02
-        ? data.map(b => b.toString(16).padStart(2,'0')).join('')
-        : String.fromCharCode(...data);
-      return [str, pos + 4 + len];
-    }
-    case 0x0e: { // string-utf8
-      const len = (bytes[pos] << 24) | (bytes[pos+1] << 16) | (bytes[pos+2] << 8) | bytes[pos+3];
-      const data = bytes.slice(pos + 4, pos + 4 + len);
-      return [new TextDecoder().decode(new Uint8Array(data)), pos + 4 + len];
-    }
-    case 0x05: case 0x06: { // standard/contract principal
-      return ['principal', pos + 21];
-    }
-    case 0x03: { // bool true
-      return [true, pos];
-    }
-    case 0x04: { // bool false
-      return [false, pos];
-    }
-    case 0x09: { // none
-      return [null, pos];
-    }
-    case 0x0a: { // some
-      return decodeValue(bytes, pos);
-    }
-    case 0x07: case 0x08: { // ok / err
-      return decodeValue(bytes, pos);
-    }
-    case 0x0c: { // nested tuple — recurse
-      const numFields = (bytes[pos] << 24) | (bytes[pos+1] << 16) | (bytes[pos+2] << 8) | bytes[pos+3];
-      pos += 4;
-      const obj = {};
-      for (let i = 0; i < numFields; i++) {
-        if (pos >= bytes.length) break;
-        const nameLen = bytes[pos++];
-        const name = String.fromCharCode(...bytes.slice(pos, pos + nameLen));
-        pos += nameLen;
-        const [value, newPos] = decodeValue(bytes, pos);
-        obj[name] = value;
-        pos = newPos;
+/* ── Fetch single eagle data ── */
+async function fetchEagle(tokenId) {
+  const uintArg = encodeUint(tokenId);
+
+  const [paramsRes, ownerRes] = await Promise.allSettled([
+    callRead('get-render-params', [uintArg]),
+    callRead('get-owner',         [uintArg]),
+  ]);
+  // Note: get-render-params returns (ok string-utf8) directly — no 'some' wrapper
+  // decode: 07(ok) + 0d(string-utf8) + 4-byte len + bytes
+  function decodeRenderParams(hexResult) {
+    const hex = (hexResult||'').replace('0x','').slice(4); // skip ok(07)+type(0d)
+    const len = parseInt(hex.slice(0,8),16);
+    const strHex = hex.slice(8, 8+len*2);
+    return strHex.match(/.{2}/g).map(b=>parseInt(b,16)).reduce((a,c)=>a+String.fromCharCode(c),'');
+  }
+
+  let html  = null;
+  let meta  = { name: `Eagle #${tokenId}`, tier: 0, cid: 0, rank: tokenId };
+  let owner = null;
+
+  // Assemble HTML from renderer segments + render-params (get-token-uri returns a URL, not data URI)
+  if (paramsRes.status === 'fulfilled' && paramsRes.value.okay && paramsRes.value.result) {
+    try {
+      const jsonStr = decodeRenderParams(paramsRes.value.result);
+      if (jsonStr) {
+        const parsed = JSON.parse(jsonStr);
+        meta = { ...meta, ...parsed };
+        // Build the full card HTML from renderer segments
+        const segs = await getRendererSegments();
+        html = segs.seg1 + segs.eagle + segs.seg2 + jsonStr + segs.seg3;
       }
-      return [obj, pos];
-    }
-    default:
-      return [null, pos];
+    } catch (e) { console.warn('render assemble failed:', e.message); }
+  }
+
+  // Decode owner
+  if (ownerRes.status === 'fulfilled' && ownerRes.value.okay && ownerRes.value.result) {
+    try {
+      owner = decodeOwner(ownerRes.value.result);
+    } catch (e) { /* skip */ }
+  }
+
+  const tierIdx  = typeof meta.tier === 'number' ? meta.tier : 0;
+  const tierName = TIER_NAMES[tierIdx]  || 'Common';
+  const tierId   = TIER_IDS[tierIdx]   || 'common';
+
+  // TODO: fetch live listing from marketplace contract
+  // For now: null = not listed; { price, currency } = listed
+  const listing  = null;
+
+  return {
+    id:       tokenId,
+    name:     meta.name || `Eagle #${tokenId}`,
+    tier:     tierIdx,
+    tierName: tierName,
+    tierId:   tierId,
+    rank:     meta.rank || tokenId,
+    cid:      meta.cid  || 0,
+    owner:    owner,
+    html:     html,
+    listing:  listing,
+  };
+}
+
+/* ── Render skeleton cards ── */
+function renderSkeletons(count) {
+  const grid = document.getElementById('eagles-grid');
+  grid.innerHTML = '';
+  for (let i = 0; i < count; i++) {
+    const sk = document.createElement('div');
+    sk.className = 'skeleton-card';
+    sk.innerHTML = `
+      <div class="skeleton-iframe"></div>
+      <div class="skeleton-info">
+        <div class="skeleton-line"></div>
+        <div class="skeleton-line short thin"></div>
+      </div>`;
+    grid.appendChild(sk);
   }
 }
 
-// ── Escape helpers ────────────────────────────────────────────────────────
-function escHtml(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+/* ── Build eagle card element ── */
+function buildEagleCard(eagle, index) {
+  const card = document.createElement('div');
+  card.className = `eagle-card tier-${eagle.tierId}`;
+  card.dataset.tier = eagle.tierId;
+  card.style.animationDelay = `${Math.min(index * 60, 600)}ms`;
+
+  const ownerDisplay = eagle.owner ? abbreviateAddress(eagle.owner) : 'Unknown';
+  const explorerHref = eagle.owner
+    ? `${CONFIG.explorerBase}/address/${eagle.owner}?chain=${CONFIG.network}`
+    : '#';
+
+  // Build listing strip
+  const listingHtml = eagle.listing
+    ? (() => {
+        const isSbtc = eagle.listing.currency === 'sBTC';
+        const curClass = isSbtc ? 'currency-sbtc' : 'currency-stx';
+        const icon = isSbtc ? '₿' : '◈';
+        return `<div class="card-listed">
+          <span class="listed-label">For Sale</span>
+          <span class="listed-price ${curClass}">${icon} ${escHtml(String(eagle.listing.price))} <span class="price-currency">${escHtml(eagle.listing.currency)}</span></span>
+        </div>`;
+      })()
+    : `<div class="card-not-listed"><span class="not-listed-dot"></span><span>Not listed</span></div>`;
+
+  card.innerHTML = `
+    <div class="card-iframe-wrap" id="wrap-${eagle.id}">
+      <div class="iframe-loader" id="loader-${eagle.id}">
+        <div style="text-align:center;">
+          <div style="font-size:28px;margin-bottom:8px;opacity:0.4;">🦅</div>
+          <div style="font-size:11px;color:var(--text-dim);font-family:Rajdhani,sans-serif;letter-spacing:0.05em;">Loading…</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-info">${listingHtml}</div>`;
+
+  // Inject iframe after element is attached (needs layout for scale calc)
+  if (eagle.html) {
+    requestAnimationFrame(() => {
+      const wrap = card.querySelector('.card-iframe-wrap');
+      if (!wrap) return;
+      const iframe = document.createElement('iframe');
+      iframe.setAttribute('scrolling', 'no');
+      iframe.setAttribute('sandbox', 'allow-scripts');
+      iframe.style.cssText = 'position:absolute;top:0;left:0;width:340px;height:480px;border:none;transform-origin:top left;';
+
+      iframe.addEventListener('load', () => {
+        // Scale iframe to fill wrapper width
+        scaleIframe(iframe, wrap);
+        const loader = card.querySelector(`#loader-${eagle.id}`);
+        if (loader) loader.classList.add('hidden');
+      });
+
+      iframe.srcdoc = eagle.html;
+      wrap.appendChild(iframe);
+
+      // Observe resize
+      if (window.ResizeObserver) {
+        const ro = new ResizeObserver(() => scaleIframe(iframe, wrap));
+        ro.observe(wrap);
+      }
+    });
+  } else {
+    // No HTML — show eagle icon placeholder
+    const wrap = card.querySelector('.card-iframe-wrap');
+    if (wrap) {
+      const loader = card.querySelector(`#loader-${eagle.id}`);
+      if (loader) {
+        loader.innerHTML = `<div style="text-align:center;"><div style="font-size:40px;margin-bottom:8px;">🦅</div><div style="font-size:11px;color:var(--text-dim);font-family:Rajdhani,sans-serif;letter-spacing:0.05em;">#${eagle.id}</div></div>`;
+      }
+    }
+  }
+
+  return card;
 }
-function escAttr(s) {
-  return String(s).replace(/"/g,'&quot;');
+
+function scaleIframe(iframe, wrap) {
+  const wrapW = wrap.clientWidth;
+  if (!wrapW) return;
+  const scale = wrapW / 340;
+  iframe.style.transform = `scale(${scale})`;
 }
+
+/* ── Render grid (with filter applied) ── */
+function renderGrid() {
+  const grid = document.getElementById('eagles-grid');
+  grid.innerHTML = '';
+
+  const filtered = activeFilter === 'all'
+    ? eaglesData
+    : eaglesData.filter(e => e.tierId === activeFilter);
+
+  if (eaglesData.length === 0) {
+    // Empty state
+    const empty = document.createElement('div');
+    empty.className = 'empty-state';
+    empty.innerHTML = `
+      <span class="empty-eagle">🦅</span>
+      <h3>No eagles minted yet</h3>
+      <p>Be the first Genesis AIBTC agent to claim your eagle.</p>
+      <a class="btn btn-primary" href="/#mint">⚡ Mint My Eagle</a>`;
+    grid.appendChild(empty);
+    return;
+  }
+
+  if (filtered.length === 0) {
+    const noRes = document.createElement('div');
+    noRes.className = 'no-results';
+    noRes.textContent = `No ${activeFilter} eagles minted yet.`;
+    grid.appendChild(noRes);
+    return;
+  }
+
+  filtered.forEach((eagle, idx) => {
+    grid.appendChild(buildEagleCard(eagle, idx));
+  });
+}
+
+/* ── Update filter counts ── */
+function updateFilterCounts() {
+  const counts = { all: eaglesData.length, legendary: 0, epic: 0, rare: 0, uncommon: 0, common: 0 };
+  eaglesData.forEach(e => { if (counts[e.tierId] !== undefined) counts[e.tierId]++; });
+  Object.entries(counts).forEach(([tier, cnt]) => {
+    const el = document.getElementById(`count-${tier}`);
+    if (el) el.textContent = cnt;
+  });
+}
+
+/* ── Update header stats ── */
+function updateHeaderStats(minted) {
+  const statMinted    = document.getElementById('stat-minted');
+  const statRemaining = document.getElementById('stat-remaining');
+  if (statMinted)    statMinted.textContent    = minted;
+  if (statRemaining) statRemaining.textContent = Math.max(0, TOTAL_SUPPLY - minted);
+}
+
+/* ── Show error banner ── */
+function showError(msg) {
+  const banner = document.getElementById('error-banner');
+  if (banner) { banner.style.display = 'block'; banner.textContent = '⚠️ ' + msg; }
+}
+
+function hideError() {
+  const banner = document.getElementById('error-banner');
+  if (banner) { banner.style.display = 'none'; }
+}
+
+/* ── Main load ── */
+async function loadGallery(manual) {
+  if (isLoading) return;
+  isLoading = true;
+  hideError();
+
+  const refreshBtn = document.getElementById('refresh-btn');
+  if (refreshBtn) refreshBtn.classList.add('spinning');
+
+  try {
+    // Get total minted
+    const minted = await getTotalMinted();
+    updateHeaderStats(minted);
+
+    if (minted === 0) {
+      eaglesData = [];
+      updateFilterCounts();
+      renderGrid();
+      return;
+    }
+
+    // Show skeletons if this is the initial load
+    if (eaglesData.length === 0 || manual) {
+      renderSkeletons(Math.min(minted, 8));
+    }
+
+    // Fetch all eagles in parallel
+    const ids = Array.from({ length: minted }, (_, i) => i); // tokens are 0-indexed (0 to minted-1)
+    const results = await Promise.allSettled(ids.map(id => fetchEagle(id)));
+
+    eaglesData = results
+      .map((r, i) => r.status === 'fulfilled' ? r.value : null)
+      .filter(Boolean);
+
+    updateFilterCounts();
+    renderGrid();
+
+    // Update refresh timestamp
+    const refreshText = document.getElementById('refresh-text');
+    if (refreshText) {
+      const now = new Date();
+      refreshText.textContent = `Last updated ${now.toLocaleTimeString()}`;
+    }
+  } catch (err) {
+    showError('Failed to load gallery: ' + err.message);
+    // If we have cached data, keep it; otherwise render empty
+    if (eaglesData.length === 0) {
+      document.getElementById('eagles-grid').innerHTML = '';
+    }
+  } finally {
+    isLoading = false;
+    if (refreshBtn) refreshBtn.classList.remove('spinning');
+  }
+}
+
+/* ── Filter handler ── */
+function setFilter(tier, el) {
+  activeFilter = tier;
+  document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+  if (el) el.classList.add('active');
+  renderGrid();
+}
+
+/* ── Escape HTML ── */
+function escHtml(str) {
+  return String(str || '')
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+
+/* ── Auto-refresh ── */
+function scheduleRefresh() {
+  clearTimeout(refreshTimer);
+  refreshTimer = setTimeout(async () => {
+    await loadGallery(false);
+    scheduleRefresh();
+  }, 60000);
+}
+
+/* ── Init ── */
+(async function init() {
+  await loadGallery(false);
+  scheduleRefresh();
+})();
 </script>
 </body>
 </html>
