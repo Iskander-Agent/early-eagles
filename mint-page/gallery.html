@@ -635,9 +635,30 @@ async function fetchEagle(tokenId) {
   const tierName = TIER_NAMES[tierIdx]  || 'Common';
   const tierId   = TIER_IDS[tierIdx]   || 'common';
 
-  // TODO: fetch live listing from marketplace contract
-  // For now: null = not listed; { price, currency } = listed
-  const listing  = null;
+  // Fetch live listing from contract
+  let listing = null;
+  try {
+    const listRes = await callRead('get-listing', [uintArg]);
+    const lhex = listRes.result;
+    if (lhex && lhex !== '0x09') {
+      // Decode (some (tuple {price: uint, currency: string-ascii, commission: principal}))
+      // 0a = some, 0c = tuple
+      const lh = lhex.replace('0x','');
+      if (lh.startsWith('0a')) {
+        // Extract currency string
+        const curMatch = lhex.match(/0863757272656e6379([0-9a-f]+)/i);
+        const priceMatch = lhex.match(/057072696365([0-9a-f]{34})/i);
+        if (curMatch && priceMatch) {
+          const curHex = curMatch[1];
+          const curLen = parseInt(curHex.slice(2,10),16); // skip type(0d) + 4-byte len
+          const curStr = curHex.slice(10, 10+curLen*2).match(/.{2}/g).map(b=>parseInt(b,16)).reduce((a,c)=>a+String.fromCharCode(c),'');
+          const price = parseInt(priceMatch[1].slice(2), 16); // skip type byte 01
+          const displayPrice = curStr === 'STX' ? (price/1_000_000).toFixed(2)+' STX' : (price/100_000_000).toFixed(8)+' sBTC';
+          listing = { price: displayPrice, currency: curStr, raw: price };
+        }
+      }
+    }
+  } catch(e) { /* skip listing on error */ }
 
   return {
     id:       tokenId,
@@ -685,9 +706,9 @@ function buildEagleCard(eagle, index) {
   // Build listing hover badge
   const listingBadge = eagle.listing
     ? (() => {
-        const isSbtc = eagle.listing.currency === 'sBTC';
+        const isSbtc = eagle.listing.currency === 'SBTC' || eagle.listing.currency === 'sBTC';
         const icon = isSbtc ? '₿' : '◈';
-        return `<div class="listing-badge"><span class="listing-badge-inner for-sale ${isSbtc ? 'for-sale-sbtc' : ''}">${icon} ${escHtml(String(eagle.listing.price))} ${escHtml(eagle.listing.currency)}</span></div>`;
+        return `<div class="listing-badge"><span class="listing-badge-inner for-sale ${isSbtc ? 'for-sale-sbtc' : ''}">${icon} ${escHtml(String(eagle.listing.price))}</span></div>`;
       })()
     : `<div class="listing-badge"><span class="listing-badge-inner not-listed">Not listed</span></div>`;
 
