@@ -414,7 +414,7 @@
 // ─── Config ─────────────────────────────────────────────────────────────────
 const API      = 'https://api.testnet.hiro.so';
 const ADDR     = 'ST3JR7JXFT7ZM9JKSQPBQG1HPT0D365MA5TX3DS8N';
-const NFT      = 'early-eagles-v5-testnet';
+const NFT      = 'early-eagles-v6-testnet';
 const RENDERER = 'early-eagles-renderer-v2';
 const COMM_STX = ADDR + '.commission-stx';
 
@@ -632,6 +632,7 @@ async function mintEagle() {
       functionArgs: [
         { type: 'uint', value: rank.toString() },
         { type: 'string-utf8', value: name },
+        { type: 'string-ascii', value: name.replace(/[^\x20-\x7E]/g, '?') }, // name-ascii: frozen at mint
         { type: 'string-ascii', value: btc },
         { type: 'uint', value: tier.toString() },
         { type: 'uint', value: colorId.toString() },
