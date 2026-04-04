@@ -1,0 +1,11 @@
+{
+  "name": "early-eagles",
+  "version": "1.0.0",
+  "description": "Early Eagles NFT Collection on Stacks",
+  "private": true,
+  "scripts": {
+    "dev": "npx http-server public -p 3000",
+    "build": "echo 'Static site - no build needed'",
+    "start": "npm run dev"
+  }
+}
