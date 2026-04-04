@@ -1,0 +1,1268 @@
+{
+  "commitHash": "b7a3baf1d1c3ee3640a548d16a93ab2e2413d1d7bec30db187af2fcfd9ea7198",
+  "seed": "early-eagles-2026",
+  "assignments": [
+    {
+      "slot": 0,
+      "tier": 0,
+      "cid": 0,
+      "name": "Frosty Narwhal",
+      "reserved": true
+    },
+    {
+      "slot": 1,
+      "tier": 0,
+      "cid": 10,
+      "name": "Tiny Marten",
+      "reserved": true
+    },
+    {
+      "slot": 2,
+      "tier": 3,
+      "cid": 19,
+      "reserved": false
+    },
+    {
+      "slot": 3,
+      "tier": 3,
+      "cid": 2,
+      "reserved": false
+    },
+    {
+      "slot": 4,
+      "tier": 2,
+      "cid": 0,
+      "reserved": false
+    },
+    {
+      "slot": 5,
+      "tier": 3,
+      "cid": 4,
+      "reserved": false
+    },
+    {
+      "slot": 6,
+      "tier": 4,
+      "cid": 8,
+      "reserved": false
+    },
+    {
+      "slot": 7,
+      "tier": 3,
+      "cid": 2,
+      "reserved": false
+    },
+    {
+      "slot": 8,
+      "tier": 2,
+      "cid": 4,
+      "reserved": false
+    },
+    {
+      "slot": 9,
+      "tier": 3,
+      "cid": 4,
+      "reserved": false
+    },
+    {
+      "slot": 10,
+      "tier": 3,
+      "cid": 4,
+      "reserved": false
+    },
+    {
+      "slot": 11,
+      "tier": 4,
+      "cid": 20,
+      "reserved": false
+    },
+    {
+      "slot": 12,
+      "tier": 1,
+      "cid": 19,
+      "reserved": false
+    },
+    {
+      "slot": 13,
+      "tier": 4,
+      "cid": 7,
+      "reserved": false
+    },
+    {
+      "slot": 14,
+      "tier": 4,
+      "cid": 2,
+      "reserved": false
+    },
+    {
+      "slot": 15,
+      "tier": 1,
+      "cid": 7,
+      "reserved": false
+    },
+    {
+      "slot": 16,
+      "tier": 3,
+      "cid": 7,
+      "reserved": false
+    },
+    {
+      "slot": 17,
+      "tier": 3,
+      "cid": 0,
+      "reserved": false
+    },
+    {
+      "slot": 18,
+      "tier": 3,
+      "cid": 6,
+      "reserved": false
+    },
+    {
+      "slot": 19,
+      "tier": 3,
+      "cid": 9,
+      "reserved": false
+    },
+    {
+      "slot": 20,
+      "tier": 4,
+      "cid": 5,
+      "reserved": false
+    },
+    {
+      "slot": 21,
+      "tier": 4,
+      "cid": 20,
+      "reserved": false
+    },
+    {
+      "slot": 22,
+      "tier": 4,
+      "cid": 6,
+      "reserved": false
+    },
+    {
+      "slot": 23,
+      "tier": 4,
+      "cid": 4,
+      "reserved": false
+    },
+    {
+      "slot": 24,
+      "tier": 3,
+      "cid": 0,
+      "reserved": false
+    },
+    {
+      "slot": 25,
+      "tier": 2,
+      "cid": 6,
+      "reserved": false
+    },
+    {
+      "slot": 26,
+      "tier": 3,
+      "cid": 1,
+      "reserved": false
+    },
+    {
+      "slot": 27,
+      "tier": 4,
+      "cid": 3,
+      "reserved": false
+    },
+    {
+      "slot": 28,
+      "tier": 2,
+      "cid": 3,
+      "reserved": false
+    },
+    {
+      "slot": 29,
+      "tier": 1,
+      "cid": 0,
+      "reserved": false
+    },
+    {
+      "slot": 30,
+      "tier": 4,
+      "cid": 9,
+      "reserved": false
+    },
+    {
+      "slot": 31,
+      "tier": 3,
+      "cid": 20,
+      "reserved": false
+    },
+    {
+      "slot": 32,
+      "tier": 4,
+      "cid": 20,
+      "reserved": false
+    },
+    {
+      "slot": 33,
+      "tier": 3,
+      "cid": 7,
+      "reserved": false
+    },
+    {
+      "slot": 34,
+      "tier": 1,
+      "cid": 11,
+      "reserved": false
+    },
+    {
+      "slot": 35,
+      "tier": 3,
+      "cid": 20,
+      "reserved": false
+    },
+    {
+      "slot": 36,
+      "tier": 3,
+      "cid": 7,
+      "reserved": false
+    },
+    {
+      "slot": 37,
+      "tier": 4,
+      "cid": 3,
+      "reserved": false
+    },
+    {
+      "slot": 38,
+      "tier": 2,
+      "cid": 0,
+      "reserved": false
+    },
+    {
+      "slot": 39,
+      "tier": 4,
+      "cid": 2,
+      "reserved": false
+    },
+    {
+      "slot": 40,
+      "tier": 4,
+      "cid": 2,
+      "reserved": false
+    },
+    {
+      "slot": 41,
+      "tier": 4,
+      "cid": 3,
+      "reserved": false
+    },
+    {
+      "slot": 42,
+      "tier": 1,
+      "cid": 1,
+      "reserved": false
+    },
+    {
+      "slot": 43,
+      "tier": 4,
+      "cid": 6,
+      "reserved": false
+    },
+    {
+      "slot": 44,
+      "tier": 2,
+      "cid": 1,
+      "reserved": false
+    },
+    {
+      "slot": 45,
+      "tier": 2,
+      "cid": 0,
+      "reserved": false
+    },
+    {
+      "slot": 46,
+      "tier": 4,
+      "cid": 1,
+      "reserved": false
+    },
+    {
+      "slot": 47,
+      "tier": 3,
+      "cid": 19,
+      "reserved": false
+    },
+    {
+      "slot": 48,
+      "tier": 1,
+      "cid": 8,
+      "reserved": false
+    },
+    {
+      "slot": 49,
+      "tier": 3,
+      "cid": 3,
+      "reserved": false
+    },
+    {
+      "slot": 50,
+      "tier": 2,
+      "cid": 13,
+      "reserved": false
+    },
+    {
+      "slot": 51,
+      "tier": 2,
+      "cid": 3,
+      "reserved": false
+    },
+    {
+      "slot": 52,
+      "tier": 4,
+      "cid": 7,
+      "reserved": false
+    },
+    {
+      "slot": 53,
+      "tier": 2,
+      "cid": 19,
+      "reserved": false
+    },
+    {
+      "slot": 54,
+      "tier": 3,
+      "cid": 19,
+      "reserved": false
+    },
+    {
+      "slot": 55,
+      "tier": 4,
+      "cid": 5,
+      "reserved": false
+    },
+    {
+      "slot": 56,
+      "tier": 1,
+      "cid": 8,
+      "reserved": false
+    },
+    {
+      "slot": 57,
+      "tier": 2,
+      "cid": 19,
+      "reserved": false
+    },
+    {
+      "slot": 58,
+      "tier": 3,
+      "cid": 9,
+      "reserved": false
+    },
+    {
+      "slot": 59,
+      "tier": 4,
+      "cid": 7,
+      "reserved": false
+    },
+    {
+      "slot": 60,
+      "tier": 3,
+      "cid": 7,
+      "reserved": false
+    },
+    {
+      "slot": 61,
+      "tier": 1,
+      "cid": 4,
+      "reserved": false
+    },
+    {
+      "slot": 62,
+      "tier": 3,
+      "cid": 9,
+      "reserved": false
+    },
+    {
+      "slot": 63,
+      "tier": 3,
+      "cid": 4,
+      "reserved": false
+    },
+    {
+      "slot": 64,
+      "tier": 4,
+      "cid": 0,
+      "reserved": false
+    },
+    {
+      "slot": 65,
+      "tier": 0,
+      "cid": 18,
+      "reserved": false
+    },
+    {
+      "slot": 66,
+      "tier": 2,
+      "cid": 1,
+      "reserved": false
+    },
+    {
+      "slot": 67,
+      "tier": 4,
+      "cid": 1,
+      "reserved": false
+    },
+    {
+      "slot": 68,
+      "tier": 3,
+      "cid": 3,
+      "reserved": false
+    },
+    {
+      "slot": 69,
+      "tier": 3,
+      "cid": 19,
+      "reserved": false
+    },
+    {
+      "slot": 70,
+      "tier": 4,
+      "cid": 4,
+      "reserved": false
+    },
+    {
+      "slot": 71,
+      "tier": 1,
+      "cid": 4,
+      "reserved": false
+    },
+    {
+      "slot": 72,
+      "tier": 3,
+      "cid": 6,
+      "reserved": false
+    },
+    {
+      "slot": 73,
+      "tier": 2,
+      "cid": 11,
+      "reserved": false
+    },
+    {
+      "slot": 74,
+      "tier": 1,
+      "cid": 19,
+      "reserved": false
+    },
+    {
+      "slot": 75,
+      "tier": 4,
+      "cid": 19,
+      "reserved": false
+    },
+    {
+      "slot": 76,
+      "tier": 4,
+      "cid": 3,
+      "reserved": false
+    },
+    {
+      "slot": 77,
+      "tier": 3,
+      "cid": 19,
+      "reserved": false
+    },
+    {
+      "slot": 78,
+      "tier": 2,
+      "cid": 8,
+      "reserved": false
+    },
+    {
+      "slot": 79,
+      "tier": 3,
+      "cid": 2,
+      "reserved": false
+    },
+    {
+      "slot": 80,
+      "tier": 2,
+      "cid": 4,
+      "reserved": false
+    },
+    {
+      "slot": 81,
+      "tier": 3,
+      "cid": 1,
+      "reserved": false
+    },
+    {
+      "slot": 82,
+      "tier": 4,
+      "cid": 1,
+      "reserved": false
+    },
+    {
+      "slot": 83,
+      "tier": 4,
+      "cid": 6,
+      "reserved": false
+    },
+    {
+      "slot": 84,
+      "tier": 4,
+      "cid": 4,
+      "reserved": false
+    },
+    {
+      "slot": 85,
+      "tier": 3,
+      "cid": 5,
+      "reserved": false
+    },
+    {
+      "slot": 86,
+      "tier": 3,
+      "cid": 8,
+      "reserved": false
+    },
+    {
+      "slot": 87,
+      "tier": 3,
+      "cid": 5,
+      "reserved": false
+    },
+    {
+      "slot": 88,
+      "tier": 2,
+      "cid": 4,
+      "reserved": false
+    },
+    {
+      "slot": 89,
+      "tier": 3,
+      "cid": 6,
+      "reserved": false
+    },
+    {
+      "slot": 90,
+      "tier": 3,
+      "cid": 5,
+      "reserved": false
+    },
+    {
+      "slot": 91,
+      "tier": 1,
+      "cid": 3,
+      "reserved": false
+    },
+    {
+      "slot": 92,
+      "tier": 2,
+      "cid": 6,
+      "reserved": false
+    },
+    {
+      "slot": 93,
+      "tier": 3,
+      "cid": 8,
+      "reserved": false
+    },
+    {
+      "slot": 94,
+      "tier": 3,
+      "cid": 6,
+      "reserved": false
+    },
+    {
+      "slot": 95,
+      "tier": 4,
+      "cid": 9,
+      "reserved": false
+    },
+    {
+      "slot": 96,
+      "tier": 0,
+      "cid": 16,
+      "reserved": false
+    },
+    {
+      "slot": 97,
+      "tier": 1,
+      "cid": 0,
+      "reserved": false
+    },
+    {
+      "slot": 98,
+      "tier": 3,
+      "cid": 8,
+      "reserved": false
+    },
+    {
+      "slot": 99,
+      "tier": 3,
+      "cid": 3,
+      "reserved": false
+    },
+    {
+      "slot": 100,
+      "tier": 3,
+      "cid": 0,
+      "reserved": false
+    },
+    {
+      "slot": 101,
+      "tier": 3,
+      "cid": 8,
+      "reserved": false
+    },
+    {
+      "slot": 102,
+      "tier": 3,
+      "cid": 5,
+      "reserved": false
+    },
+    {
+      "slot": 103,
+      "tier": 3,
+      "cid": 20,
+      "reserved": false
+    },
+    {
+      "slot": 104,
+      "tier": 3,
+      "cid": 0,
+      "reserved": false
+    },
+    {
+      "slot": 105,
+      "tier": 2,
+      "cid": 13,
+      "reserved": false
+    },
+    {
+      "slot": 106,
+      "tier": 3,
+      "cid": 20,
+      "reserved": false
+    },
+    {
+      "slot": 107,
+      "tier": 4,
+      "cid": 6,
+      "reserved": false
+    },
+    {
+      "slot": 108,
+      "tier": 4,
+      "cid": 0,
+      "reserved": false
+    },
+    {
+      "slot": 109,
+      "tier": 4,
+      "cid": 5,
+      "reserved": false
+    },
+    {
+      "slot": 110,
+      "tier": 4,
+      "cid": 1,
+      "reserved": false
+    },
+    {
+      "slot": 111,
+      "tier": 3,
+      "cid": 0,
+      "reserved": false
+    },
+    {
+      "slot": 112,
+      "tier": 4,
+      "cid": 19,
+      "reserved": false
+    },
+    {
+      "slot": 113,
+      "tier": 1,
+      "cid": 1,
+      "reserved": false
+    },
+    {
+      "slot": 114,
+      "tier": 3,
+      "cid": 7,
+      "reserved": false
+    },
+    {
+      "slot": 115,
+      "tier": 2,
+      "cid": 1,
+      "reserved": false
+    },
+    {
+      "slot": 116,
+      "tier": 4,
+      "cid": 0,
+      "reserved": false
+    },
+    {
+      "slot": 117,
+      "tier": 2,
+      "cid": 7,
+      "reserved": false
+    },
+    {
+      "slot": 118,
+      "tier": 4,
+      "cid": 4,
+      "reserved": false
+    },
+    {
+      "slot": 119,
+      "tier": 3,
+      "cid": 0,
+      "reserved": false
+    },
+    {
+      "slot": 120,
+      "tier": 1,
+      "cid": 7,
+      "reserved": false
+    },
+    {
+      "slot": 121,
+      "tier": 4,
+      "cid": 3,
+      "reserved": false
+    },
+    {
+      "slot": 122,
+      "tier": 2,
+      "cid": 13,
+      "reserved": false
+    },
+    {
+      "slot": 123,
+      "tier": 3,
+      "cid": 6,
+      "reserved": false
+    },
+    {
+      "slot": 124,
+      "tier": 0,
+      "cid": 14,
+      "reserved": false
+    },
+    {
+      "slot": 125,
+      "tier": 1,
+      "cid": 4,
+      "reserved": false
+    },
+    {
+      "slot": 126,
+      "tier": 1,
+      "cid": 13,
+      "reserved": false
+    },
+    {
+      "slot": 127,
+      "tier": 4,
+      "cid": 2,
+      "reserved": false
+    },
+    {
+      "slot": 128,
+      "tier": 4,
+      "cid": 7,
+      "reserved": false
+    },
+    {
+      "slot": 129,
+      "tier": 4,
+      "cid": 5,
+      "reserved": false
+    },
+    {
+      "slot": 130,
+      "tier": 3,
+      "cid": 6,
+      "reserved": false
+    },
+    {
+      "slot": 131,
+      "tier": 1,
+      "cid": 3,
+      "reserved": false
+    },
+    {
+      "slot": 132,
+      "tier": 3,
+      "cid": 8,
+      "reserved": false
+    },
+    {
+      "slot": 133,
+      "tier": 4,
+      "cid": 4,
+      "reserved": false
+    },
+    {
+      "slot": 134,
+      "tier": 2,
+      "cid": 7,
+      "reserved": false
+    },
+    {
+      "slot": 135,
+      "tier": 3,
+      "cid": 1,
+      "reserved": false
+    },
+    {
+      "slot": 136,
+      "tier": 4,
+      "cid": 8,
+      "reserved": false
+    },
+    {
+      "slot": 137,
+      "tier": 4,
+      "cid": 19,
+      "reserved": false
+    },
+    {
+      "slot": 138,
+      "tier": 3,
+      "cid": 9,
+      "reserved": false
+    },
+    {
+      "slot": 139,
+      "tier": 4,
+      "cid": 9,
+      "reserved": false
+    },
+    {
+      "slot": 140,
+      "tier": 4,
+      "cid": 0,
+      "reserved": false
+    },
+    {
+      "slot": 141,
+      "tier": 4,
+      "cid": 7,
+      "reserved": false
+    },
+    {
+      "slot": 142,
+      "tier": 2,
+      "cid": 11,
+      "reserved": false
+    },
+    {
+      "slot": 143,
+      "tier": 1,
+      "cid": 6,
+      "reserved": false
+    },
+    {
+      "slot": 144,
+      "tier": 4,
+      "cid": 5,
+      "reserved": false
+    },
+    {
+      "slot": 145,
+      "tier": 4,
+      "cid": 19,
+      "reserved": false
+    },
+    {
+      "slot": 146,
+      "tier": 0,
+      "cid": 12,
+      "reserved": false
+    },
+    {
+      "slot": 147,
+      "tier": 4,
+      "cid": 9,
+      "reserved": false
+    },
+    {
+      "slot": 148,
+      "tier": 0,
+      "cid": 13,
+      "reserved": false
+    },
+    {
+      "slot": 149,
+      "tier": 3,
+      "cid": 9,
+      "reserved": false
+    },
+    {
+      "slot": 150,
+      "tier": 4,
+      "cid": 8,
+      "reserved": false
+    },
+    {
+      "slot": 151,
+      "tier": 3,
+      "cid": 9,
+      "reserved": false
+    },
+    {
+      "slot": 152,
+      "tier": 3,
+      "cid": 2,
+      "reserved": false
+    },
+    {
+      "slot": 153,
+      "tier": 1,
+      "cid": 7,
+      "reserved": false
+    },
+    {
+      "slot": 154,
+      "tier": 2,
+      "cid": 19,
+      "reserved": false
+    },
+    {
+      "slot": 155,
+      "tier": 3,
+      "cid": 3,
+      "reserved": false
+    },
+    {
+      "slot": 156,
+      "tier": 0,
+      "cid": 17,
+      "reserved": false
+    },
+    {
+      "slot": 157,
+      "tier": 1,
+      "cid": 13,
+      "reserved": false
+    },
+    {
+      "slot": 158,
+      "tier": 2,
+      "cid": 8,
+      "reserved": false
+    },
+    {
+      "slot": 159,
+      "tier": 1,
+      "cid": 3,
+      "reserved": false
+    },
+    {
+      "slot": 160,
+      "tier": 2,
+      "cid": 8,
+      "reserved": false
+    },
+    {
+      "slot": 161,
+      "tier": 2,
+      "cid": 13,
+      "reserved": false
+    },
+    {
+      "slot": 162,
+      "tier": 2,
+      "cid": 7,
+      "reserved": false
+    },
+    {
+      "slot": 163,
+      "tier": 3,
+      "cid": 7,
+      "reserved": false
+    },
+    {
+      "slot": 164,
+      "tier": 4,
+      "cid": 8,
+      "reserved": false
+    },
+    {
+      "slot": 165,
+      "tier": 2,
+      "cid": 3,
+      "reserved": false
+    },
+    {
+      "slot": 166,
+      "tier": 2,
+      "cid": 19,
+      "reserved": false
+    },
+    {
+      "slot": 167,
+      "tier": 2,
+      "cid": 4,
+      "reserved": false
+    },
+    {
+      "slot": 168,
+      "tier": 2,
+      "cid": 1,
+      "reserved": false
+    },
+    {
+      "slot": 169,
+      "tier": 2,
+      "cid": 6,
+      "reserved": false
+    },
+    {
+      "slot": 170,
+      "tier": 3,
+      "cid": 8,
+      "reserved": false
+    },
+    {
+      "slot": 171,
+      "tier": 0,
+      "cid": 11,
+      "reserved": false
+    },
+    {
+      "slot": 172,
+      "tier": 4,
+      "cid": 9,
+      "reserved": false
+    },
+    {
+      "slot": 173,
+      "tier": 4,
+      "cid": 19,
+      "reserved": false
+    },
+    {
+      "slot": 174,
+      "tier": 3,
+      "cid": 3,
+      "reserved": false
+    },
+    {
+      "slot": 175,
+      "tier": 3,
+      "cid": 1,
+      "reserved": false
+    },
+    {
+      "slot": 176,
+      "tier": 3,
+      "cid": 1,
+      "reserved": false
+    },
+    {
+      "slot": 177,
+      "tier": 4,
+      "cid": 8,
+      "reserved": false
+    },
+    {
+      "slot": 178,
+      "tier": 2,
+      "cid": 11,
+      "reserved": false
+    },
+    {
+      "slot": 179,
+      "tier": 2,
+      "cid": 11,
+      "reserved": false
+    },
+    {
+      "slot": 180,
+      "tier": 4,
+      "cid": 1,
+      "reserved": false
+    },
+    {
+      "slot": 181,
+      "tier": 3,
+      "cid": 2,
+      "reserved": false
+    },
+    {
+      "slot": 182,
+      "tier": 3,
+      "cid": 1,
+      "reserved": false
+    },
+    {
+      "slot": 183,
+      "tier": 1,
+      "cid": 0,
+      "reserved": false
+    },
+    {
+      "slot": 184,
+      "tier": 3,
+      "cid": 3,
+      "reserved": false
+    },
+    {
+      "slot": 185,
+      "tier": 3,
+      "cid": 5,
+      "reserved": false
+    },
+    {
+      "slot": 186,
+      "tier": 1,
+      "cid": 13,
+      "reserved": false
+    },
+    {
+      "slot": 187,
+      "tier": 4,
+      "cid": 20,
+      "reserved": false
+    },
+    {
+      "slot": 188,
+      "tier": 1,
+      "cid": 6,
+      "reserved": false
+    },
+    {
+      "slot": 189,
+      "tier": 4,
+      "cid": 6,
+      "reserved": false
+    },
+    {
+      "slot": 190,
+      "tier": 4,
+      "cid": 0,
+      "reserved": false
+    },
+    {
+      "slot": 191,
+      "tier": 2,
+      "cid": 7,
+      "reserved": false
+    },
+    {
+      "slot": 192,
+      "tier": 1,
+      "cid": 1,
+      "reserved": false
+    },
+    {
+      "slot": 193,
+      "tier": 2,
+      "cid": 6,
+      "reserved": false
+    },
+    {
+      "slot": 194,
+      "tier": 4,
+      "cid": 2,
+      "reserved": false
+    },
+    {
+      "slot": 195,
+      "tier": 3,
+      "cid": 5,
+      "reserved": false
+    },
+    {
+      "slot": 196,
+      "tier": 4,
+      "cid": 20,
+      "reserved": false
+    },
+    {
+      "slot": 197,
+      "tier": 3,
+      "cid": 4,
+      "reserved": false
+    },
+    {
+      "slot": 198,
+      "tier": 1,
+      "cid": 6,
+      "reserved": false
+    },
+    {
+      "slot": 199,
+      "tier": 2,
+      "cid": 3,
+      "reserved": false
+    },
+    {
+      "slot": 200,
+      "tier": 1,
+      "cid": 8,
+      "reserved": false
+    },
+    {
+      "slot": 201,
+      "tier": 3,
+      "cid": 2,
+      "reserved": false
+    },
+    {
+      "slot": 202,
+      "tier": 1,
+      "cid": 11,
+      "reserved": false
+    },
+    {
+      "slot": 203,
+      "tier": 3,
+      "cid": 20,
+      "reserved": false
+    },
+    {
+      "slot": 204,
+      "tier": 2,
+      "cid": 8,
+      "reserved": false
+    },
+    {
+      "slot": 205,
+      "tier": 3,
+      "cid": 4,
+      "reserved": false
+    },
+    {
+      "slot": 206,
+      "tier": 1,
+      "cid": 19,
+      "reserved": false
+    },
+    {
+      "slot": 207,
+      "tier": 0,
+      "cid": 15,
+      "reserved": false
+    },
+    {
+      "slot": 208,
+      "tier": 1,
+      "cid": 11,
+      "reserved": false
+    },
+    {
+      "slot": 209,
+      "tier": 2,
+      "cid": 0,
+      "reserved": false
+    }
+  ]
+}
