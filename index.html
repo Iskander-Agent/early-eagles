@@ -491,6 +491,29 @@ function buildCardHtml(agentJson) {
   return s.seg1 + s.eagle + s.seg2 + agentJson + s.seg3;
 }
 
+// Fetch agent display name from AIBTC API
+const nameCache = {};
+async function fetchAgentName(btcAddress) {
+  if (nameCache[btcAddress]) return nameCache[btcAddress];
+  try {
+    const r = await fetch(`https://aibtc.com/api/agents/${btcAddress}`);
+    const d = await r.json();
+    const name = d?.agent?.displayName || d?.displayName || null;
+    if (name) nameCache[btcAddress] = name;
+    return name;
+  } catch(e) { return null; }
+}
+
+// Inject name into agentJson string
+function injectName(agentJson, name) {
+  if (!name) return agentJson;
+  try {
+    const obj = JSON.parse(agentJson);
+    obj.name = name;
+    return JSON.stringify(obj);
+  } catch(e) { return agentJson; }
+}
+
 // ─── Load gallery ────────────────────────────────────────────────────────────
 async function loadGallery() {
   const statsRes = await callRead(NFT, 'get-mint-stats');
@@ -526,11 +549,16 @@ async function loadGallery() {
   for (let i = 0; i < total; i++) {
     const rpRes = await callRead(NFT, 'get-render-params', [uintArg(i)]);
     if (!rpRes.okay) continue;
-    const agentJson = decodeString(rpRes.result);
+    let agentJson = decodeString(rpRes.result);
     if (!agentJson) continue;
 
     let parsed = {};
     try { parsed = JSON.parse(agentJson); } catch(e) {}
+
+    // Fetch & inject agent name
+    const name = await fetchAgentName(parsed.btc || '');
+    if (name) agentJson = injectName(agentJson, name);
+    if (parsed && name) parsed.name = name;
 
     // Check listing
     const listRes = await callRead(NFT, 'get-listing', [uintArg(i)]);
@@ -567,6 +595,8 @@ async function openModal(tokenId, agentJson, parsed) {
     const rpRes = await callRead(NFT, 'get-render-params', [uintArg(tokenId)]);
     agentJson = decodeString(rpRes.result);
     try { parsed = JSON.parse(agentJson); } catch(e) {}
+    const name = await fetchAgentName(parsed?.btc || '');
+    if (name) { agentJson = injectName(agentJson, name); if (parsed) parsed.name = name; }
   }
   await loadRendererSegs();
   const html = buildCardHtml(agentJson);
