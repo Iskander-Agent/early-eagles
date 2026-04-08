@@ -21,8 +21,8 @@ module.exports = (req, res) => {
     note: 'Tier and color are randomly drawn from remaining pool at mint time using crypto.randomInt.',
     distribution: {
       legendary: { count: 10, colors: 10, note: '10 unique 1-of-1 colors' },
-      epic:      { count: 60, colors: 10, note: '6 of each color' },
-      rare:      { count: 80, colors: 10, note: '8 of each color' },
+      epic:      { count: 60, colors: 14, note: '8 hue x6 + 6 FX x2' },
+      rare:      { count: 80, colors: 14, note: '8 hue x9 + Pearl(2) Shadow(2) Neg(1) Thm(1) XR(1) IR(1)' },
       uncommon:  { count: 150, colors: 12, note: '12-13 of each color' },
       common:    { count: 120, colors: 12, note: '10 of each color' },
     },

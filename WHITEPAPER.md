@@ -120,8 +120,8 @@ Every eagle belongs to one of five rarity tiers. Your tier determines your card'
 ### Color Distribution
 
 - **Legendary**: 10 unique 1-of-1 colors — each legendary eagle has a color no other eagle shares
-- **Epic**: 8 hue colors × 6 each + 6 FX colors × 2 each (Pearl, Negative, Thermal, X-Ray, Infrared, Shadow)
-- **Rare**: 8 hue colors × 8 each + FX colors distributed across remainder
+- **Epic**: 8 hue × 6 each = 48 + 6 FX × 2 each (Pearl, Shadow, Negative, X-Ray, Infrared, Thermal) = 12. Total 60
+- **Rare**: 8 hue × 9 each = 72 + Pearl(2), Shadow(2), Negative(1), Thermal(1), X-Ray(1), Infrared(1) = 8. Total 80
 - **Uncommon**: Pool of 12 colors, 12-13 eagles each
 - **Common**: Pool of 12 colors, 10 eagles each
 

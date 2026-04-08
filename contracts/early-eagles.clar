@@ -102,36 +102,55 @@
 (define-map rank-to-token uint uint)
 
 ;; ── Color tables ───────────────────────────────────────────────────────────
-;; 0=Azure 1=Amethyst 2=Fuchsia 3=Crimson 4=Amber 5=Jade 6=Forest 7=Teal
-;; 8=Prism 9=Cobalt 10=Chartreuse 11=Violet 12=Gold 13=Pearl 14=Sepia
-;; 15=Shadow 16=Negative 17=Thermal 18=X-Ray 19=Aurora 20=Psychedelic
+;; Hue: 0=Azure 1=Sapphire 2=Amethyst 3=Fuchsia 4=Crimson 5=Scarlet
+;;      6=Ember 7=Amber 8=Chartreuse 9=Jade 10=Forest 11=Teal
+;; FX:  12=Gold 13=Pearl 14=Negative 15=Thermal 16=X-Ray
+;;      17=Aurora 18=Psychedelic 19=Infrared 20=Shadow
 
 ;; Legendary: 10 x 1-of-1, assigned in mint order
+;; idx0=Azure(0) idx1=Gold(12) idx2=Pearl(13) idx3=Negative(14) idx4=Thermal(15)
+;; idx5=X-Ray(16) idx6=Aurora(17) idx7=Psychedelic(18) idx8=Infrared(19) idx9=Shadow(20)
 (define-read-only (legendary-color-for-index (idx uint))
-  (if (is-eq idx u0) u12 (if (is-eq idx u1) u18
-  (if (is-eq idx u2) u19 (if (is-eq idx u3) u20
-  (if (is-eq idx u4) u17 (if (is-eq idx u5) u16
-  (if (is-eq idx u6) u14 (if (is-eq idx u7) u15
-  (if (is-eq idx u8) u13 u0)))))))))
+  (if (is-eq idx u0) u0  (if (is-eq idx u1) u12
+  (if (is-eq idx u2) u13 (if (is-eq idx u3) u14
+  (if (is-eq idx u4) u15 (if (is-eq idx u5) u16
+  (if (is-eq idx u6) u17 (if (is-eq idx u7) u18
+  (if (is-eq idx u8) u19 u20)))))))))
 )
 
-;; Epic/Rare colors (10 options)
-(define-read-only (epic-color-for-index (idx uint))
-  (if (is-eq idx u0) u0 (if (is-eq idx u1) u1
-  (if (is-eq idx u2) u3 (if (is-eq idx u3) u4
-  (if (is-eq idx u4) u13 (if (is-eq idx u5) u6
-  (if (is-eq idx u6) u7 (if (is-eq idx u7) u8
-  (if (is-eq idx u8) u10 u15)))))))))
+;; Epic/Rare hue pool (8 colors): Azure Sapphire Fuchsia Crimson Ember Amber Chartreuse Teal
+(define-read-only (hue-for-index (idx uint))
+  (if (is-eq idx u0) u0  (if (is-eq idx u1) u1
+  (if (is-eq idx u2) u3  (if (is-eq idx u3) u4
+  (if (is-eq idx u4) u6  (if (is-eq idx u5) u7
+  (if (is-eq idx u6) u8  u11)))))))
 )
 
-;; Uncommon/Common colors (12 options)
+;; Epic: mod seed 60 -> 48 hue slots (8x6) + 12 FX slots (6x2)
+;; FX: Pearl(13) Shadow(20) Negative(14) X-Ray(16) Infrared(19) Thermal(15)
+(define-read-only (epic-color-for-slot (slot uint))
+  (if (< slot u48)
+    (hue-for-index (/ slot u6))
+    (let ((fx (- slot u48)))
+      (if (< fx u2) u13 (if (< fx u4) u20
+      (if (< fx u6) u14 (if (< fx u8) u16
+      (if (< fx u10) u19 u15)))))))
+)
+
+;; Rare: mod seed 80 -> 72 hue slots (8x9) + 8 FX slots
+;; FX: Pearl(2) Shadow(2) Negative(1) Thermal(1) X-Ray(1) Infrared(1)
+(define-read-only (rare-color-for-slot (slot uint))
+  (if (< slot u72)
+    (hue-for-index (/ slot u9))
+    (let ((fx (- slot u72)))
+      (if (< fx u2) u13 (if (< fx u4) u20
+      (if (< fx u5) u14 (if (< fx u6) u15
+      (if (< fx u7) u16 u19)))))))
+)
+
+;; Uncommon/Common: all 12 hues (CIDs 0-11)
 (define-read-only (uncommon-color-for-index (idx uint))
-  (if (is-eq idx u0) u0 (if (is-eq idx u1) u1
-  (if (is-eq idx u2) u2 (if (is-eq idx u3) u3
-  (if (is-eq idx u4) u4 (if (is-eq idx u5) u5
-  (if (is-eq idx u6) u6 (if (is-eq idx u7) u7
-  (if (is-eq idx u8) u8 (if (is-eq idx u9) u9
-  (if (is-eq idx u10) u10 u11)))))))))))
+  (if (< idx u12) idx u0)
 )
 
 ;; ── Random seed ────────────────────────────────────────────────────────────
@@ -167,8 +186,8 @@
 
 (define-private (pick-color (tier uint) (seed uint) (leg-minted uint))
   (if (is-eq tier TIER-LEGENDARY) (legendary-color-for-index leg-minted)
-  (if (is-eq tier TIER-EPIC) (epic-color-for-index (mod seed u10))
-  (if (is-eq tier TIER-RARE) (epic-color-for-index (mod seed u10))
+  (if (is-eq tier TIER-EPIC) (epic-color-for-slot (mod seed u60))
+  (if (is-eq tier TIER-RARE) (rare-color-for-slot (mod seed u80))
   (if (is-eq tier TIER-UNCOMMON) (uncommon-color-for-index (mod seed u12))
   (uncommon-color-for-index (mod seed u12))))))
 )
