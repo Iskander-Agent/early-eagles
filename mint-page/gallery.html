@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🦅 Early Eagles — Gallery</title>
+<meta name="description" content="Browse all minted Early Eagles — 420 fully on-chain NFTs on the Stacks blockchain.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ── Reset & Root ── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --gold:        #d4a84b;
+  --gold-light:  #e8c26a;
+  --gold-dim:    rgba(212,168,75,0.15);
+  --gold-glow:   rgba(212,168,75,0.3);
+  --navy:        #0d1117;
+  --navy-mid:    #131a24;
+  --navy-light:  #1a2433;
+  --surface:     #0f1520;
+  --surface2:    #161f2e;
+  --border:      rgba(212,168,75,0.18);
+  --border-sub:  rgba(255,255,255,0.07);
+  --text:        #e8eaf0;
+  --text-muted:  #8892a4;
+  --text-dim:    #4a5568;
+  --green:       #00ff88;
+  --radius:      12px;
+  --radius-sm:   8px;
+  --transition:  0.2s ease;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--navy);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+h1, h2, h3, h4 { font-family: 'Rajdhani', sans-serif; font-weight: 700; letter-spacing: 0.02em; }
+
+/* ── Layout ── */
+.container { max-width: 1280px; margin: 0 auto; padding: 0 24px; }
+
+/* ── Buttons ── */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  font-family: 'Rajdhani', sans-serif; font-weight: 600; font-size: 15px;
+  letter-spacing: 0.05em; text-transform: uppercase;
+  padding: 11px 24px; border-radius: var(--radius-sm);
+  border: none; cursor: pointer; text-decoration: none;
+  transition: all var(--transition); white-space: nowrap;
+}
+.btn-primary {
+  background: var(--gold); color: #0d1117;
+  box-shadow: 0 0 20px rgba(212,168,75,0.3);
+}
+.btn-primary:hover { background: var(--gold-light); transform: translateY(-2px); box-shadow: 0 4px 30px rgba(212,168,75,0.5); }
+.btn-ghost {
+  background: transparent; color: var(--gold);
+  border: 1px solid var(--border);
+}
+.btn-ghost:hover { background: var(--gold-dim); transform: translateY(-2px); }
+.btn-sm { padding: 8px 16px; font-size: 12px; }
+
+/* ── NAV ── */
+nav {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(13,17,23,0.92); backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border-sub);
+  padding: 14px 0;
+}
+.nav-inner { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.nav-brand {
+  font-family: 'Rajdhani', sans-serif; font-weight: 700;
+  font-size: 20px; color: var(--gold); text-decoration: none;
+  display: flex; align-items: center; gap: 8px;
+}
+.nav-links { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.nav-links a {
+  font-family: 'Rajdhani', sans-serif; font-weight: 500; font-size: 13px;
+  letter-spacing: 0.05em; text-transform: uppercase;
+  color: var(--text-muted); text-decoration: none;
+  padding: 6px 12px; border-radius: 6px; transition: all 0.2s ease;
+}
+.nav-links a:hover { color: var(--gold); background: var(--gold-dim); }
+.nav-links a.active { color: var(--gold); }
+.nav-right { display: flex; align-items: center; gap: 10px; }
+
+/* ── Page header ── */
+.page-header {
+  position: relative; overflow: hidden;
+  padding: 60px 0 40px; text-align: center;
+}
+.page-header-inner { position: relative; z-index: 2; }
+.gallery-label {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: 'Rajdhani', sans-serif; font-size: 11px; font-weight: 600;
+  letter-spacing: 3px; text-transform: uppercase; color: var(--gold);
+  background: var(--gold-dim); border: 1px solid var(--border);
+  border-radius: 20px; padding: 5px 14px; margin-bottom: 16px;
+}
+.page-title {
+  font-family: 'Rajdhani', sans-serif; font-weight: 700;
+  font-size: clamp(2.4rem, 6vw, 4rem);
+  background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 60%, #a07830 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  line-height: 1; margin-bottom: 14px; letter-spacing: -0.01em;
+}
+.page-subtitle {
+  font-size: 15px; color: var(--text-muted);
+  display: flex; align-items: center; justify-content: center; gap: 16px;
+  flex-wrap: wrap;
+}
+.page-subtitle strong { color: var(--text); font-weight: 600; }
+.stat-sep { color: var(--text-dim); }
+.pulse-dot {
+  width: 7px; height: 7px; border-radius: 50%; background: var(--green);
+  box-shadow: 0 0 7px var(--green); flex-shrink: 0;
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100%{ opacity:1; transform:scale(1); } 50%{ opacity:0.5; transform:scale(0.85); } }
+
+/* ── Filter bar ── */
+.filter-bar {
+  padding: 20px 0;
+  border-bottom: 1px solid var(--border-sub);
+  position: sticky; top: 57px; z-index: 90;
+  background: rgba(13,17,23,0.95); backdrop-filter: blur(8px);
+}
+.filter-inner {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+.filter-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: 'Rajdhani', sans-serif; font-size: 13px; font-weight: 600;
+  letter-spacing: 0.04em; text-transform: uppercase;
+  padding: 7px 16px; border-radius: 20px; border: none; cursor: pointer;
+  background: var(--surface2); border: 1px solid var(--border-sub);
+  color: var(--text-muted); transition: all var(--transition);
+}
+.filter-pill:hover { border-color: var(--border); color: var(--text); }
+.filter-pill.active {
+  background: var(--gold-dim); border-color: var(--border);
+  color: var(--gold);
+}
+.filter-pill[data-tier="legendary"].active { color: var(--gold); border-color: rgba(212,168,75,0.5); background: rgba(212,168,75,0.12); }
+.filter-pill[data-tier="epic"].active      { color: #c084fc; border-color: rgba(160,80,255,0.4); background: rgba(160,80,255,0.1); }
+.filter-pill[data-tier="rare"].active      { color: #7dd3fc; border-color: rgba(56,189,248,0.4); background: rgba(56,189,248,0.1); }
+.filter-pill[data-tier="uncommon"].active  { color: #6ee7b7; border-color: rgba(52,211,153,0.4); background: rgba(52,211,153,0.1); }
+.filter-pill[data-tier="common"].active    { color: #9ca3af; border-color: rgba(156,163,175,0.35); background: rgba(156,163,175,0.08); }
+
+.filter-count {
+  font-size: 11px; padding: 1px 6px; border-radius: 8px;
+  background: rgba(255,255,255,0.08); color: var(--text-dim);
+}
+
+/* ── Gallery Grid ── */
+.gallery-section { padding: 32px 0 60px; }
+
+.eagles-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+}
+@media (max-width: 1100px) { .eagles-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 760px)  { .eagles-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; } }
+@media (max-width: 480px)  { .eagles-grid { grid-template-columns: 1fr; gap: 14px; } }
+
+/* ── Eagle Card ── */
+.eagle-card {
+  overflow: hidden;
+  transition: transform var(--transition), box-shadow var(--transition);
+  opacity: 0;
+  transform: translateY(16px);
+  animation: cardIn 0.4s ease forwards;
+  position: relative;
+}
+.eagle-card:hover {
+  transform: translateY(-4px);
+}
+.eagle-card.tier-legendary { }
+.eagle-card.tier-legendary:hover { }
+
+@keyframes cardIn {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* iframe container — 340×480 scaled to fit card width */
+.card-iframe-wrap {
+  border-radius: var(--radius);
+  position: relative;
+  width: 100%;
+  /* 340:480 = 0.708 aspect ratio */
+  padding-bottom: calc(480 / 340 * 100%);
+  background: transparent;
+  overflow: hidden;
+}
+.card-iframe-wrap iframe {
+  position: absolute;
+  top: 0; left: 0;
+  width: 340px;
+  height: 480px;
+  border: none;
+  transform-origin: top left;
+  /* scale is set via JS based on rendered width */
+}
+.card-iframe-wrap .iframe-loader {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: transparent;
+  z-index: 2; transition: opacity 0.3s ease;
+}
+.card-iframe-wrap .iframe-loader.hidden { opacity: 0; pointer-events: none; }
+
+
+
+
+/* ── Skeleton Cards ── */
+.skeleton-card {
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.skeleton-iframe {
+  width: 100%;
+  padding-bottom: calc(480 / 340 * 100%);
+  background: linear-gradient(90deg, var(--surface) 25%, var(--surface2) 50%, var(--surface) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+  position: relative;
+}
+.skeleton-info { padding: 14px 16px 16px; }
+.skeleton-line {
+  height: 14px; border-radius: 6px; margin-bottom: 10px;
+  background: linear-gradient(90deg, var(--surface) 25%, var(--surface2) 50%, var(--surface) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+.skeleton-line.short { width: 55%; }
+.skeleton-line.thin  { height: 10px; }
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── Empty state ── */
+.empty-state {
+  text-align: center; padding: 100px 24px; grid-column: 1/-1;
+}
+.empty-eagle { font-size: 64px; margin-bottom: 20px; display: block; opacity: 0.5; }
+.empty-state h3 {
+  font-size: 1.6rem; color: var(--text-muted); margin-bottom: 12px;
+}
+.empty-state p { color: var(--text-dim); font-size: 14px; margin-bottom: 28px; }
+
+/* ── Error state ── */
+.error-banner {
+  background: rgba(255,77,106,0.08); border: 1px solid rgba(255,77,106,0.25);
+  border-radius: var(--radius-sm); padding: 16px 20px;
+  margin-bottom: 24px; display: none;
+  font-size: 14px; color: #ff8a9a;
+}
+
+/* ── Refresh indicator ── */
+.refresh-bar {
+  display: flex; align-items: center; justify-content: flex-end; gap: 8px;
+  margin-bottom: 20px;
+}
+.refresh-text {
+  font-size: 12px; color: var(--text-dim);
+  font-family: 'Rajdhani', sans-serif; letter-spacing: 0.04em;
+}
+.refresh-btn {
+  background: none; border: 1px solid var(--border-sub);
+  color: var(--text-dim); font-size: 12px; padding: 4px 12px;
+  border-radius: 6px; cursor: pointer; font-family: 'Inter', sans-serif;
+  transition: all var(--transition);
+}
+.refresh-btn:hover { border-color: var(--border); color: var(--gold); }
+.refresh-btn.spinning svg { animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── No results (filtered) ── */
+.no-results {
+  text-align: center; padding: 60px 24px; grid-column: 1/-1;
+  color: var(--text-dim); font-size: 14px;
+}
+
+@media (max-width: 640px) {
+  .filter-bar { top: 52px; }
+  nav { padding: 10px 0; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── Navigation ── -->
+<nav>
+  <div class="container nav-inner">
+    <a class="nav-brand" href="/">🦅 Early Eagles</a>
+    <div class="nav-links"><a href="/">Mint</a><a href="/gallery" class="active">Gallery</a><a href="/whitepaper">Whitepaper</a></div>
+      <div class="nav-right">
+      <a class="btn btn-primary btn-sm" href="/#mint">Mint Your Eagle →</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ── Page Header ── -->
+<div class="page-header">
+  <div class="container page-header-inner">
+    <div class="gallery-label">🖼 On-Chain Gallery</div>
+    <h1 class="page-title">GALLERY</h1>
+    <div class="page-subtitle" id="subtitle-stats">
+      <span class="pulse-dot"></span>
+      <span><strong id="stat-minted">—</strong> eagles minted</span>
+      <span class="stat-sep">·</span>
+      <span><strong id="stat-remaining">—</strong> remaining</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── Filter Bar ── */
+<div class="filter-bar">
+  <div class="container">
+    <div class="filter-inner" id="filter-bar">
+      <button class="filter-pill active" data-tier="all" onclick="setFilter('all', this)">All <span class="filter-count" id="count-all">—</span></button>
+      <button class="filter-pill" data-tier="legendary" onclick="setFilter('legendary', this)">🔱 Legendary <span class="filter-count" id="count-legendary">—</span></button>
+      <button class="filter-pill" data-tier="epic"      onclick="setFilter('epic', this)">◈ Epic <span class="filter-count" id="count-epic">—</span></button>
+      <button class="filter-pill" data-tier="rare"      onclick="setFilter('rare', this)">◇ Rare <span class="filter-count" id="count-rare">—</span></button>
+      <button class="filter-pill" data-tier="uncommon"  onclick="setFilter('uncommon', this)">○ Uncommon <span class="filter-count" id="count-uncommon">—</span></button>
+      <button class="filter-pill" data-tier="common"    onclick="setFilter('common', this)">● Common <span class="filter-count" id="count-common">—</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Gallery ── -->
+<div class="gallery-section">
+  <div class="container">
+    <div class="refresh-bar">
+      <span class="refresh-text" id="refresh-text">Click to refresh</span>
+      <button class="refresh-btn" id="refresh-btn" onclick="loadGallery(true)" title="Refresh now">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+      </button>
+    </div>
+
+    <div class="error-banner" id="error-banner"></div>
+
+    <div class="eagles-grid" id="eagles-grid">
+      <!-- Skeleton placeholders shown while loading -->
+    </div>
+  </div>
+</div>
+
+
+<script>
+/* ── CONFIG ── */
+const CONFIG = {
+  contractAddress:  'SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2',
+  rendererAddress:  'SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2',
+  workerUrl:        'https://early-eagles.vercel.app',
+  rendererName:     'early-eagles-renderer',
+  contractName:    'early-eagles',
+  stacksApiUrl:    'https://api.hiro.so',
+  explorerBase:    'https://explorer.hiro.so',
+  network:         'mainnet',
+};
+
+const TOTAL_SUPPLY = 420;
+// Contract tier IDs: 0=Legendary, 1=Epic, 2=Rare, 3=Uncommon, 4=Common
+const TIER_NAMES   = ['Legendary', 'Epic', 'Rare', 'Uncommon', 'Common'];
+const TIER_IDS     = ['legendary', 'epic', 'rare', 'uncommon', 'common'];
+
+/* ── State ── */
+let eaglesData     = [];      // [{id, name, tier, tierName, tierId, owner, html}]
+let activeFilter   = 'all';
+let refreshTimer   = null;
+let isLoading      = false;
+
+
+
+/* ── Decode Clarity result hex to string ── */
+
+
+
+
+function abbreviateAddress(addr) {
+  if (!addr || addr.length < 12) return addr;
+  return addr.slice(0, 8) + '…' + addr.slice(-4);
+}
+
+/* ── API call helper ── */
+/* ── Render skeleton cards ── */
+function renderSkeletons(count) {
+  const grid = document.getElementById('eagles-grid');
+  grid.innerHTML = '';
+  for (let i = 0; i < count; i++) {
+    const sk = document.createElement('div');
+    sk.className = 'skeleton-card';
+    sk.innerHTML = `
+      <div class="skeleton-iframe"></div>
+      <div class="skeleton-info">
+        <div class="skeleton-line"></div>
+        <div class="skeleton-line short thin"></div>
+      </div>`;
+    grid.appendChild(sk);
+  }
+}
+
+/* ── Build eagle card element ── */
+function buildEagleCard(eagle, index) {
+  const card = document.createElement('div');
+  card.className = `eagle-card tier-${eagle.tierId}`;
+  card.dataset.tier = eagle.tierId;
+  card.style.animationDelay = `${Math.min(index * 60, 600)}ms`;
+
+  const ownerDisplay = eagle.owner ? abbreviateAddress(eagle.owner) : 'Unknown';
+  const explorerHref = eagle.owner
+    ? `${CONFIG.explorerBase}/address/${eagle.owner}?chain=${CONFIG.network}`
+    : '#';
+
+  card.innerHTML = `
+    <div class="card-iframe-wrap" id="wrap-${eagle.id}">
+      <div class="iframe-loader" id="loader-${eagle.id}">
+        <div style="text-align:center;">
+          <div style="font-size:28px;margin-bottom:8px;opacity:0.4;">🦅</div>
+          <div style="font-size:11px;color:var(--text-dim);font-family:Rajdhani,sans-serif;letter-spacing:0.05em;">Loading…</div>
+        </div>
+      </div>
+    </div>`;
+
+  // Inject iframe after element is attached (needs layout for scale calc)
+  if (eagle.html) {
+    requestAnimationFrame(() => {
+      const wrap = card.querySelector('.card-iframe-wrap');
+      if (!wrap) return;
+      const iframe = document.createElement('iframe');
+      iframe.setAttribute('scrolling', 'no');
+      iframe.setAttribute('sandbox', 'allow-scripts');
+      iframe.style.cssText = 'position:absolute;top:0;left:0;width:340px;height:480px;border:none;transform-origin:top left;pointer-events:none;';
+
+      iframe.addEventListener('load', () => {
+        // Scale iframe to fill wrapper width
+        scaleIframe(iframe, wrap);
+        const loader = card.querySelector(`#loader-${eagle.id}`);
+        if (loader) loader.classList.add('hidden');
+      });
+
+      iframe.srcdoc = eagle.html;
+      wrap.appendChild(iframe);
+
+      // Observe resize
+      if (window.ResizeObserver) {
+        const ro = new ResizeObserver(() => scaleIframe(iframe, wrap));
+        ro.observe(wrap);
+      }
+    });
+  } else {
+    // No HTML — show eagle icon placeholder
+    const wrap = card.querySelector('.card-iframe-wrap');
+    if (wrap) {
+      const loader = card.querySelector(`#loader-${eagle.id}`);
+      if (loader) {
+        loader.innerHTML = `<div style="text-align:center;"><div style="font-size:40px;margin-bottom:8px;">🦅</div><div style="font-size:11px;color:var(--text-dim);font-family:Rajdhani,sans-serif;letter-spacing:0.05em;">#${eagle.id}</div></div>`;
+      }
+    }
+  }
+
+  return card;
+}
+
+
+
+function scaleIframe(iframe, wrap) {
+  const wrapW = wrap.clientWidth;
+  if (!wrapW) return;
+  const scale = wrapW / 340;
+  iframe.style.transform = `scale(${scale})`;
+}
+
+/* ── Render grid (with filter applied) ── */
+function renderGrid() {
+  const grid = document.getElementById('eagles-grid');
+  grid.innerHTML = '';
+
+  const filtered = activeFilter === 'all'
+    ? eaglesData
+    : eaglesData.filter(e => e.tierId === activeFilter);
+
+  if (eaglesData.length === 0) {
+    // Empty state
+    const empty = document.createElement('div');
+    empty.className = 'empty-state';
+    empty.innerHTML = `
+      <span class="empty-eagle">🦅</span>
+      <h3>No eagles minted yet</h3>
+      <p>Be the first Genesis AIBTC agent to claim your eagle.</p>
+      <a class="btn btn-primary" href="/#mint">⚡ Mint My Eagle</a>`;
+    grid.appendChild(empty);
+    return;
+  }
+
+  if (filtered.length === 0) {
+    const noRes = document.createElement('div');
+    noRes.className = 'no-results';
+    noRes.textContent = `No ${activeFilter} eagles minted yet.`;
+    grid.appendChild(noRes);
+    return;
+  }
+
+  filtered.forEach((eagle, idx) => {
+    grid.appendChild(buildEagleCard(eagle, idx));
+  });
+}
+
+/* ── Update filter counts ── */
+function updateFilterCounts() {
+  const counts = { all: eaglesData.length, legendary: 0, epic: 0, rare: 0, uncommon: 0, common: 0 };
+  eaglesData.forEach(e => { if (counts[e.tierId] !== undefined) counts[e.tierId]++; });
+  Object.entries(counts).forEach(([tier, cnt]) => {
+    const el = document.getElementById(`count-${tier}`);
+    if (el) el.textContent = cnt;
+  });
+}
+
+/* ── Update header stats ── */
+function updateHeaderStats(minted) {
+  const statMinted    = document.getElementById('stat-minted');
+  const statRemaining = document.getElementById('stat-remaining');
+  if (statMinted)    statMinted.textContent    = minted;
+  if (statRemaining) statRemaining.textContent = Math.max(0, TOTAL_SUPPLY - minted);
+}
+
+/* ── Show error banner ── */
+function showError(msg) {
+  const banner = document.getElementById('error-banner');
+  if (banner) { banner.style.display = 'block'; banner.textContent = '⚠️ ' + msg; }
+}
+
+function hideError() {
+  const banner = document.getElementById('error-banner');
+  if (banner) { banner.style.display = 'none'; }
+}
+
+/* ── Main load ── */
+
+
+
+async function loadGallery(manual) {
+  if (isLoading) return;
+  isLoading = true;
+  hideError();
+
+  const refreshBtn = document.getElementById('refresh-btn');
+  if (refreshBtn) refreshBtn.classList.add('spinning');
+
+  const refreshText = document.getElementById('refresh-text');
+  if (refreshText) refreshText.textContent = 'Loading gallery...';
+
+  try {
+    // Single API call — server fetches everything, edge-cached 60s
+    const url = CONFIG.workerUrl + '/api/gallery' + (manual ? '?t=' + Date.now() : '');
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Gallery API returned ' + res.status);
+    const data = await res.json();
+
+    updateHeaderStats(data.totalMinted);
+
+    if (!data.eagles || data.eagles.length === 0) {
+      eaglesData = [];
+      updateFilterCounts();
+      renderGrid();
+      return;
+    }
+
+    eaglesData = data.eagles;
+    updateFilterCounts();
+    renderGrid();
+
+    if (refreshText) {
+      refreshText.textContent = data.totalMinted + ' eagles · Click to refresh';
+    }
+  } catch (err) {
+    showError('Failed to load gallery: ' + err.message);
+    if (eaglesData.length === 0) {
+      document.getElementById('eagles-grid').innerHTML = '';
+    }
+  } finally {
+    isLoading = false;
+    if (refreshBtn) refreshBtn.classList.remove('spinning');
+  }
+}
+
+/* ── Filter handler ── */
+function setFilter(tier, el) {
+  activeFilter = tier;
+  document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+  if (el) el.classList.add('active');
+  renderGrid();
+}
+
+/* ── Escape HTML ── */
+function escHtml(str) {
+  return String(str || '')
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+
+/* ── No auto-refresh — manual only via button ── */
+
+
+/* ── Init ── */
+(async function init() {
+  await loadGallery(false);
+  
+})();
+</script>
+</body>
+</html>
