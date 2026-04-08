@@ -44,7 +44,7 @@ Calling `get-token-uri(token-id)` returns a `data:text/html;base64,...` URI. Ope
 | Contract | Purpose |
 |----------|---------|
 | `early-eagles` | SIP-009 NFT — minting, ownership, built-in marketplace |
-| `early-eagles-renderer-v10` | Locked renderer — 4 segments, color shaders, sigil engine |
+| `early-eagles-renderer` | Locked renderer — 4 segments, color shaders, sigil engine |
 | `commission-stx` | 2% royalty handler (STX sales) |
 | `commission-sbtc` | 2% royalty handler (sBTC sales) |
 
@@ -111,19 +111,19 @@ Every eagle belongs to one of five rarity tiers. Your tier determines your card'
 
 | Tier | Count | Rarity | Background | Badge |
 |------|-------|--------|------------|-------|
-| **Legendary** | 10 | 4.76% | Animated Matrix rain | Gold accent, glow |
-| **Epic** | 30 | 14.29% | Aurora borealis waves | Blue accent |
-| **Rare** | 40 | 19.05% | Purple nebula particles | Purple accent |
-| **Uncommon** | 70 | 33.33% | Fire particle system | Orange accent |
-| **Common** | 60 | 28.57% | Static gradient (10 variants) | Neutral |
+| **Legendary** | 10 | 2.38% | Animated Matrix rain | Gold accent, glow |
+| **Epic** | 60 | 14.29% | Aurora borealis waves | Blue accent |
+| **Rare** | 80 | 19.05% | Purple nebula particles | Purple accent |
+| **Uncommon** | 150 | 35.71% | Fire particle system | Orange accent |
+| **Common** | 120 | 28.57% | Static gradient (10 variants) | Neutral |
 
 ### Color Distribution
 
 - **Legendary**: 10 unique 1-of-1 colors — each legendary eagle has a color no other eagle shares
-- **Epic**: 8 hue colors × 3 each + 6 FX colors × 1 each (Pearl, Negative, Thermal, X-Ray, Infrared, Shadow)
-- **Rare**: 8 hue colors × 4 each + Pearl(2), Shadow(2), Negative(1), Thermal(1), X-Ray(1), Infrared(1)
-- **Uncommon**: Pool of 12 colors, 5-6 eagles each
-- **Common**: Pool of 12 colors, 5 eagles each
+- **Epic**: 8 hue colors × 6 each + 6 FX colors × 2 each (Pearl, Negative, Thermal, X-Ray, Infrared, Shadow)
+- **Rare**: 8 hue colors × 8 each + FX colors distributed across remainder
+- **Uncommon**: Pool of 12 colors, 12-13 eagles each
+- **Common**: Pool of 12 colors, 10 eagles each
 
 ---
 
@@ -135,16 +135,17 @@ Your eagle's tier and color are **randomly assigned at mint time** using `crypto
 
 The process:
 
-1. Agent calls `POST /api/mint` with their STX address
-2. Server verifies AIBTC Genesis registration
-3. Server reads **all previously minted tokens** from on-chain state
-4. Builds a remaining pool: total target counts minus what's been minted
-5. Picks a random `(tier, cid)` from the remaining pool
-6. Admin broadcasts a gasless `airdrop-mint` transaction
+1. Agent calls `POST /api/authorize` with their STX address
+2. Server verifies AIBTC Genesis registration, returns a nonce + expiry + message hash
+3. Agent signs the message hash with their STX private key (secp256k1 consent)
+4. Agent calls `POST /api/mint` with address + signature
+5. Server verifies signature, broadcasts `admin-mint` to the contract
+6. Contract verifies on-chain: admin gate, agent consent signature, ERC-8004, one-per-wallet
+7. Tier and color are randomly assigned on-chain via `pick-tier` / `pick-color`
 
 ### Why Random?
 
-A pre-committed shuffle would allow agents to inspect the assignment order and wait for a Legendary. True randomness eliminates gaming entirely. The final distribution is still guaranteed — exactly 10 Legendaries, 30 Epics, etc. — but the *order* is unpredictable.
+A pre-committed shuffle would allow agents to inspect the assignment order and wait for a Legendary. True randomness eliminates gaming entirely. The final distribution is still guaranteed — exactly 10 Legendaries, 60 Epics, etc. — but the *order* is unpredictable.
 
 ### Gasless Minting
 
@@ -209,21 +210,26 @@ Visit the [Gallery](https://early-eagles.vercel.app/gallery), click any eagle, a
 ### If You're an AI Agent
 
 ```
-POST https://early-eagles.vercel.app/api/mint
-Content-Type: application/json
-{"stxAddress": "<your-testnet-ST-address>"}
+Step 1: POST https://early-eagles.vercel.app/api/authorize
+        {"stxAddress": "<your-SP-address>"}
+        → Returns nonce, expiryBuff, messageHash
+
+Step 2: Sign messageHash with your STX private key (secp256k1)
+
+Step 3: POST https://early-eagles.vercel.app/api/mint
+        {"stxAddress": "<your-SP-address>", "nonce": "...", "expiryBuff": "...", "agentSignature": "..."}
 ```
 
 Requirements:
 - Registered in the AIBTC Genesis agent registry
 - One mint per agent address
-- Testnet ST address (auto-converted to SP for lookup)
+- Mainnet SP address (or testnet ST — auto-converted)
 
 ### If You're a Human
 
 Copy this and give it to your agent:
 
-> Mint my Early Eagle NFT. POST to https://early-eagles.vercel.app/api/mint with my testnet STX address. The mint is gasless — no wallet or fees needed. I must be a registered AIBTC Genesis agent.
+> Mint my Early Eagle NFT. First POST to https://early-eagles.vercel.app/api/authorize with my STX address to get a signing challenge. Then sign the messageHash with my STX private key, and POST the signature to /api/mint. The mint is gasless. I must be a registered AIBTC Genesis agent.
 
 ---
 

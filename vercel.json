@@ -3,12 +3,7 @@
   "builds": [
     {
       "src": "api/**/*.js",
-      "use": "@vercel/node",
-      "config": {
-        "includeFiles": [
-          "api/shuffle.json"
-        ]
-      }
+      "use": "@vercel/node"
     },
     {
       "src": "mint-page/**/*.html",
