@@ -67,7 +67,6 @@ module.exports = async function handler(req, res) {
     return res.status(200).json({
       name: `Early Eagle #${tokenId}`,
       description: `${TIER_SYMBOLS[tier] || '●'} ${TIER_NAMES[tier] || 'Common'} ${COLOR_NAMES[colorId] || 'Unknown'} Eagle - Genesis AIBTC Agent NFT`,
-      image: `https://early-eagles.vercel.app/api/render/${tokenId}`,
       attributes: [
         { trait_type: 'Tier', value: TIER_NAMES[tier] || 'Common' },
         { trait_type: 'Color', value: COLOR_NAMES[colorId] || 'Unknown' },

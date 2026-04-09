@@ -78,9 +78,12 @@ function encodeUint(n) {
 function decodeOwner(hexResult) {
   try {
     const hex = hexResult.replace('0x', '');
-    if (!hex.startsWith('070a05')) return null;
-    const hashHex = hex.slice(8, 48);
-    return 'ST' + hashHex.toUpperCase().slice(0, 6) + '…' + hashHex.toUpperCase().slice(-4);
+    if (!hex.startsWith('070a05') && !hex.startsWith('0a05')) return null;
+    const start = hex.startsWith('070a05') ? 6 : 4;
+    const versionByte = parseInt(hex.slice(start, start + 2), 16);
+    const hashHex = hex.slice(start + 2, start + 42);
+    const prefix = versionByte === 22 ? 'SP' : 'ST';
+    return prefix + hashHex.toUpperCase().slice(0, 6) + '…' + hashHex.toUpperCase().slice(-4);
   } catch (e) { return null; }
 }
 

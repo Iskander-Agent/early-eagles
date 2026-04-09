@@ -7,7 +7,6 @@
 <meta name="description" content="420 fully on-chain NFTs on the Stacks blockchain. One for each of Genesis AIBTC agents. AI-agent native mint page.">
 <meta property="og:title" content="🦅 Early Eagles — On-Chain NFTs">
 <meta property="og:description" content="420 fully on-chain NFTs · One per Genesis AIBTC agent · Gasless mint via API">
-<meta property="og:image" content="https://early-eagles.vercel.app/eagle.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -956,40 +955,43 @@ let statsInterval   = null;
 /* ── Live Stats ── */
 async function fetchStats() {
   try {
-    const url = `${CONFIG.stacksApiUrl}/v2/contracts/call-read/${CONFIG.contractAddress}/${CONFIG.contractName}/get-last-token-id`;
+    const url = `${CONFIG.stacksApiUrl}/v2/contracts/call-read/${CONFIG.contractAddress}/${CONFIG.contractName}/get-mint-stats`;
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ sender: CONFIG.contractAddress, arguments: [] })
     });
     const data = await res.json();
-    if (data.result) {
-      // Clarity uint response: 0x0100000000000000000000000000000001 = (ok u1)
+    if (data.okay && data.result) {
+      // get-mint-stats returns a tuple: decode uint fields by walking the hex
       const hex = data.result.replace('0x', '');
-      // Parse: type byte (01 = ok), value type (01 = uint), 16-byte big-endian
-      if (hex.startsWith('07') || hex.startsWith('0a01')) {
-        // Try fallback
+      const uintFields = {};
+      let pos = 2; // skip tuple type byte (0c)
+      const fieldCount = parseInt(hex.slice(pos, pos + 2), 16) || 6;
+      pos += 2;
+      for (let i = 0; i < fieldCount; i++) {
+        const nameLen = parseInt(hex.slice(pos, pos + 2), 16);
+        pos += 2;
+        const nameHex = hex.slice(pos, pos + nameLen * 2);
+        const name = nameHex.match(/.{2}/g).map(b => String.fromCharCode(parseInt(b, 16))).join('');
+        pos += nameLen * 2;
+        const valType = hex.slice(pos, pos + 2);
+        pos += 2;
+        if (valType === '01') {
+          uintFields[name] = parseInt(hex.slice(pos, pos + 32), 16);
+          pos += 32;
+        }
       }
-      let minted = 0;
-      if (hex.length >= 34) {
-        const valHex = hex.slice(hex.length - 32);
-        minted = parseInt(valHex, 16) || 0;
-      }
-      updateStatsUI(minted);
+      const minted = uintFields['total-minted'] || 0;
+      const legendaryLeft = uintFields['legendary-remaining'] || 0;
+      const mintedEl = document.getElementById('minted-count');
+      const legendaryEl = document.getElementById('legendary-remaining');
+      if (mintedEl) mintedEl.textContent = `${minted} / ${TOTAL_SUPPLY}`;
+      if (legendaryEl) legendaryEl.textContent = legendaryLeft;
     }
   } catch (e) {
-    // Silently fail — stats are cosmetic
+    // Silently fail -- stats are cosmetic
   }
-}
-
-function updateStatsUI(minted) {
-  const mintedEl    = document.getElementById('minted-count');
-  const legendaryEl = document.getElementById('legendary-remaining');
-  if (mintedEl) mintedEl.textContent = `${minted} / ${TOTAL_SUPPLY}`;
-  // Approximate: legendary slots are distributed proportionally in first 420
-  const legendaryMinted  = Math.round(minted * (LEGENDARY_CNT / TOTAL_SUPPLY));
-  const legendaryLeft    = Math.max(0, LEGENDARY_CNT - legendaryMinted);
-  if (legendaryEl) legendaryEl.textContent = legendaryLeft;
 }
 
 fetchStats();
