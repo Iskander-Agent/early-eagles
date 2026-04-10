@@ -154,11 +154,14 @@
 )
 
 ;; ── Random seed ────────────────────────────────────────────────────────────
+;; Uses get-stacks-block-info? (Clarity 3+) — replaces deprecated get-block-info?.
+;; id-header-hash of the previous Stacks block is unpredictable to the caller
+;; (committed before the block they appear in), giving us per-mint VRF entropy.
 (define-private (get-seed (nonce (buff 16)))
   (buff-to-uint-be
     (sha256 (concat
       (concat
-        (unwrap-panic (get-block-info? id-header-hash (- stacks-block-height u1)))
+        (unwrap-panic (get-stacks-block-info? id-header-hash (- stacks-block-height u1)))
         (hash160 tx-sender))
       nonce
     ))

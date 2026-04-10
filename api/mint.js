@@ -98,7 +98,16 @@ async function getAdminKey() {
   return wallet.accounts[0].stxPrivateKey;
 }
 
+// Mempool-aware: returns the next nonce considering pending mempool TXs.
+// Falls back to confirmed nonce if the extended endpoint is unreachable.
 async function getNonce(address) {
+  try {
+    const r = await fetch(STACKS_API + "/extended/v1/address/" + address + "/nonces");
+    if (r.ok) {
+      const d = await r.json();
+      if (typeof d.possible_next_nonce === "number") return d.possible_next_nonce;
+    }
+  } catch (_) { /* fall through */ }
   const r = await fetch(STACKS_API + "/v2/accounts/" + address);
   const d = await r.json();
   return d.nonce;
@@ -208,6 +217,8 @@ module.exports = async function handler(req, res) {
     const adminNonce = await getNonce(ADMIN_ADDRESS);
 
     const nameAscii = (agent.displayName || "").replace(/[^ -~]/g, "?").replace(/[<>&"\\]/g, "").slice(0, 64);
+    // Contract field is (string-utf8 64) — slice by codepoint to stay within bound.
+    const displayUtf8 = Array.from(agent.displayName || nameAscii).slice(0, 64).join("");
 
     const tx = await makeContractCall({
       contractAddress: ADMIN_ADDRESS,
@@ -219,15 +230,15 @@ module.exports = async function handler(req, res) {
         bufferCV(expiryBuf),
         bufferCV(agentSig),
         uintCV(agentRank),
-        stringUtf8CV(agent.displayName || nameAscii),
+        stringUtf8CV(displayUtf8),
         stringAsciiCV(nameAscii),
-        stringAsciiCV(agent.btcAddress || ""),
+        stringAsciiCV((agent.btcAddress || "").slice(0, 62)),
       ],
       senderKey: privKey,
       network: STACKS_MAINNET,
       anchorMode: AnchorMode.Any,
       postConditionMode: PostConditionMode.Deny,
-      fee: 300000n,
+      fee: 50000n,
       nonce: BigInt(adminNonce),
     });
 
