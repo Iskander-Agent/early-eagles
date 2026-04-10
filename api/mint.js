@@ -238,7 +238,7 @@ module.exports = async function handler(req, res) {
       network: STACKS_MAINNET,
       anchorMode: AnchorMode.Any,
       postConditionMode: PostConditionMode.Deny,
-      fee: 50000n,
+      fee: 3000n,
       nonce: BigInt(adminNonce),
     });
 
