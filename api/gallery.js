@@ -6,6 +6,10 @@
  * Server-side fetches from Hiro API — no rate limit issues for clients.
  */
 
+const { fetchCallReadOnlyFunction, cvToValue } = require('@stacks/transactions');
+const { STACKS_MAINNET } = require('@stacks/network');
+const { c32address } = require('c32check');
+
 // Mainnet only
 const STACKS_API = 'https://api.hiro.so';
 // Deploy address for Early Eagles mainnet contracts
@@ -74,16 +78,19 @@ function encodeUint(n) {
   return '0x01' + n.toString(16).padStart(32, '0');
 }
 
-// C32 abbreviation for owner display
+// Decode (response (optional principal) ...) hex into c32-encoded address (abbreviated)
 function decodeOwner(hexResult) {
   try {
     const hex = hexResult.replace('0x', '');
-    if (!hex.startsWith('070a05') && !hex.startsWith('0a05')) return null;
-    const start = hex.startsWith('070a05') ? 6 : 4;
-    const versionByte = parseInt(hex.slice(start, start + 2), 16);
-    const hashHex = hex.slice(start + 2, start + 42);
-    const prefix = versionByte === 22 ? 'SP' : 'ST';
-    return prefix + hashHex.toUpperCase().slice(0, 6) + '…' + hashHex.toUpperCase().slice(-4);
+    let i = 0;
+    if (hex.slice(i, i + 2) === '07') i += 2; // response.ok wrapper
+    if (hex.slice(i, i + 2) === '0a') i += 2; // optional some
+    if (hex.slice(i, i + 2) !== '05') return null; // expect standard principal
+    i += 2;
+    const versionByte = parseInt(hex.slice(i, i + 2), 16);
+    const hashHex = hex.slice(i + 2, i + 42);
+    const addr = c32address(versionByte, hashHex);
+    return addr.slice(0, 6) + '…' + addr.slice(-4);
   } catch (e) { return null; }
 }
 
@@ -100,9 +107,17 @@ module.exports = async function handler(req, res) {
   res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=300');
 
   try {
-    // 1. Get total minted
-    const lastIdRes = await callRead(NFT_CONTRACT, 'get-last-token-id');
-    const totalMinted = parseInt(lastIdRes.result.slice(6), 16) || 0;
+    // 1. Get total minted (use get-mint-stats — accurate count, not last-id)
+    const statsCV = await fetchCallReadOnlyFunction({
+      contractAddress: ADMIN_ADDRESS,
+      contractName: NFT_CONTRACT,
+      functionName: 'get-mint-stats',
+      functionArgs: [],
+      senderAddress: ADMIN_ADDRESS,
+      network: STACKS_MAINNET,
+    });
+    const stats = cvToValue(statsCV);
+    const totalMinted = parseInt(stats['total-minted'].value, 10) || 0;
 
     // 2. Get renderer segments (cache in memory — they're locked)
     if (!_segCache) {

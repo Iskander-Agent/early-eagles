@@ -8,7 +8,7 @@ const TIER_SYMBOLS = ['🔱', '◈', '◇', '○', '●'];
 const COLOR_NAMES = [
   'Azure', 'Sapphire', 'Amethyst', 'Fuchsia', 'Crimson', 'Scarlet', 'Ember',
   'Amber', 'Chartreuse', 'Jade', 'Forest', 'Teal',
-  'Gold', 'Pearl', 'Negative', 'Thermal', 'X-Ray', 'Aurora', 'Psychedelic', 'Infrared', 'Shadow'
+  'Gold', 'Pearl', 'Negative', 'Thermal', 'X-Ray', 'Aurora', 'Psychedelic', 'Bitcoin', 'Shadow'
 ];
 
 const ADMIN_ADDRESS = process.env.ADMIN_ADDRESS || 'SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2';

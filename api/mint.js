@@ -55,32 +55,23 @@ setInterval(() => {
   }
 }, 60_000);
 
-// ── C32 address decoding ──────────────────────────────────────────────────────
-const C32 = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
-
-function decodeStacksAddress(addr) {
-  const body = addr.slice(2);
-  let n = BigInt(0);
-  for (const ch of body) {
-    const idx = C32.indexOf(ch);
-    if (idx < 0) throw new Error("Invalid c32 char: " + ch);
-    n = n * 32n + BigInt(idx);
-  }
-  const bytes = [];
-  let tmp = n;
-  for (let i = 0; i < 25; i++) {
-    bytes.unshift(Number(tmp & 0xffn));
-    tmp >>= 8n;
-  }
-  return { version: bytes[0], hash160: bytes.slice(1, 21) };
-}
-
-function principalConsensusBytes(stxAddress) {
-  const { version, hash160 } = decodeStacksAddress(stxAddress);
+// ── Principal consensus serialization ────────────────────────────────────────
+// Standard principal: type 0x05 || version (1 byte) || hash160 (20 bytes) = 22 bytes.
+// MUST match Clarity's to-consensus-buff? exactly so signatures verify on-chain.
+//
+// Earlier versions had a hand-rolled c32 decoder that returned the wrong version
+// byte (0x00 instead of 0x16/0x1a). The bug was discovered during the testnet
+// rehearsal of admin-mint and fixed by switching to the canonical c32check
+// library which is already pinned via @stacks/transactions.
+async function principalConsensusBytes(stxAddress) {
+  const { c32addressDecode } = await import("c32check");
+  const [version, hash160Hex] = c32addressDecode(stxAddress);
   const buf = new Uint8Array(22);
   buf[0] = 0x05;
   buf[1] = version;
-  buf.set(hash160, 2);
+  for (let i = 0; i < 20; i++) {
+    buf[2 + i] = parseInt(hash160Hex.slice(i * 2, i * 2 + 2), 16);
+  }
   return buf;
 }
 
@@ -171,7 +162,7 @@ module.exports = async function handler(req, res) {
     }
 
     // Reconstruct message hash and verify
-    const principalBytes = principalConsensusBytes(mainnetAddr);
+    const principalBytes = await principalConsensusBytes(mainnetAddr);
     const message = new Uint8Array(46);
     message.set(principalBytes, 0);
     message.set(nonce, 22);

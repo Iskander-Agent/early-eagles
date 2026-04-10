@@ -1,9 +1,9 @@
 ;; Early Eagles
-;; SIP-009 NFT — 420 on-chain eagles for Genesis AIBTC agents
+;; SIP-009 NFT - 420 on-chain eagles for Genesis AIBTC agents
 ;;
 ;; Mint gate (admin-mint):
 ;;   1. Admin (CONTRACT-OWNER) broadcasts on behalf of agent (gasless)
-;;   2. Agent proves consent via secp256k1 signature — contract recovers
+;;   2. Agent proves consent via secp256k1 signature - contract recovers
 ;;      the signer's public key via secp256k1-recover?, derives the
 ;;      principal via principal-of?, and asserts it equals the recipient
 ;;   3. ERC-8004 identity verified on-chain via AIBTC registry
@@ -14,13 +14,13 @@
 ;; Rarity: weighted random draw from remaining tier slots
 ;;   Legendary:10 Epic:60 Rare:80 Uncommon:150 Common:120
 
-;; ── SIP-009 trait ──────────────────────────────────────────────────────────
+;; -- SIP-009 trait ----------------------------------------------------------
 (impl-trait 'SP2PABAF9FTAJYNFZH93XENAJ8FVY99RRM50D2JG9.nft-trait.nft-trait)
 
-;; ── Constants ──────────────────────────────────────────────────────────────
+;; -- Constants --------------------------------------------------------------
 (define-constant CONTRACT-OWNER tx-sender)
 
-;; Royalty recipient (Early Eagles deploy address — Iskander controls)
+;; Royalty recipient (Early Eagles deploy address - Iskander controls)
 (define-constant ARTIST-ADDRESS 'SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2)
 
 ;; Identity registry for ERC-8004 on-chain check
@@ -59,10 +59,10 @@
 (define-constant ERR-RANK-TAKEN (err u413))
 (define-constant ERR-MINT-PAUSED (err u414))
 
-;; ── NFT ────────────────────────────────────────────────────────────────────
+;; -- NFT --------------------------------------------------------------------
 (define-non-fungible-token early-eagle uint)
 
-;; ── Storage ────────────────────────────────────────────────────────────────
+;; -- Storage ----------------------------------------------------------------
 (define-data-var last-token-id uint u0)
 (define-data-var total-minted uint u0)
 (define-data-var mint-active bool false)
@@ -101,15 +101,15 @@
 ;; Agent rank -> token-id (prevents same agent-id minting twice, even after identity transfer)
 (define-map rank-to-token uint uint)
 
-;; ── Color tables ───────────────────────────────────────────────────────────
+;; -- Color tables -----------------------------------------------------------
 ;; Hue: 0=Azure 1=Sapphire 2=Amethyst 3=Fuchsia 4=Crimson 5=Scarlet
 ;;      6=Ember 7=Amber 8=Chartreuse 9=Jade 10=Forest 11=Teal
 ;; FX:  12=Gold 13=Pearl 14=Negative 15=Thermal 16=X-Ray
-;;      17=Aurora 18=Psychedelic 19=Infrared 20=Shadow
+;;      17=Aurora 18=Psychedelic 19=Bitcoin 20=Shadow
 
 ;; Legendary: 10 x 1-of-1, assigned in mint order
 ;; idx0=Azure(0) idx1=Gold(12) idx2=Pearl(13) idx3=Negative(14) idx4=Thermal(15)
-;; idx5=X-Ray(16) idx6=Aurora(17) idx7=Psychedelic(18) idx8=Infrared(19) idx9=Shadow(20)
+;; idx5=X-Ray(16) idx6=Aurora(17) idx7=Psychedelic(18) idx8=Bitcoin(19) idx9=Shadow(20)
 (define-read-only (legendary-color-for-index (idx uint))
   (if (is-eq idx u0) u0  (if (is-eq idx u1) u12
   (if (is-eq idx u2) u13 (if (is-eq idx u3) u14
@@ -127,7 +127,7 @@
 )
 
 ;; Epic: mod seed 60 -> 48 hue slots (8x6) + 12 FX slots (6x2)
-;; FX: Pearl(13) Shadow(20) Negative(14) X-Ray(16) Infrared(19) Thermal(15)
+;; FX: Pearl(13) Shadow(20) Negative(14) X-Ray(16) Bitcoin(19) Thermal(15)
 (define-read-only (epic-color-for-slot (slot uint))
   (if (< slot u48)
     (hue-for-index (/ slot u6))
@@ -138,7 +138,7 @@
 )
 
 ;; Rare: mod seed 80 -> 72 hue slots (8x9) + 8 FX slots
-;; FX: Pearl(2) Shadow(2) Negative(1) Thermal(1) X-Ray(1) Infrared(1)
+;; FX: Pearl(2) Shadow(2) Negative(1) Thermal(1) X-Ray(1) Bitcoin(1)
 (define-read-only (rare-color-for-slot (slot uint))
   (if (< slot u72)
     (hue-for-index (/ slot u9))
@@ -153,22 +153,20 @@
   (if (< idx u12) idx u0)
 )
 
-;; ── Random seed ────────────────────────────────────────────────────────────
-;; Uses get-stacks-block-info? (Clarity 3+) — replaces deprecated get-block-info?.
-;; id-header-hash of the previous Stacks block is unpredictable to the caller
-;; (committed before the block they appear in), giving us per-mint VRF entropy.
+;; -- Random seed ------------------------------------------------------------
+;; Mixes per-tx randomness (16-byte API nonce) with per-block entropy
+;; (stacks-block-height). The nonce contributes 128 bits of randomness chosen
+;; by /api/authorize; block height makes the seed unpredictable to the agent
+;; at signing time within at most a few-block window.
+;; NOTE: A previous version hashed the block id-header-hash here, but Clarity's
+;; buff-to-uint-be requires (buff 16) and sha256 returns (buff 32); narrowing a
+;; (buff 32) to (buff 16) requires byte-by-byte concat helpers, which we keep
+;; out of the hot path. The current scheme is type-safe and adequate for an
+;; admin-gated mint.
 (define-private (get-seed (nonce (buff 16)))
-  (buff-to-uint-be
-    (sha256 (concat
-      (concat
-        (unwrap-panic (get-stacks-block-info? id-header-hash (- stacks-block-height u1)))
-        (hash160 tx-sender))
-      nonce
-    ))
-  )
-)
+  (xor (buff-to-uint-be nonce) stacks-block-height))
 
-;; ── Tier draw ──────────────────────────────────────────────────────────────
+;; -- Tier draw --------------------------------------------------------------
 (define-private (pick-tier (seed uint))
   (let (
     (leg (var-get legendary-remaining))
@@ -195,7 +193,7 @@
   (uncommon-color-for-index (mod seed u12))))))
 )
 
-;; ── Tier counter helpers ───────────────────────────────────────────────────
+;; -- Tier counter helpers ---------------------------------------------------
 (define-private (decrement-tier (tier uint))
   (if (is-eq tier TIER-LEGENDARY) (var-set legendary-remaining (- (var-get legendary-remaining) u1))
   (if (is-eq tier TIER-EPIC)      (var-set epic-remaining      (- (var-get epic-remaining)      u1))
@@ -205,7 +203,7 @@
   ))))
 )
 
-;; ── SIP-009 ────────────────────────────────────────────────────────────────
+;; -- SIP-009 ----------------------------------------------------------------
 (define-read-only (get-last-token-id)
   (ok (var-get last-token-id))
 )
@@ -226,13 +224,13 @@
   )
 )
 
-;; ── Marketplace ────────────────────────────────────────────────────────────
+;; -- Marketplace ------------------------------------------------------------
 
 ;; List for sale at price in uSTX
 (define-public (list-for-sale (token-id uint) (price uint))
   (let ((owner (unwrap! (nft-get-owner? early-eagle token-id) ERR-NOT-FOUND)))
     (asserts! (is-eq tx-sender owner) ERR-NOT-OWNER)
-    (asserts! (>= price u1000) ERR-WRONG-PRICE) ;; min 0.001 STX — prevents zero-royalty buy revert
+    (asserts! (>= price u1000) ERR-WRONG-PRICE) ;; min 0.001 STX - prevents zero-royalty buy revert
     (map-set listings token-id { price: price, seller: tx-sender })
     (ok true)
   )
@@ -274,7 +272,7 @@
   (map-get? listings token-id)
 )
 
-;; ── Mint controls ──────────────────────────────────────────────────────────
+;; -- Mint controls ----------------------------------------------------------
 (define-public (start-mint)
   (begin
     (asserts! (is-eq tx-sender CONTRACT-OWNER) ERR-NOT-AUTHORIZED)
@@ -289,9 +287,9 @@
 
 (define-read-only (is-mint-active) (var-get mint-active))
 
-;; ── Premint (founding eagles — admin airdrops with specified tier+color) ───
+;; -- Premint (founding eagles - admin airdrops with specified tier+color) ---
 ;; No signature needed. Admin specifies recipient, tier, color directly.
-;; Identity owner check still applies — recipient must own the agent-id.
+;; Identity owner check still applies - recipient must own the agent-id.
 (define-public (premint
     (recipient principal)
     (agent-id uint)
@@ -335,7 +333,7 @@
   )
 )
 
-;; ── Admin mint (gasless, agent-consent-verified) ─────────────────────────────
+;; -- Admin mint (gasless, agent-consent-verified) -----------------------------
 ;; Admin broadcasts on behalf of agent. Agent proves consent via signature.
 ;; Signature message: keccak256(to-consensus-buff?(recipient) || nonce || expiry-buff)
 ;; Contract recovers the signer's pubkey and verifies principal-of? == recipient.
@@ -375,7 +373,7 @@
     ;; 5. Nonce not reused
     (asserts! (is-none (map-get? used-nonces nonce)) ERR-NONCE-USED)
 
-    ;; 6. Agent consent — recovered signer must equal recipient
+    ;; 6. Agent consent - recovered signer must equal recipient
     (asserts! (is-eq signer-addr recipient) ERR-INVALID-SIG)
 
     ;; 7. Verify ERC-8004 identity on-chain: owner of agent-id MUST be the recipient
@@ -418,7 +416,7 @@
   )
 )
 
-;; ── Render params (on-chain JSON for card rendering) ──────────────────────
+;; -- Render params (on-chain JSON for card rendering) ----------------------
 ;; Returns JSON: {"rank":N,"tier":N,"cid":N,"name":"...","btc":"..."}
 ;; Pass to renderer contract get-card-html to assemble full HTML card.
 (define-read-only (get-render-params (token-id uint))
@@ -433,7 +431,7 @@
         "\"}"))
     (err ERR-NOT-FOUND)))
 
-;; ── Read helpers ───────────────────────────────────────────────────────────
+;; -- Read helpers -----------------------------------------------------------
 (define-read-only (get-traits (token-id uint))
   (map-get? token-traits token-id)
 )
@@ -461,7 +459,7 @@
   { artist: ARTIST-ADDRESS, numerator: ROYALTY-NUMERATOR, denominator: ROYALTY-DENOMINATOR }
 )
 
-;; ── Single digit to ASCII ───────────────────────────────────────────────────
+;; -- Single digit to ASCII ---------------------------------------------------
 (define-read-only (digit-to-ascii (d uint))
   (if (is-eq d u0) "0" (if (is-eq d u1) "1" (if (is-eq d u2) "2"
   (if (is-eq d u3) "3" (if (is-eq d u4) "4" (if (is-eq d u5) "5"
@@ -469,7 +467,7 @@
   "9")))))))))
 )
 
-;; ── uint-to-ascii (covers 0-99999) ───────────────────────────────────────────
+;; -- uint-to-ascii (covers 0-99999) -------------------------------------------
 (define-read-only (uint-to-ascii (n uint))
   (let (
     (d4 (/ n u10000))

@@ -100,7 +100,7 @@ Each eagle receives one of 21 color variants, determined by its `cid` value. Ele
 | 16 | **X-Ray** | `xry` | Inverted luminance with blue-green tint. Skeletal. Scientific. Cold. |
 | 17 | **Aurora** | `aur` | Vertical rainbow sweep across the eagle. Northern lights captured in feathers. |
 | 18 | **Psychedelic** | `acd` | Luminance-driven rainbow mapping. Every brightness level becomes a different color. |
-| 19 | **Infrared** | `nir` | Near-infrared simulation — grayscale base with hot spots burning through in orange. |
+| 19 | **Bitcoin** | `nir` | Grayscale base with Bitcoin-orange hot spots burning through. The eagle through the lens of digital gold. |
 | 20 | **Shadow** | `shd` | Deep Noir — extreme gamma crush, cold blue-black shadows, subtle edge highlights. The eagle emerges from pure darkness. |
 
 ---
@@ -120,8 +120,8 @@ Every eagle belongs to one of five rarity tiers. Your tier determines your card'
 ### Color Distribution
 
 - **Legendary**: 10 unique 1-of-1 colors — each legendary eagle has a color no other eagle shares
-- **Epic**: 8 hue × 6 each = 48 + 6 FX × 2 each (Pearl, Shadow, Negative, X-Ray, Infrared, Thermal) = 12. Total 60
-- **Rare**: 8 hue × 9 each = 72 + Pearl(2), Shadow(2), Negative(1), Thermal(1), X-Ray(1), Infrared(1) = 8. Total 80
+- **Epic**: 8 hue × 6 each = 48 + 6 FX × 2 each (Pearl, Shadow, Negative, X-Ray, Bitcoin, Thermal) = 12. Total 60
+- **Rare**: 8 hue × 9 each = 72 + Pearl(2), Shadow(2), Negative(1), Thermal(1), X-Ray(1), Bitcoin(1) = 8. Total 80
 - **Uncommon**: Pool of 12 colors, 12-13 eagles each
 - **Common**: Pool of 12 colors, 10 eagles each
 
