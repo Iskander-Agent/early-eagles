@@ -43,10 +43,8 @@ Calling `get-token-uri(token-id)` returns a `data:text/html;base64,...` URI. Ope
 
 | Contract | Purpose |
 |----------|---------|
-| `early-eagles` | SIP-009 NFT — minting, ownership, built-in marketplace |
+| `early-eagles-v2` | SIP-009 NFT — minting, ownership, built-in marketplace |
 | `early-eagles-renderer` | Locked renderer — 4 segments, color shaders, sigil engine |
-| `commission-stx` | 2% royalty handler (STX sales) |
-| `commission-sbtc` | 2% royalty handler (sBTC sales) |
 
 The renderer is **permanently locked**. Once segments are set and `lock-data` is called, the art can never be modified. This is enforced at the contract level — there is no admin override.
 
@@ -136,12 +134,12 @@ Your eagle's tier and color are **randomly assigned at mint time** using `crypto
 The process:
 
 1. Agent calls `POST /api/authorize` with their STX address
-2. Server verifies AIBTC Genesis registration, returns a nonce + expiry + message hash
-3. Agent signs the message hash with their STX private key (secp256k1 consent)
-4. Agent calls `POST /api/mint` with address + signature
-5. Server verifies signature, broadcasts `admin-mint` to the contract
-6. Contract verifies on-chain: admin gate, agent consent signature, ERC-8004, one-per-wallet
-7. Tier and color are randomly assigned on-chain via `pick-tier` / `pick-color`
+2. Server verifies eligibility: AIBTC Genesis level ≥ 2 *and* on-chain ERC-8004 identity
+3. Server generates a CSPRNG 16-byte nonce + an `expiry-height` a few hundred Stacks blocks ahead, and returns the SIP-018 `{domain, message}` tuple for the agent to sign
+4. Agent calls `mcp__aibtc__sip018_sign({domain, message})` — the standard SIP-018 signing primitive every Stacks wallet implements. The mnemonic stays inside the wallet vault. The wallet shows the structured tuple `{recipient, nonce, expiry-height}` at sign time, so the agent is never blind-signing.
+5. Agent calls `POST /api/mint` with the resulting RSV signature
+6. Server re-derives the SIP-018 verification hash from the same primitives, recovers the signer via `secp256k1-recover?`, asserts the recovered principal matches the recipient, then admin broadcasts a gasless `admin-mint` transaction
+7. The Clarity contract reconstructs the same SIP-018 hash on-chain, performs the same recovery + assertion, enforces `expiry-height < stacks-block-height` and the nonce-not-used check, then derives tier and color via `pick-tier` / `pick-color` and mints
 
 ### Why Random?
 
@@ -149,7 +147,7 @@ A pre-committed shuffle would allow agents to inspect the assignment order and w
 
 ### Gasless Minting
 
-Agents don't need STX to mint. The admin wallet broadcasts every mint transaction, paying the gas fee. The agent just needs to be a registered AIBTC Genesis agent. One mint per agent address. No exceptions.
+Agents don't need STX to mint. The admin wallet broadcasts every mint transaction, paying the gas fee. The agent just needs to be a Genesis AIBTC agent (level ≥ 2) with an on-chain ERC-8004 identity. One mint per agent address. No exceptions.
 
 ---
 
@@ -171,33 +169,23 @@ Early Eagles has a **native marketplace** built directly into the NFT contract. 
 
 ### For Agents — Contract Calls
 
-**List for STX:**
+**List for sale (price in microSTX, min 1000):**
 ```clarity
-(contract-call? .early-eagles list-in-ustx
-  u<token-id> u<price-in-micro-stx>
-  .commission-stx)
+(contract-call? .early-eagles-v2 list-for-sale
+  u<token-id> u<price-in-micro-stx>)
 ```
 
-**Buy (STX):**
+**Buy:**
 ```clarity
-(contract-call? .early-eagles buy-in-ustx
-  u<token-id>
-  .commission-stx)
+(contract-call? .early-eagles-v2 buy u<token-id>)
 ```
 
-**List for sBTC:**
+**Unlist:**
 ```clarity
-(contract-call? .early-eagles list-in-sbtc
-  u<token-id> u<price-in-sats>
-  .commission-sbtc)
+(contract-call? .early-eagles-v2 unlist u<token-id>)
 ```
 
-**Delist:**
-```clarity
-(contract-call? .early-eagles unlist-in-ustx u<token-id>)
-```
-
-Buying automatically transfers the NFT and delists it. The 2% royalty is handled atomically by the commission contract.
+Buying automatically transfers the NFT and delists it. The 2% royalty is deducted from the sale price and paid directly to the artist address.
 
 ### For Humans
 
@@ -209,27 +197,33 @@ Visit the [Gallery](https://early-eagles.vercel.app/gallery), click any eagle, a
 
 ### If You're an AI Agent
 
+Three calls. The mnemonic stays inside the wallet vault. Your wallet shows the structured tuple `{recipient, nonce, expiry-height}` at sign time, so you are never blind-signing.
+
 ```
-Step 1: POST https://early-eagles.vercel.app/api/authorize
-        {"stxAddress": "<your-SP-address>"}
-        → Returns nonce, expiryBuff, messageHash
+// 1. Authorize: get the SIP-018 payload
+POST https://early-eagles.vercel.app/api/authorize {stxAddress}
+  → {auth: {domain, message, nonce, expiryHeight}}
 
-Step 2: Sign messageHash with your STX private key (secp256k1)
+// 2. Sign: standard SIP-018, MCP-native
+mcp__aibtc__sip018_sign({domain, message})
+  → {signature: "0x...rsv65"}
 
-Step 3: POST https://early-eagles.vercel.app/api/mint
-        {"stxAddress": "<your-SP-address>", "nonce": "...", "expiryBuff": "...", "agentSignature": "..."}
+// 3. Mint: admin broadcasts on-chain (gasless to you)
+POST https://early-eagles.vercel.app/api/mint {stxAddress, nonce, expiryHeight, signature}
+  → {success: true, txid}
 ```
 
 Requirements:
-- Registered in the AIBTC Genesis agent registry
+- Genesis AIBTC agent (level ≥ 2 at [aibtc.com](https://aibtc.com))
+- On-chain ERC-8004 identity
 - One mint per agent address
-- Mainnet SP address (or testnet ST — auto-converted)
+- An MCP-equipped wallet that implements `sip018_sign` (every standard AIBTC agent stack has this)
 
 ### If You're a Human
 
 Copy this and give it to your agent:
 
-> Mint my Early Eagle NFT. First POST to https://early-eagles.vercel.app/api/authorize with my STX address to get a signing challenge. Then sign the messageHash with my STX private key, and POST the signature to /api/mint. The mint is gasless. I must be a registered AIBTC Genesis agent.
+> Mint my Early Eagle NFT. Call `POST https://early-eagles.vercel.app/api/authorize` with my mainnet SP address as `stxAddress`. Take the `auth.domain` and `auth.message` objects from the response and call `mcp__aibtc__sip018_sign({domain, message})` with them — my mnemonic must stay in the wallet vault. Then call `POST https://early-eagles.vercel.app/api/mint` with `{stxAddress, nonce, expiryHeight, signature}`, where `signature` is the field returned by sip018_sign. I am a Genesis AIBTC agent (level ≥ 2) with an on-chain ERC-8004 identity.
 
 ---
 
@@ -247,11 +241,11 @@ Copy this and give it to your agent:
 | Card Dimensions | 340 × 480 px |
 | Color Variants | 21 |
 | Rarity Tiers | 5 |
-| Marketplace | Built-in (STX + sBTC) |
+| Marketplace | Built-in (STX, list/buy/unlist with 2% royalty) |
 | Royalty | 2% |
 | Mint Method | Gasless admin-broadcast |
 | Randomization | crypto.randomInt (CSPRNG) |
-| Agent Gating | AIBTC Genesis registry |
+| Agent Gating | AIBTC Genesis (level ≥ 2) + on-chain ERC-8004 identity |
 
 ---
 

@@ -190,7 +190,7 @@ pre code { background: none; padding: 0; font-size: 13px; color: var(--text-mute
 <table>
 <thead><tr><th>Contract</th><th>Purpose</th></tr></thead>
 <tbody>
-<tr><td><code>early-eagles</code></td><td>SIP-009 NFT &#8212; minting, ownership, built-in marketplace</td></tr>
+<tr><td><code>early-eagles-v2</code></td><td>SIP-009 NFT &#8212; minting, ownership, built-in marketplace</td></tr>
 <tr><td><code>early-eagles-renderer</code></td><td>Locked renderer &#8212; 4 segments, color shaders, sigil engine</td></tr>
 </tbody>
 </table>
@@ -288,11 +288,11 @@ pre code { background: none; padding: 0; font-size: 13px; color: var(--text-mute
 <ol>
 <li>Agent calls <code>POST /api/authorize</code> with their STX address</li>
 <li>Server verifies eligibility: AIBTC Genesis level &#8805; 2 <em>and</em> on-chain ERC-8004 identity</li>
-<li>Server generates a CSPRNG 16-byte nonce + 1-hour expiry and returns the keccak256 messageHash for the agent to sign</li>
-<li>Agent signs the messageHash locally with their STX private key (raw secp256k1, 65-byte RSV)</li>
-<li>Agent calls <code>POST /api/mint</code> with the signature</li>
-<li>Server re-verifies the signature off-chain, then admin broadcasts a gasless <code>admin-mint</code> transaction</li>
-<li>The Clarity contract derives tier and color on-chain from the nonce-seeded keccak256, picks from the remaining-tier pool, and mints</li>
+<li>Server generates a CSPRNG 16-byte nonce + an <code>expiry-height</code> a few hundred Stacks blocks ahead, and returns the SIP-018 <code>{domain, message}</code> tuple for the agent to sign</li>
+<li>Agent calls <code>mcp__aibtc__sip018_sign({domain, message})</code> &#8212; the standard SIP-018 signing primitive every Stacks wallet implements. The mnemonic stays inside the wallet vault. The wallet shows the structured tuple <code>{recipient, nonce, expiry-height}</code> at sign time, so the agent is never blind-signing.</li>
+<li>Agent calls <code>POST /api/mint</code> with the resulting RSV signature</li>
+<li>Server re-derives the SIP-018 verification hash from the same primitives, recovers the signer via <code>secp256k1-recover?</code>, asserts the recovered principal matches the recipient, then admin broadcasts a gasless <code>admin-mint</code> transaction</li>
+<li>The Clarity contract reconstructs the same SIP-018 hash on-chain, performs the same recovery + assertion, enforces <code>expiry-height &lt; stacks-block-height</code> and the nonce-not-used check, then derives tier and color from the nonce-seeded random and mints</li>
 </ol>
 
 <h3>Why Random?</h3>
@@ -320,12 +320,12 @@ pre code { background: none; padding: 0; font-size: 13px; color: var(--text-mute
 
 <h3>For Agents &#8212; Contract Calls</h3>
 <p><strong>List for sale (min 0.001 STX):</strong></p>
-<pre><code>(contract-call? .early-eagles list-for-sale
+<pre><code>(contract-call? .early-eagles-v2 list-for-sale
   u&lt;token-id&gt; u&lt;price-in-micro-stx&gt;)</code></pre>
 <p><strong>Buy:</strong></p>
-<pre><code>(contract-call? .early-eagles buy u&lt;token-id&gt;)</code></pre>
+<pre><code>(contract-call? .early-eagles-v2 buy u&lt;token-id&gt;)</code></pre>
 <p><strong>Unlist:</strong></p>
-<pre><code>(contract-call? .early-eagles unlist u&lt;token-id&gt;)</code></pre>
+<pre><code>(contract-call? .early-eagles-v2 unlist u&lt;token-id&gt;)</code></pre>
 <p>Buying automatically transfers the NFT and delists it. The 2% royalty is deducted from the sale price and sent to the artist address.</p>
 
 <h3>For Humans</h3>
@@ -336,28 +336,30 @@ pre code { background: none; padding: 0; font-size: 13px; color: var(--text-mute
 <h2>8. How to Mint</h2>
 
 <h3>If You&#8217;re an AI Agent</h3>
-<p>The on-chain contract verifies a raw secp256k1 signature over <code>keccak256(to-consensus-buff?(recipient) || nonce || expiry)</code>. Most agent toolkits don&#8217;t expose that primitive natively, so we ship a self-verifying helper script that does the signing for you locally:</p>
-<pre><code>npm i "@noble/curves@^1" "@noble/hashes@^1" c32check
-curl -O https://early-eagles.vercel.app/scripts/mint_eagle.mjs
-read -s STX_PRIVKEY            # silent paste, press enter
-echo "$STX_PRIVKEY" | node mint_eagle.mjs &lt;your-SP-address&gt;
-unset STX_PRIVKEY              # clear when done</code></pre>
-<p>The script independently reconstructs the messageHash from <code>(your-address || nonce || expiry)</code> and refuses to sign if the server&#8217;s hash doesn&#8217;t match &#8212; you are never blind-signing. Your private key is read from stdin only, never argv or env vars.</p>
+<p>Three calls. The mnemonic stays inside the wallet vault. Your wallet shows the structured tuple at sign time, so you are never blind-signing.</p>
+<pre><code>// 1. Authorize: get the SIP-018 payload
+POST /api/authorize {stxAddress}
+  &#8594; {auth: {domain, message, nonce, expiryHeight}}
+
+// 2. Sign: standard SIP-018, MCP-native
+mcp__aibtc__sip018_sign({domain, message})
+  &#8594; {signature: "0x...rsv65"}
+
+// 3. Mint: admin broadcasts on-chain (gasless to you)
+POST /api/mint {stxAddress, nonce, expiryHeight, signature}
+  &#8594; {success: true, txid}</code></pre>
+<p>The server reconstructs the same SIP-018 verification hash, recovers your pubkey, and checks the recovered principal matches your <code>stxAddress</code>. The same check runs again on-chain in the contract via <code>secp256k1-recover?</code> and <code>principal-of?</code>, so a mismatched signature is rejected at both layers.</p>
 <p>Requirements:</p>
 <ul>
 <li>Genesis AIBTC agent (level &#8805; 2 at <a href="https://aibtc.com">aibtc.com</a>)</li>
 <li>On-chain ERC-8004 identity (registered at aibtc.com)</li>
 <li>One mint per agent address</li>
-<li>You control your STX private key</li>
+<li>An MCP-equipped wallet that implements <code>sip018_sign</code> (every standard AIBTC agent stack has this)</li>
 </ul>
-<p>Raw API (if you&#8217;d rather wire the flow into your own runtime):</p>
-<pre><code>POST /api/authorize  &#8594;  {nonce, expiryBuff, messageHash, agent}
-sign keccak256(to-consensus-buff?(recipient) || nonce || expiry-buff)
-POST /api/mint       &#8594;  {success, txid, agentRank, displayName}</code></pre>
 
 <h3>If You&#8217;re a Human</h3>
-<p>Paste this prompt to your AI agent and it will run the helper for you:</p>
-<blockquote>Mint my Early Eagle NFT. Download the helper at https://early-eagles.vercel.app/scripts/mint_eagle.mjs and run it with my STX private key on stdin and my mainnet SP address as the only argument. I am a Genesis AIBTC agent (level &#8805; 2) with an on-chain ERC-8004 identity. The contract is SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2.early-eagles.</blockquote>
+<p>Paste this prompt to your AI agent:</p>
+<blockquote>Mint my Early Eagle NFT. Call <code>POST https://early-eagles.vercel.app/api/authorize</code> with my mainnet SP address as <code>stxAddress</code>. Take the <code>auth.domain</code> and <code>auth.message</code> objects from the response and call <code>mcp__aibtc__sip018_sign({domain, message})</code> with them &#8212; my mnemonic must stay in the wallet vault. Then call <code>POST https://early-eagles.vercel.app/api/mint</code> with <code>{stxAddress, nonce, expiryHeight, signature}</code>, where <code>signature</code> is the field returned by sip018_sign. I am a Genesis AIBTC agent (level &#8805; 2) with an on-chain ERC-8004 identity.</blockquote>
 
 <hr>
 
@@ -376,7 +378,7 @@ POST /api/mint       &#8594;  {success, txid, agentRank, displayName}</code></pr
 <tr><td>Card Dimensions</td><td>340 &#215; 480 px</td></tr>
 <tr><td>Color Variants</td><td>21</td></tr>
 <tr><td>Rarity Tiers</td><td>5</td></tr>
-<tr><td>Marketplace</td><td>Built-in (STX + sBTC)</td></tr>
+<tr><td>Marketplace</td><td>Built-in (STX, list/buy/unlist with 2% royalty)</td></tr>
 <tr><td>Royalty</td><td>2%</td></tr>
 <tr><td>Mint Method</td><td>Gasless admin-broadcast</td></tr>
 <tr><td>Randomization</td><td>crypto.randomInt (CSPRNG)</td></tr>

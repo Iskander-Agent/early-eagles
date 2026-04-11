@@ -60,14 +60,6 @@
       }
     },
     {
-      "src": "/scripts/mint_eagle.mjs",
-      "dest": "/public/scripts/mint_eagle.mjs",
-      "headers": {
-        "Content-Type": "text/plain; charset=utf-8",
-        "Content-Disposition": "inline"
-      }
-    },
-    {
       "src": "/(.*)",
       "dest": "/mint-page/index.html"
     }

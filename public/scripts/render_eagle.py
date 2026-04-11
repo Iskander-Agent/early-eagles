@@ -22,7 +22,7 @@ import sys, json, urllib.request
 NETWORK       = "mainnet"
 API           = "https://api.hiro.so"
 NFT_ADDR      = "SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2"
-NFT_NAME      = "early-eagles"
+NFT_NAME      = "early-eagles-v2"
 RENDERER_ADDR = "SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2"
 RENDERER_NAME = "early-eagles-renderer"
 

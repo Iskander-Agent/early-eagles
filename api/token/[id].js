@@ -11,8 +11,9 @@ const COLOR_NAMES = [
   'Gold', 'Pearl', 'Negative', 'Thermal', 'X-Ray', 'Aurora', 'Psychedelic', 'Bitcoin', 'Shadow'
 ];
 
-const ADMIN_ADDRESS = process.env.ADMIN_ADDRESS || 'SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2';
-const NFT_CONTRACT = process.env.NFT_CONTRACT_NAME || 'early-eagles';
+// Hardcoded - the contract identity is not a runtime config.
+const ADMIN_ADDRESS = 'SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2';
+const NFT_CONTRACT = 'early-eagles-v2';
 const STACKS_API = 'https://api.hiro.so';
 
 module.exports = async function handler(req, res) {

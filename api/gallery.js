@@ -12,14 +12,12 @@ const { c32address } = require('c32check');
 
 // Mainnet only
 const STACKS_API = 'https://api.hiro.so';
-// Deploy address for Early Eagles mainnet contracts
-const ADMIN_ADDRESS = process.env.ADMIN_ADDRESS || 'SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2';
 
-const NFT_CONTRACT = process.env.NFT_CONTRACT_NAME || 'early-eagles';
-// Renderer deployed from same address on mainnet
-const RENDERER_ADDRESS = process.env.ADMIN_ADDRESS || 'SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2';
-
-const RENDERER_NAME = process.env.RENDERER_NAME || 'early-eagles-renderer';
+// Hardcoded - the contract identity is not a runtime config.
+const ADMIN_ADDRESS = 'SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2';
+const NFT_CONTRACT = 'early-eagles-v2';
+const RENDERER_ADDRESS = 'SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2';
+const RENDERER_NAME = 'early-eagles-renderer';
 
 const CORS = {
   'Access-Control-Allow-Origin': process.env.ALLOWED_ORIGIN || 'https://early-eagles.vercel.app',

@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="https://early-eagles.vercel.app">Mint</a> · <a href="https://early-eagles.vercel.app/gallery">Gallery</a> · <a href="https://early-eagles.vercel.app/whitepaper">Whitepaper</a> · <a href="https://explorer.hiro.so/txid/SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2.early-eagles?chain=mainnet">Explorer</a>
+  <a href="https://early-eagles.vercel.app">Mint</a> · <a href="https://early-eagles.vercel.app/gallery">Gallery</a> · <a href="https://early-eagles.vercel.app/whitepaper">Whitepaper</a> · <a href="https://explorer.hiro.so/txid/SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2.early-eagles-v2?chain=mainnet">Explorer</a>
 </p>
 
 ---
@@ -39,7 +39,7 @@ No API calls at render time. No gateway. Open `get-token-uri` in a browser and t
 
 | Contract | Purpose |
 |----------|---------|
-| `early-eagles` | SIP-009 NFT — minting, ownership, built-in marketplace |
+| `early-eagles-v2` | SIP-009 NFT — minting, ownership, built-in marketplace |
 | `early-eagles-renderer` | On-chain renderer — 4 segments, locked forever after deploy |
 
 Deployer: `SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2`
@@ -60,47 +60,48 @@ Tier and color are randomly assigned at mint time using on-chain randomness. The
 
 ## Minting
 
-Agents mint through a two-step signature flow:
+Three calls. The mnemonic stays inside the wallet vault — the agent never extracts a private key.
 
-1. **Authorize** — `POST /api/authorize` with STX address. Server verifies Genesis registration, returns a signing challenge (nonce + expiry + message hash).
-2. **Mint** — Agent signs the challenge with their STX private key, then `POST /api/mint`. Admin broadcasts `admin-mint` to the contract. The contract verifies the signature on-chain.
+1. **Authorize** — `POST /api/authorize {stxAddress}`. Server verifies Genesis level + on-chain ERC-8004 identity, generates a fresh nonce + an `expiry-height` a few hundred Stacks blocks ahead, returns the SIP-018 `{domain, message}` tuple.
+2. **Sign** — Agent calls `mcp__aibtc__sip018_sign({domain, message})`. The wallet shows the structured tuple `{recipient, nonce, expiry-height}` at sign time, so the agent is never blind-signing. Returns a 65-byte RSV signature.
+3. **Mint** — `POST /api/mint {stxAddress, nonce, expiryHeight, signature}`. Server reconstructs the same SIP-018 verification hash, recovers the signer, asserts it matches `stxAddress`, then admin broadcasts `admin-mint` to the contract. The contract reconstructs the hash on-chain and runs the same `secp256k1-recover?` + `principal-of?` check, plus enforces `stacks-block-height < expiry-height` and the nonce-not-used gate.
 
-Minting is gasless — the admin pays all transaction fees. One mint per agent. Must be a registered Genesis AIBTC agent with ERC-8004 identity.
+Minting is gasless — the admin pays all transaction fees. One mint per agent address. Must be a Genesis AIBTC agent (level ≥ 2) with on-chain ERC-8004 identity.
 
 ## Project Structure
 
 ```
 contracts/
-  early-eagles.clar          # SIP-009 NFT contract
+  early-eagles-v2.clar       # SIP-009 NFT contract (SIP-018 signing)
   early-eagles-renderer.clar # On-chain renderer (segments + assembly)
 api/
-  authorize.js               # Step 1: eligibility check + signing challenge
-  mint.js                    # Step 2: verify signature, broadcast admin-mint
+  authorize.js               # Step 1: eligibility check + SIP-018 payload
+  mint.js                    # Step 2: verify SIP-018 sig, broadcast admin-mint
   gallery.js                 # Gallery data (segments + eagle metadata)
   token/[id].js              # Token metadata API
   shuffle.js                 # Distribution info
 mint-page/
   index.html                 # Mint page
   gallery.html               # Gallery with live on-chain card rendering
-  whitepaper.html             # Technical whitepaper
+  whitepaper.html            # Technical whitepaper
 ```
 
 ## Built-In Marketplace
 
-The NFT contract includes a native marketplace — no external platform needed.
+The NFT contract includes a native STX marketplace — no external platform needed.
 
 ```clarity
-;; List
-(contract-call? .early-eagles list-in-ustx u<token-id> u<price> .commission-stx)
+;; List for sale (price in microSTX, min 1000)
+(contract-call? .early-eagles-v2 list-for-sale u<token-id> u<price>)
 
 ;; Buy
-(contract-call? .early-eagles buy-in-ustx u<token-id> .commission-stx)
+(contract-call? .early-eagles-v2 buy u<token-id>)
 
-;; Delist
-(contract-call? .early-eagles unlist-in-ustx u<token-id>)
+;; Unlist
+(contract-call? .early-eagles-v2 unlist u<token-id>)
 ```
 
-2% royalty on all sales, handled atomically by the commission contract.
+2% royalty on every sale, paid directly to the artist address by `buy`.
 
 ## Stack
 

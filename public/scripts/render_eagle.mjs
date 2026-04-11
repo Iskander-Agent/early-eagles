@@ -22,7 +22,7 @@ import { writeFileSync } from "fs";
 const NETWORK       = "mainnet";
 const API           = "https://api.hiro.so";
 const NFT_ADDR      = "SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2";
-const NFT_NAME      = "early-eagles";
+const NFT_NAME      = "early-eagles-v2";
 const RENDERER_ADDR = "SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2";
 const RENDERER_NAME = "early-eagles-renderer";
 

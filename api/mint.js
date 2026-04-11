@@ -1,17 +1,24 @@
 /**
- * Early Eagles — POST /api/mint
+ * Early Eagles - POST /api/mint
  *
  * Step 2 of the mint flow (after /api/authorize):
- * 1. Agent provides STX address + signed consent from authorize step
- * 2. Backend verifies agent signature off-chain (belt-and-suspenders)
- * 3. Backend looks up agent data from AIBTC API
- * 4. Admin broadcasts admin-mint transaction to the contract
- * 5. Contract verifies on-chain: admin gate, agent consent sig, ERC-8004, one-per-wallet
+ *   1. Agent provides {stxAddress, nonce, expiryHeight, signature}
+ *   2. Server reconstructs the SIP-018 verification hash from those primitives
+ *      and recovers the signer; aborts if the recovered address != stxAddress
+ *   3. Server re-checks AIBTC eligibility (Genesis + on-chain ERC-8004)
+ *   4. Admin broadcasts admin-mint to early-eagles-v2
+ *   5. The contract verifies the same signature on-chain via secp256k1-recover?
+ *      + principal-of? and enforces the expiry-height + nonce-not-used checks
  */
 
 const STACKS_API = "https://api.hiro.so";
-const ADMIN_ADDRESS = process.env.ADMIN_ADDRESS || "SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2";
-const NFT_CONTRACT = process.env.NFT_CONTRACT_NAME || "early-eagles";
+
+const NFT_CONTRACT = "early-eagles-v2";
+const ADMIN_ADDRESS = "SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2";
+
+// SIP-018 domain - MUST match the constant baked into the contract
+// (DOMAIN-HASH = sha256(consensus-buff?({name, version, chain-id}))).
+const SIP018_DOMAIN = { name: "early-eagles-v2", version: "1", chainId: 1 };
 
 const CORS = {
   "Access-Control-Allow-Origin": process.env.ALLOWED_ORIGIN || "https://early-eagles.vercel.app",
@@ -19,7 +26,7 @@ const CORS = {
   "Access-Control-Allow-Headers": "Content-Type",
 };
 
-// ── Rate limiting ─────────────────────────────────────────────────────────────
+// -- Rate limiting -----------------------------------------------------------
 const RATE_LIMIT_MAP = new Map();
 const RATE_WINDOW_MS = 60_000;
 const MAX_REQUESTS = 3;
@@ -43,10 +50,9 @@ setInterval(() => {
   }
 }, 300_000);
 
-
-// ── Mint dedup (prevent double-broadcast) ─────────────────────────────────────
-const PENDING_MINTS = new Map(); // key: mainnetAddr, value: timestamp
-const PENDING_TTL_MS = 120_000; // 2 minutes
+// -- Per-instance dedup (best-effort; on-chain ERR-NONCE-USED is the real gate)
+const PENDING_MINTS = new Map();
+const PENDING_TTL_MS = 120_000;
 
 setInterval(() => {
   const now = Date.now();
@@ -55,15 +61,7 @@ setInterval(() => {
   }
 }, 60_000);
 
-// ── AIBTC eligibility lookup ──────────────────────────────────────────────────
-// Replaces the legacy https://aibtc.com/api/agents/{addr} call, which reliably
-// hangs upstream for real Genesis agents (>15s, 0 bytes — confirmed against
-// multiple addresses). Two parallel fetches, both 5s timeout:
-//   1. https://aibtc.com/agents/{addr} — public RSC HTML page. Contains level,
-//      displayName, btcAddress, bnsName as escaped JSON in __next_f.push blocks.
-//   2. Hiro /extended/v1/tokens/nft/holdings — ground truth for ERC-8004
-//      identity. Returns the agent's on-chain agentId, independent of any
-//      AIBTC backend caching/staleness.
+// -- AIBTC eligibility lookup (same parallel page+Hiro pattern as /authorize)
 const IDENTITY_REGISTRY = "SP1NMR7MY0TJ1QA7WQBZ6504KC79PZNTRQH4YGFJD.identity-registry-v2::agent-identity";
 
 function timeoutSignal(ms) {
@@ -86,29 +84,21 @@ async function fetchAibtcEligibility(stxAddress) {
   ]);
 
   if (pageSettled.status === "rejected" || !pageSettled.value.ok) {
-    const detail = pageSettled.status === "rejected"
-      ? pageSettled.reason.message
-      : "HTTP " + pageSettled.value.status;
-    throw new Error("AIBTC profile fetch failed: " + detail);
+    throw new Error("AIBTC profile fetch failed");
   }
   if (hiroSettled.status === "rejected" || !hiroSettled.value.ok) {
-    const detail = hiroSettled.status === "rejected"
-      ? hiroSettled.reason.message
-      : "HTTP " + hiroSettled.value.status;
-    throw new Error("Hiro identity lookup failed: " + detail);
+    throw new Error("Hiro identity lookup failed");
   }
 
   const html = await pageSettled.value.text();
   const hiro = await hiroSettled.value.json();
 
   const levelMatch = html.match(/level\\":(\d+)/);
-  if (!levelMatch) {
-    return { found: false, reason: "Agent not found on AIBTC network" };
-  }
+  if (!levelMatch) return { found: false };
+
   const levelNameMatch = html.match(/levelName\\":\\"([A-Za-z]+)/);
   const displayNameMatch = html.match(/displayName\\":\\"([^"\\]+)/);
   const btcAddrMatch = html.match(/btcAddress\\":\\"([a-zA-Z0-9]+)/);
-  const bnsMatch = html.match(/bnsName\\":\\"([^"\\]+)/);
 
   const holding = (hiro.results || [])[0];
   const agentId = holding ? parseInt(holding.value.repr.replace(/^u/, ""), 10) : null;
@@ -119,37 +109,68 @@ async function fetchAibtcEligibility(stxAddress) {
     levelName: levelNameMatch ? levelNameMatch[1] : "Unknown",
     displayName: displayNameMatch ? displayNameMatch[1] : null,
     btcAddress: btcAddrMatch ? btcAddrMatch[1] : null,
-    bnsName: bnsMatch ? bnsMatch[1] : null,
     agentId: Number.isFinite(agentId) ? agentId : null,
   };
 }
 
-// ── Principal consensus serialization ────────────────────────────────────────
-// Standard principal: type 0x05 || version (1 byte) || hash160 (20 bytes) = 22 bytes.
-// MUST match Clarity's to-consensus-buff? exactly so signatures verify on-chain.
-//
-// Earlier versions had a hand-rolled c32 decoder that returned the wrong version
-// byte (0x00 instead of 0x16/0x1a). The bug was discovered during the testnet
-// rehearsal of admin-mint and fixed by switching to the canonical c32check
-// library which is already pinned via @stacks/transactions.
-async function principalConsensusBytes(stxAddress) {
-  const { c32addressDecode } = await import("c32check");
-  const [version, hash160Hex] = c32addressDecode(stxAddress);
-  const buf = new Uint8Array(22);
-  buf[0] = 0x05;
-  buf[1] = version;
-  for (let i = 0; i < 20; i++) {
-    buf[2 + i] = parseInt(hash160Hex.slice(i * 2, i * 2 + 2), 16);
-  }
-  return buf;
-}
-
+// -- Hex helpers -------------------------------------------------------------
 function hexToBytes(hex) {
   const h = hex.startsWith("0x") ? hex.slice(2) : hex;
   return new Uint8Array(h.match(/.{2}/g).map(b => parseInt(b, 16)));
 }
+function bytesToHex(bytes) {
+  return Array.from(bytes).map(b => b.toString(16).padStart(2, "0")).join("");
+}
 
-// ── Stacks helpers ────────────────────────────────────────────────────────────
+// -- SIP-018 verification hash reconstruction --------------------------------
+//
+// Builds the same hash the on-chain contract computes in admin-mint:
+//   message-tuple    = { recipient, nonce, expiry-height }
+//   message-hash     = sha256(consensus-buff(message-tuple))
+//   verification-hash = sha256("SIP018" || domain-hash || message-hash)
+//
+// The domain-hash is sha256(consensus-buff(domain-tuple)) for our fixed domain
+// {name: "early-eagles-v2", version: "1", chain-id: u1}. We compute it lazily
+// on first call and cache.
+let _domainHashCache = null;
+async function getDomainHash() {
+  if (_domainHashCache) return _domainHashCache;
+  const { tupleCV, stringAsciiCV, uintCV, serializeCV } = await import("@stacks/transactions");
+  const { sha256 } = await import("@noble/hashes/sha256");
+  const domain = tupleCV({
+    name: stringAsciiCV(SIP018_DOMAIN.name),
+    version: stringAsciiCV(SIP018_DOMAIN.version),
+    "chain-id": uintCV(SIP018_DOMAIN.chainId),
+  });
+  const buf = serializeCV(domain);
+  const bytes = typeof buf === "string" ? hexToBytes(buf) : new Uint8Array(buf);
+  _domainHashCache = sha256(bytes);
+  return _domainHashCache;
+}
+
+async function sip018VerificationHash(recipient, nonceBytes, expiryHeight) {
+  const { tupleCV, principalCV, bufferCV, uintCV, serializeCV } = await import("@stacks/transactions");
+  const { sha256 } = await import("@noble/hashes/sha256");
+
+  const message = tupleCV({
+    recipient: principalCV(recipient),
+    nonce: bufferCV(nonceBytes),
+    "expiry-height": uintCV(expiryHeight),
+  });
+  const buf = serializeCV(message);
+  const mBytes = typeof buf === "string" ? hexToBytes(buf) : new Uint8Array(buf);
+  const msgHash = sha256(mBytes);
+
+  const domainHash = await getDomainHash();
+  const SIP018_PREFIX = hexToBytes("534950303138");
+  const encoded = new Uint8Array(SIP018_PREFIX.length + 32 + 32);
+  encoded.set(SIP018_PREFIX, 0);
+  encoded.set(domainHash, SIP018_PREFIX.length);
+  encoded.set(msgHash, SIP018_PREFIX.length + 32);
+  return sha256(encoded);
+}
+
+// -- Stacks broadcast helpers ------------------------------------------------
 async function getAdminKey() {
   const { generateWallet } = await import("@stacks/wallet-sdk");
   const mnemonic = process.env.ADMIN_MNEMONIC;
@@ -158,8 +179,6 @@ async function getAdminKey() {
   return wallet.accounts[0].stxPrivateKey;
 }
 
-// Mempool-aware: returns the next nonce considering pending mempool TXs.
-// Falls back to confirmed nonce if the extended endpoint is unreachable.
 async function getNonce(address) {
   try {
     const r = await fetch(STACKS_API + "/extended/v1/address/" + address + "/nonces");
@@ -186,7 +205,7 @@ async function broadcastTx(tx) {
   return JSON.parse(text);
 }
 
-// ── Handler ───────────────────────────────────────────────────────────────────
+// -- Handler -----------------------------------------------------------------
 module.exports = async function handler(req, res) {
   Object.entries(CORS).forEach(([k, v]) => res.setHeader(k, v));
   if (req.method === "OPTIONS") return res.status(200).end();
@@ -197,59 +216,66 @@ module.exports = async function handler(req, res) {
     return res.status(429).json({ error: "Too many requests. Try again in 1 minute." });
   }
 
-  const { stxAddress: rawAddr, nonce: nonceHex, expiryBuff: expiryHex, agentSignature: sigHex } = req.body || {};
+  const { stxAddress: rawAddr, nonce: nonceHex, expiryHeight, signature: sigHex } = req.body || {};
 
   if (!rawAddr) return res.status(400).json({ error: "stxAddress required" });
-  if (!nonceHex || !expiryHex || !sigHex) {
-    return res.status(400).json({ error: "nonce, expiryBuff, and agentSignature required (from /api/authorize)" });
+  if (!nonceHex || expiryHeight == null || !sigHex) {
+    return res.status(400).json({ error: "nonce, expiryHeight, and signature required (from /api/authorize)" });
   }
-  if (!/^S[PMTN][A-Z0-9]{38,41}$/.test(rawAddr)) return res.status(400).json({ error: "Invalid Stacks address" });
+  if (!/^S[PMTN][A-Z0-9]{38,41}$/.test(rawAddr)) {
+    return res.status(400).json({ error: "Invalid Stacks address" });
+  }
 
   const mainnetAddr = rawAddr.startsWith("ST") ? "SP" + rawAddr.slice(2)
                     : rawAddr.startsWith("SN") ? "SM" + rawAddr.slice(2)
                     : rawAddr;
 
+  let nonceBytes, sigBytes, expiryHeightInt;
   try {
-    // 1. Verify agent signature off-chain
-    const { keccak_256 } = await import("@noble/hashes/sha3");
+    nonceBytes = hexToBytes(nonceHex);
+    sigBytes = hexToBytes(sigHex);
+    expiryHeightInt = parseInt(expiryHeight, 10);
+  } catch (e) {
+    return res.status(400).json({ error: "Invalid hex format in nonce or signature" });
+  }
+  if (nonceBytes.length !== 16) return res.status(400).json({ error: "nonce must be 16 bytes" });
+  if (sigBytes.length !== 65) return res.status(400).json({ error: "signature must be 65 bytes (RSV)" });
+  if (!Number.isFinite(expiryHeightInt) || expiryHeightInt <= 0) {
+    return res.status(400).json({ error: "expiryHeight must be a positive integer" });
+  }
+
+  try {
+    // 1. Off-chain expiry sanity (the contract enforces the real check on-chain)
+    const tipRes = await fetch(STACKS_API + "/v2/info");
+    const tipData = await tipRes.json();
+    const currentHeight = tipData.stacks_tip_height;
+    if (typeof currentHeight === "number" && currentHeight >= expiryHeightInt) {
+      return res.status(400).json({
+        error: "Authorization expired (height " + currentHeight + " >= " + expiryHeightInt + "). Call /api/authorize again.",
+      });
+    }
+
+    // 2. Reconstruct the SIP-018 verification hash and recover the signer
+    const verificationHash = await sip018VerificationHash(mainnetAddr, nonceBytes, expiryHeightInt);
+
     const { secp256k1 } = await import("@noble/curves/secp256k1");
     const { getAddressFromPublicKey } = await import("@stacks/transactions");
     const { STACKS_MAINNET } = await import("@stacks/network");
 
-    const nonce = hexToBytes(nonceHex);
-    const expiryBuf = hexToBytes(expiryHex);
-    const agentSig = hexToBytes(sigHex);
-
-    if (nonce.length !== 16) return res.status(400).json({ error: "nonce must be 16 bytes" });
-    if (expiryBuf.length !== 8) return res.status(400).json({ error: "expiryBuff must be 8 bytes" });
-    if (agentSig.length !== 65) return res.status(400).json({ error: "agentSignature must be 65 bytes" });
-
-    // Check expiry
-    const expiryTs = Number(new DataView(expiryBuf.buffer).getBigUint64(0, false));
-    if (expiryTs < Math.floor(Date.now() / 1000)) {
-      return res.status(400).json({ error: "Authorization expired. Call /api/authorize again." });
-    }
-
-    // Reconstruct message hash and verify
-    const principalBytes = await principalConsensusBytes(mainnetAddr);
-    const message = new Uint8Array(46);
-    message.set(principalBytes, 0);
-    message.set(nonce, 22);
-    message.set(expiryBuf, 38);
-    const msgHash = keccak_256(message);
-
-    const compactSig = agentSig.slice(0, 64);
-    const recoveryBit = agentSig[64];
+    const compactSig = sigBytes.slice(0, 64);
+    const recoveryBit = sigBytes[64];
     const sig = secp256k1.Signature.fromCompact(compactSig).addRecoveryBit(recoveryBit);
-    const recoveredPubkey = sig.recoverPublicKey(msgHash);
+    const recoveredPubkey = sig.recoverPublicKey(verificationHash);
     const recoveredPubkeyHex = recoveredPubkey.toHex(true);
 
     const signerAddr = getAddressFromPublicKey(recoveredPubkeyHex, STACKS_MAINNET);
     if (signerAddr !== mainnetAddr) {
-      return res.status(403).json({ error: "Signature does not match stxAddress. Agent must sign with their own key." });
+      return res.status(403).json({
+        error: "Signature does not match stxAddress. Agent must sign with their own key.",
+      });
     }
 
-    // 2. Look up agent data (level + on-chain ERC-8004 identity + display fields)
+    // 3. Eligibility (Genesis level + ERC-8004 identity)
     let eligibility;
     try {
       eligibility = await fetchAibtcEligibility(mainnetAddr);
@@ -266,13 +292,15 @@ module.exports = async function handler(req, res) {
     const agentRank = eligibility.agentId;
     if (isNaN(agentRank) || agentRank < 1) return res.status(403).json({ error: "Invalid agent identity rank" });
 
-    // 3. Check for duplicate in-flight mint
+    // 4. Per-instance dedup (best-effort; the contract is the real source of truth)
     if (PENDING_MINTS.has(mainnetAddr)) {
-      return res.status(409).json({ error: "Mint already in progress for this address. Wait for confirmation." });
+      return res.status(409).json({
+        error: "Mint already in progress for this address. Wait for confirmation.",
+      });
     }
     PENDING_MINTS.set(mainnetAddr, Date.now());
 
-    // 4. Build and broadcast admin-mint
+    // 5. Build and broadcast admin-mint
     const {
       makeContractCall, AnchorMode, PostConditionMode,
       uintCV, stringUtf8CV, stringAsciiCV, bufferCV, standardPrincipalCV,
@@ -281,7 +309,6 @@ module.exports = async function handler(req, res) {
     const adminNonce = await getNonce(ADMIN_ADDRESS);
 
     const nameAscii = (eligibility.displayName || "").replace(/[^ -~]/g, "?").replace(/[<>&"\\]/g, "").slice(0, 64);
-    // Contract field is (string-utf8 64) — slice by codepoint to stay within bound.
     const displayUtf8 = Array.from(eligibility.displayName || nameAscii).slice(0, 64).join("");
 
     const tx = await makeContractCall({
@@ -290,18 +317,18 @@ module.exports = async function handler(req, res) {
       functionName: "admin-mint",
       functionArgs: [
         standardPrincipalCV(mainnetAddr),
-        bufferCV(nonce),
-        bufferCV(expiryBuf),
-        bufferCV(agentSig),
+        bufferCV(nonceBytes),
+        uintCV(expiryHeightInt),
+        bufferCV(sigBytes),
         uintCV(agentRank),
         stringUtf8CV(displayUtf8),
         stringAsciiCV(nameAscii),
-        stringAsciiCV((eligibility.btcAddress || "").slice(0, 62)),
+        stringAsciiCV(eligibility.btcAddress),
       ],
       senderKey: privKey,
       network: STACKS_MAINNET,
       anchorMode: AnchorMode.Any,
-      postConditionMode: PostConditionMode.Deny,
+      postConditionMode: PostConditionMode.Allow,
       fee: 3000n,
       nonce: BigInt(adminNonce),
     });
@@ -311,15 +338,12 @@ module.exports = async function handler(req, res) {
     return res.status(200).json({
       success: true,
       txid,
-      recipient: mainnetAddr,
-      agentRank,
-      displayName: eligibility.displayName,
-      btcAddress: eligibility.btcAddress,
+      explorer: "https://explorer.hiro.so/txid/0x" + txid + "?chain=mainnet",
+      contract: ADMIN_ADDRESS + "." + NFT_CONTRACT,
     });
-
   } catch (e) {
-    console.error("Mint error:", e.message);
-    console.error("Mint error detail:", e);
-    return res.status(500).json({ error: "Internal mint error. Please try again." });
+    console.error("Mint error:", e);
+    PENDING_MINTS.delete(mainnetAddr);
+    return res.status(500).json({ error: "Internal mint error: " + e.message });
   }
 };
