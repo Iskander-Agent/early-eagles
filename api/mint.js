@@ -55,6 +55,75 @@ setInterval(() => {
   }
 }, 60_000);
 
+// ── AIBTC eligibility lookup ──────────────────────────────────────────────────
+// Replaces the legacy https://aibtc.com/api/agents/{addr} call, which reliably
+// hangs upstream for real Genesis agents (>15s, 0 bytes — confirmed against
+// multiple addresses). Two parallel fetches, both 5s timeout:
+//   1. https://aibtc.com/agents/{addr} — public RSC HTML page. Contains level,
+//      displayName, btcAddress, bnsName as escaped JSON in __next_f.push blocks.
+//   2. Hiro /extended/v1/tokens/nft/holdings — ground truth for ERC-8004
+//      identity. Returns the agent's on-chain agentId, independent of any
+//      AIBTC backend caching/staleness.
+const IDENTITY_REGISTRY = "SP1NMR7MY0TJ1QA7WQBZ6504KC79PZNTRQH4YGFJD.identity-registry-v2::agent-identity";
+
+function timeoutSignal(ms) {
+  const c = new AbortController();
+  setTimeout(() => c.abort(), ms);
+  return c.signal;
+}
+
+async function fetchAibtcEligibility(stxAddress) {
+  const [pageSettled, hiroSettled] = await Promise.allSettled([
+    fetch("https://aibtc.com/agents/" + stxAddress, {
+      headers: { "User-Agent": "EarlyEagles/2.0" },
+      signal: timeoutSignal(5000),
+    }),
+    fetch(
+      "https://api.hiro.so/extended/v1/tokens/nft/holdings?principal=" + stxAddress +
+      "&asset_identifiers=" + encodeURIComponent(IDENTITY_REGISTRY),
+      { signal: timeoutSignal(5000) }
+    ),
+  ]);
+
+  if (pageSettled.status === "rejected" || !pageSettled.value.ok) {
+    const detail = pageSettled.status === "rejected"
+      ? pageSettled.reason.message
+      : "HTTP " + pageSettled.value.status;
+    throw new Error("AIBTC profile fetch failed: " + detail);
+  }
+  if (hiroSettled.status === "rejected" || !hiroSettled.value.ok) {
+    const detail = hiroSettled.status === "rejected"
+      ? hiroSettled.reason.message
+      : "HTTP " + hiroSettled.value.status;
+    throw new Error("Hiro identity lookup failed: " + detail);
+  }
+
+  const html = await pageSettled.value.text();
+  const hiro = await hiroSettled.value.json();
+
+  const levelMatch = html.match(/level\\":(\d+)/);
+  if (!levelMatch) {
+    return { found: false, reason: "Agent not found on AIBTC network" };
+  }
+  const levelNameMatch = html.match(/levelName\\":\\"([A-Za-z]+)/);
+  const displayNameMatch = html.match(/displayName\\":\\"([^"\\]+)/);
+  const btcAddrMatch = html.match(/btcAddress\\":\\"([a-zA-Z0-9]+)/);
+  const bnsMatch = html.match(/bnsName\\":\\"([^"\\]+)/);
+
+  const holding = (hiro.results || [])[0];
+  const agentId = holding ? parseInt(holding.value.repr.replace(/^u/, ""), 10) : null;
+
+  return {
+    found: true,
+    level: parseInt(levelMatch[1], 10),
+    levelName: levelNameMatch ? levelNameMatch[1] : "Unknown",
+    displayName: displayNameMatch ? displayNameMatch[1] : null,
+    btcAddress: btcAddrMatch ? btcAddrMatch[1] : null,
+    bnsName: bnsMatch ? bnsMatch[1] : null,
+    agentId: Number.isFinite(agentId) ? agentId : null,
+  };
+}
+
 // ── Principal consensus serialization ────────────────────────────────────────
 // Standard principal: type 0x05 || version (1 byte) || hash160 (20 bytes) = 22 bytes.
 // MUST match Clarity's to-consensus-buff? exactly so signatures verify on-chain.
@@ -180,17 +249,21 @@ module.exports = async function handler(req, res) {
       return res.status(403).json({ error: "Signature does not match stxAddress. Agent must sign with their own key." });
     }
 
-    // 2. Look up agent data
-    const agentRes = await fetch("https://aibtc.com/api/agents/" + mainnetAddr, {
-      headers: { "User-Agent": "EarlyEagles/2.0" },
-    });
-    const agentData = await agentRes.json();
-    if (!agentData.found || !agentData.agent) return res.status(403).json({ error: "Not a registered AIBTC agent" });
-    const agent = agentData.agent;
-    if (!agent.erc8004AgentId) return res.status(403).json({ error: "No ERC-8004 identity" });
-    if ((agentData.level || 0) < 2) return res.status(403).json({ error: "Not a Genesis agent" });
+    // 2. Look up agent data (level + on-chain ERC-8004 identity + display fields)
+    let eligibility;
+    try {
+      eligibility = await fetchAibtcEligibility(mainnetAddr);
+    } catch (e) {
+      return res.status(502).json({ error: "AIBTC eligibility lookup failed: " + e.message });
+    }
+    if (!eligibility.found) return res.status(403).json({ error: "Not a registered AIBTC agent" });
+    if (!eligibility.agentId) return res.status(403).json({ error: "No ERC-8004 identity" });
+    if (eligibility.level < 2) return res.status(403).json({ error: "Not a Genesis agent" });
+    if (!eligibility.displayName || !eligibility.btcAddress) {
+      return res.status(502).json({ error: "Could not extract agent profile fields. Try again." });
+    }
 
-    const agentRank = parseInt(agent.erc8004AgentId, 10);
+    const agentRank = eligibility.agentId;
     if (isNaN(agentRank) || agentRank < 1) return res.status(403).json({ error: "Invalid agent identity rank" });
 
     // 3. Check for duplicate in-flight mint
@@ -207,9 +280,9 @@ module.exports = async function handler(req, res) {
     const privKey = await getAdminKey();
     const adminNonce = await getNonce(ADMIN_ADDRESS);
 
-    const nameAscii = (agent.displayName || "").replace(/[^ -~]/g, "?").replace(/[<>&"\\]/g, "").slice(0, 64);
+    const nameAscii = (eligibility.displayName || "").replace(/[^ -~]/g, "?").replace(/[<>&"\\]/g, "").slice(0, 64);
     // Contract field is (string-utf8 64) — slice by codepoint to stay within bound.
-    const displayUtf8 = Array.from(agent.displayName || nameAscii).slice(0, 64).join("");
+    const displayUtf8 = Array.from(eligibility.displayName || nameAscii).slice(0, 64).join("");
 
     const tx = await makeContractCall({
       contractAddress: ADMIN_ADDRESS,
@@ -223,7 +296,7 @@ module.exports = async function handler(req, res) {
         uintCV(agentRank),
         stringUtf8CV(displayUtf8),
         stringAsciiCV(nameAscii),
-        stringAsciiCV((agent.btcAddress || "").slice(0, 62)),
+        stringAsciiCV((eligibility.btcAddress || "").slice(0, 62)),
       ],
       senderKey: privKey,
       network: STACKS_MAINNET,
@@ -240,8 +313,8 @@ module.exports = async function handler(req, res) {
       txid,
       recipient: mainnetAddr,
       agentRank,
-      displayName: agent.displayName,
-      btcAddress: agent.btcAddress,
+      displayName: eligibility.displayName,
+      btcAddress: eligibility.btcAddress,
     });
 
   } catch (e) {

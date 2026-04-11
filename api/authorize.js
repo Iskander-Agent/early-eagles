@@ -12,7 +12,6 @@
  *   to-consensus-buff? = 0x05 + version(1) + hash160(20) = 22 bytes
  */
 
-const AIBTC_API_BASE = 'https://aibtc.com/api';
 const SIG_EXPIRY_SECONDS = 3600; // 1 hour
 
 const CORS = {
@@ -45,6 +44,78 @@ setInterval(() => {
     if (now > v.resetAt) RATE_LIMIT_MAP.delete(k);
   }
 }, 300_000);
+
+// ── AIBTC eligibility lookup ──────────────────────────────────────────────────
+// Replaces the legacy https://aibtc.com/api/agents/{addr} call, which reliably
+// hangs upstream for real Genesis agents (>15s, 0 bytes — confirmed against
+// multiple addresses). Two parallel fetches, both 5s timeout:
+//   1. https://aibtc.com/agents/{addr} — public RSC HTML page. Contains level,
+//      displayName, btcAddress, bnsName as escaped JSON in __next_f.push blocks.
+//   2. Hiro /extended/v1/tokens/nft/holdings — ground truth for ERC-8004
+//      identity. Returns the agent's on-chain agentId, independent of any
+//      AIBTC backend caching/staleness.
+const IDENTITY_REGISTRY = 'SP1NMR7MY0TJ1QA7WQBZ6504KC79PZNTRQH4YGFJD.identity-registry-v2::agent-identity';
+
+function timeoutSignal(ms) {
+  const c = new AbortController();
+  setTimeout(() => c.abort(), ms);
+  return c.signal;
+}
+
+async function fetchAibtcEligibility(stxAddress) {
+  const [pageSettled, hiroSettled] = await Promise.allSettled([
+    fetch('https://aibtc.com/agents/' + stxAddress, {
+      headers: { 'User-Agent': 'EarlyEagles/2.0' },
+      signal: timeoutSignal(5000),
+    }),
+    fetch(
+      'https://api.hiro.so/extended/v1/tokens/nft/holdings?principal=' + stxAddress +
+      '&asset_identifiers=' + encodeURIComponent(IDENTITY_REGISTRY),
+      { signal: timeoutSignal(5000) }
+    ),
+  ]);
+
+  if (pageSettled.status === 'rejected' || !pageSettled.value.ok) {
+    const detail = pageSettled.status === 'rejected'
+      ? pageSettled.reason.message
+      : 'HTTP ' + pageSettled.value.status;
+    throw new Error('AIBTC profile fetch failed: ' + detail);
+  }
+  if (hiroSettled.status === 'rejected' || !hiroSettled.value.ok) {
+    const detail = hiroSettled.status === 'rejected'
+      ? hiroSettled.reason.message
+      : 'HTTP ' + hiroSettled.value.status;
+    throw new Error('Hiro identity lookup failed: ' + detail);
+  }
+
+  const html = await pageSettled.value.text();
+  const hiro = await hiroSettled.value.json();
+
+  // Parse fields from RSC payload (escaped JSON inside HTML).
+  const levelMatch = html.match(/level\\":(\d+)/);
+  if (!levelMatch) {
+    return { found: false, reason: 'Agent not found on AIBTC network' };
+  }
+  const levelNameMatch = html.match(/levelName\\":\\"([A-Za-z]+)/);
+  const displayNameMatch = html.match(/displayName\\":\\"([^"\\]+)/);
+  const btcAddrMatch = html.match(/btcAddress\\":\\"([a-zA-Z0-9]+)/);
+  const bnsMatch = html.match(/bnsName\\":\\"([^"\\]+)/);
+
+  // ERC-8004 agentId from Hiro NFT holdings.
+  // value.repr is Clarity uint serialization, e.g. "u124".
+  const holding = (hiro.results || [])[0];
+  const agentId = holding ? parseInt(holding.value.repr.replace(/^u/, ''), 10) : null;
+
+  return {
+    found: true,
+    level: parseInt(levelMatch[1], 10),
+    levelName: levelNameMatch ? levelNameMatch[1] : 'Unknown',
+    displayName: displayNameMatch ? displayNameMatch[1] : null,
+    btcAddress: btcAddrMatch ? btcAddrMatch[1] : null,
+    bnsName: bnsMatch ? bnsMatch[1] : null,
+    agentId: Number.isFinite(agentId) ? agentId : null,
+  };
+}
 
 // Principal consensus serialization (matches Clarity to-consensus-buff?)
 // Standard principal: type 0x05 || version (1 byte) || hash160 (20 bytes) = 22 bytes.
@@ -93,31 +164,22 @@ module.exports = async function handler(req, res) {
                     : rawAddr.startsWith('SN') ? 'SM' + rawAddr.slice(2)
                     : rawAddr;
 
-  // 1. Check AIBTC agent status
-  let agentData;
+  // 1. Eligibility: AIBTC level >= 2 AND on-chain ERC-8004 identity.
+  let eligibility;
   try {
-    const apiRes = await fetch(AIBTC_API_BASE + '/agents/' + mainnetAddr, {
-      headers: { 'User-Agent': 'EarlyEagles/2.0' },
-    });
-    if (!apiRes.ok) {
-      if (apiRes.status === 404) return res.status(403).json({ eligible: false, reason: 'Agent not found on AIBTC network' });
-      return res.status(502).json({ error: 'AIBTC API error', status: apiRes.status });
-    }
-    agentData = await apiRes.json();
+    eligibility = await fetchAibtcEligibility(mainnetAddr);
   } catch (e) {
-    return res.status(502).json({ error: 'Failed to reach AIBTC API: ' + e.message });
+    return res.status(502).json({ error: 'AIBTC eligibility lookup failed: ' + e.message });
   }
 
-  if (!agentData.found || !agentData.agent) {
-    return res.status(403).json({ eligible: false, reason: 'Agent not found on AIBTC network' });
+  if (!eligibility.found) {
+    return res.status(403).json({ eligible: false, reason: eligibility.reason });
   }
-  const agent = agentData.agent;
-
-  if (!agent.erc8004AgentId) {
+  if (eligibility.level < 2) {
+    return res.status(403).json({ eligible: false, reason: 'Not a Genesis agent. Current level: ' + eligibility.levelName });
+  }
+  if (!eligibility.agentId) {
     return res.status(403).json({ eligible: false, reason: 'No on-chain ERC-8004 identity. Register at aibtc.com first.' });
-  }
-  if ((agentData.level || 0) < 2) {
-    return res.status(403).json({ eligible: false, reason: 'Not a Genesis agent. Current level: ' + (agentData.levelName || agentData.level) });
   }
 
   // 2. Generate nonce + expiry
@@ -143,11 +205,11 @@ module.exports = async function handler(req, res) {
     eligible: true,
     agent: {
       stxAddress: mainnetAddr,
-      displayName: agent.displayName,
-      bnsName: agent.bnsName || null,
-      btcAddress: agent.btcAddress,
-      agentId: parseInt(agent.erc8004AgentId, 10),
-      level: agentData.levelName,
+      displayName: eligibility.displayName,
+      bnsName: eligibility.bnsName,
+      btcAddress: eligibility.btcAddress,
+      agentId: eligibility.agentId,
+      level: eligibility.levelName,
     },
     auth: {
       nonce: bytesToHex(nonce),
