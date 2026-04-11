@@ -900,6 +900,21 @@ let statsInterval   = null;
 })();
 
 /* ── Live Stats ── */
+//
+// get-mint-stats returns a Clarity tuple of 6 uint fields. We decode it
+// inline (no @stacks/transactions in the browser bundle) by walking the
+// consensus-buff hex:
+//
+//   0c                                  tuple type tag
+//   00000006                            field count, 4-byte big-endian uint
+//   for each field:
+//     LL                                name length, 1 byte
+//     <name bytes, ASCII>               LL bytes
+//     01                                uint type tag
+//     <value, 16-byte big-endian uint>  always 16 bytes for uint128
+//
+// (An earlier version of this function read the field count as 1 byte
+// instead of 4 and silently fell through to dashes — fixed.)
 async function fetchStats() {
   try {
     const url = `${CONFIG.stacksApiUrl}/v2/contracts/call-read/${CONFIG.contractAddress}/${CONFIG.contractName}/get-mint-stats`;
@@ -909,35 +924,47 @@ async function fetchStats() {
       body: JSON.stringify({ sender: CONFIG.contractAddress, arguments: [] })
     });
     const data = await res.json();
-    if (data.okay && data.result) {
-      // get-mint-stats returns a tuple: decode uint fields by walking the hex
-      const hex = data.result.replace('0x', '');
-      const uintFields = {};
-      let pos = 2; // skip tuple type byte (0c)
-      const fieldCount = parseInt(hex.slice(pos, pos + 2), 16) || 6;
-      pos += 2;
-      for (let i = 0; i < fieldCount; i++) {
-        const nameLen = parseInt(hex.slice(pos, pos + 2), 16);
-        pos += 2;
-        const nameHex = hex.slice(pos, pos + nameLen * 2);
-        const name = nameHex.match(/.{2}/g).map(b => String.fromCharCode(parseInt(b, 16))).join('');
-        pos += nameLen * 2;
-        const valType = hex.slice(pos, pos + 2);
-        pos += 2;
-        if (valType === '01') {
-          uintFields[name] = parseInt(hex.slice(pos, pos + 32), 16);
-          pos += 32;
-        }
-      }
-      const minted = uintFields['total-minted'] || 0;
-      const legendaryLeft = uintFields['legendary-remaining'] || 0;
-      const mintedEl = document.getElementById('minted-count');
-      const legendaryEl = document.getElementById('legendary-remaining');
-      if (mintedEl) mintedEl.textContent = `${minted} / ${TOTAL_SUPPLY}`;
-      if (legendaryEl) legendaryEl.textContent = legendaryLeft;
+    if (!data.okay || !data.result) return;
+
+    const hex = data.result.replace('0x', '');
+    if (hex.slice(0, 2) !== '0c') {
+      console.warn('fetchStats: unexpected leading byte 0x' + hex.slice(0, 2) + ', expected tuple 0x0c');
+      return;
     }
+    let pos = 2; // skip tuple type byte
+    const fieldCount = parseInt(hex.slice(pos, pos + 8), 16); // 4-byte BE uint
+    pos += 8;
+
+    const uintFields = {};
+    for (let i = 0; i < fieldCount; i++) {
+      const nameLen = parseInt(hex.slice(pos, pos + 2), 16);
+      pos += 2;
+      const nameHex = hex.slice(pos, pos + nameLen * 2);
+      const name = (nameHex.match(/.{2}/g) || []).map(b => String.fromCharCode(parseInt(b, 16))).join('');
+      pos += nameLen * 2;
+      const valType = hex.slice(pos, pos + 2);
+      pos += 2;
+      if (valType === '01') {
+        uintFields[name] = parseInt(hex.slice(pos, pos + 32), 16);
+        pos += 32;
+      } else {
+        console.warn('fetchStats: unexpected field type 0x' + valType + ' for ' + name + ', aborting');
+        return;
+      }
+    }
+
+    const minted = uintFields['total-minted'];
+    const legendaryLeft = uintFields['legendary-remaining'];
+    if (minted == null || legendaryLeft == null) {
+      console.warn('fetchStats: required fields missing', uintFields);
+      return;
+    }
+    const mintedEl = document.getElementById('minted-count');
+    const legendaryEl = document.getElementById('legendary-remaining');
+    if (mintedEl) mintedEl.textContent = `${minted} / ${TOTAL_SUPPLY}`;
+    if (legendaryEl) legendaryEl.textContent = legendaryLeft;
   } catch (e) {
-    // Silently fail -- stats are cosmetic
+    console.warn('fetchStats failed:', e);
   }
 }
 
