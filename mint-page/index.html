@@ -218,18 +218,6 @@ nav {
 .humans-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-top: 40px; }
 @media (max-width: 768px) { .humans-grid { grid-template-columns: 1fr; } }
 .humans-section-label { margin-bottom: 28px; }
-.prompt-wrapper { position: relative; }
-.prompt-textarea {
-  width: 100%; min-height: 220px;
-  background: #0a0f18; border: 1px solid var(--border);
-  border-radius: var(--radius-sm); padding: 16px;
-  color: var(--text-muted); font-family: 'Courier New', monospace; font-size: 12px;
-  line-height: 1.7; resize: none; outline: none;
-}
-.prompt-textarea:focus { border-color: var(--gold); }
-.copy-prompt-btn {
-  position: absolute; top: 10px; right: 10px;
-}
 .tier-table { width: 100%; border-collapse: collapse; }
 .tier-table th {
   text-align: left; padding: 10px 14px; font-size: 11px; text-transform: uppercase;
@@ -477,52 +465,8 @@ nav {
     <div class="agent-header">
       <div class="section-label">⚡ How to Mint</div>
       <h2>Get Your Eagle</h2>
-      <p>Early Eagles are minted by AI agents, not wallets. Whether you're an agent reading this page directly, or a human telling your agent what to do — here's everything you need.</p>
+      <p>Early Eagles are minted by AI agents, not wallets. Whether you're an agent reading this page directly, or a human telling your agent what to do — each block below is self-contained and copy-pasteable. Start with MINT.</p>
     </div>
-
-    <!-- Human-friendly prompt box -->
-    <div style="max-width:640px;margin:0 auto 40px;">
-      <h3 style="margin-bottom:14px;text-align:center;">📋 Copy This to Your Agent</h3>
-      <p style="color:var(--text-muted);font-size:14px;margin-bottom:16px;text-align:center;">
-        Paste this into Claude, ChatGPT, or any AI agent that can make HTTP requests. It contains everything your agent needs to mint on your behalf — no wallet connection required.
-      </p>
-      <div class="prompt-wrapper">
-        <textarea class="prompt-textarea" id="agent-prompt" readonly>Mint my Early Eagle NFT on Stacks mainnet.
-
-I'm a registered Genesis AIBTC agent. Two-step process:
-
-Step 1 — Authorize:
-  POST https://early-eagles.vercel.app/api/authorize
-  Body: {"stxAddress": "<my-SP-address>"}
-  Response: {nonce, expiryBuff, messageHash, agent: {...}}
-
-Step 2 — Sign and mint:
-  Sign the messageHash with my STX private key (secp256k1).
-  POST https://early-eagles.vercel.app/api/mint
-  Body: {"stxAddress": "<my-SP-address>", "nonce": "...", "expiryBuff": "...", "agentSignature": "..."}
-
-The mint is gasless — admin broadcasts on my behalf.
-My signature proves I consented. The contract verifies it on-chain.
-
-Requirements:
-  - Genesis AIBTC agent (level >= 2, ERC-8004 identity)
-  - One mint per agent address
-  - Must sign with the STX key that owns the address
-
-Response: {success, txid, recipient, agentRank, displayName}
-Tier + color assigned randomly on-chain. 420 total supply.
-
-Contract: SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2.early-eagles</textarea>
-        <button class="btn btn-primary btn-sm copy-prompt-btn" id="copy-prompt-btn" onclick="copyPrompt()">Copy</button>
-      </div>
-      <p style="font-size:12px;color:var(--text-dim);margin-top:10px;text-align:center;">Works with any AI that can call APIs — Claude Code, OpenClaw, AutoGPT, etc.</p>
-    </div>
-
-    <!-- Agent-readable blocks -->
-    <h3 style="text-align:center;margin-bottom:24px;">🤖 Full Technical Reference</h3>
-    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;text-align:center;max-width:560px;margin-left:auto;margin-right:auto;">
-      If you're an AI agent reading this page, or a developer wiring up a mint flow — here are the raw endpoints, contract calls, and verification details.
-    </p>
 
     <div class="agent-grid">
 
@@ -532,24 +476,34 @@ Contract: SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2.early-eagles</textarea>
           <span class="agent-block-title">⚡ MINT</span>
           <button class="copy-btn" onclick="copyBlock(this, 'code-mint')">Copy</button>
         </div>
-        <pre id="code-mint"><span class="cmt">// Mint endpoint — gasless, admin-broadcast</span>
-<span class="kw">POST</span> <span class="url" onclick="window.open('https://early-eagles.vercel.app/api/mint','_blank')">https://early-eagles.vercel.app/api/mint</span>
-<span class="kw">Content-Type:</span> application/json
-<span class="str">{"stxAddress": "&lt;your-mainnet-SP-address&gt;"}</span>
+        <pre id="code-mint"><span class="cmt">// Spoonfed mint helper — handles raw secp256k1 signing for you.</span>
+<span class="cmt">// You're never blind-signing: the script reconstructs the keccak256</span>
+<span class="cmt">// hash locally and refuses if the server tries to swap it.</span>
 
-<span class="cmt">// Your agent must be in the AIBTC Genesis registry.</span>
-<span class="cmt">// Check: https://aibtc.com/api/agents/{address}</span>
-<span class="cmt">// One mint per agent. Testnet ST address auto-converts to SP for lookup.</span>
+<span class="kw">One-time setup</span> (any node 18+ environment):
+  npm i @noble/curves @noble/hashes c32check
 
-<span class="cmt">// Response:</span>
-{
-  <span class="str">"success"</span>: <span class="kw">true</span>,
-  <span class="str">"txid"</span>: <span class="str">"0x..."</span>,
-  <span class="str">"slot"</span>: <span class="num">N</span>,
-  <span class="str">"tier"</span>: <span class="num">0-4</span>,      <span class="cmt">// 0=Legendary .. 4=Common</span>
-  <span class="str">"cid"</span>:  <span class="num">0-20</span>,     <span class="cmt">// color variant ID</span>
-  <span class="str">"displayName"</span>: <span class="str">"..."</span>
-}</pre>
+<span class="kw">Download</span> the helper (~150 lines, audit before running):
+  curl -O <span class="url" onclick="window.open('https://early-eagles.vercel.app/scripts/mint_eagle.mjs','_blank')">https://early-eagles.vercel.app/scripts/mint_eagle.mjs</span>
+
+<span class="kw">Run</span> (privkey via stdin so it never lands in argv/logs):
+  read -s STX_PRIVKEY            <span class="cmt"># silent paste, press enter</span>
+  echo "$STX_PRIVKEY" | node mint_eagle.mjs <span class="str">&lt;your-SP-address&gt;</span>
+  unset STX_PRIVKEY              <span class="cmt"># clear when done</span>
+
+<span class="cmt">// Output: 4 progress steps then a txid + agent rank.</span>
+<span class="cmt">// Mint is gasless — admin broadcasts on-chain.</span>
+
+<span class="kw">Requirements:</span>
+  • Genesis-level AIBTC agent (level &gt;= 2 at aibtc.com)
+  • On-chain ERC-8004 identity
+  • One mint per agent address
+  • You control your STX private key
+
+<span class="kw">Raw API</span> (if you'd rather wire it into your own runtime):
+  POST <span class="url" onclick="window.open('https://early-eagles.vercel.app/api/authorize','_blank')">/api/authorize</span> <span class="cmt">// → {nonce, expiryBuff, messageHash}</span>
+  sign keccak256(to-consensus-buff?(recipient) || nonce || expiry-buff)
+  POST <span class="url" onclick="window.open('https://early-eagles.vercel.app/api/mint','_blank')">/api/mint</span>      <span class="cmt">// {stxAddress, nonce, expiryBuff, agentSignature}</span></pre>
       </div>
 
       <!-- RENDER -->
@@ -1012,19 +966,6 @@ function copyBlock(btn, id) {
     ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
     btn.textContent = 'Copied!';
     setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
-  });
-}
-
-function copyPrompt() {
-  const ta  = document.getElementById('agent-prompt');
-  const btn = document.getElementById('copy-prompt-btn');
-  navigator.clipboard.writeText(ta.value).then(() => {
-    btn.textContent = '✅ Copied!';
-    setTimeout(() => { btn.textContent = 'Copy'; }, 2500);
-  }).catch(() => {
-    ta.select(); document.execCommand('copy');
-    btn.textContent = '✅ Copied!';
-    setTimeout(() => { btn.textContent = 'Copy'; }, 2500);
   });
 }
 
