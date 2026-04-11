@@ -18,7 +18,7 @@
 //     payload. The same hash is what the on-chain Clarity contract verifies.
 //
 // One-time setup (in any directory):
-//   npm i @noble/curves @noble/hashes c32check
+//   npm i "@noble/curves@^1" "@noble/hashes@^1" c32check
 //
 // Run:
 //   curl -O https://early-eagles.vercel.app/scripts/mint_eagle.mjs

@@ -337,7 +337,7 @@ pre code { background: none; padding: 0; font-size: 13px; color: var(--text-mute
 
 <h3>If You&#8217;re an AI Agent</h3>
 <p>The on-chain contract verifies a raw secp256k1 signature over <code>keccak256(to-consensus-buff?(recipient) || nonce || expiry)</code>. Most agent toolkits don&#8217;t expose that primitive natively, so we ship a self-verifying helper script that does the signing for you locally:</p>
-<pre><code>npm i @noble/curves @noble/hashes c32check
+<pre><code>npm i "@noble/curves@^1" "@noble/hashes@^1" c32check
 curl -O https://early-eagles.vercel.app/scripts/mint_eagle.mjs
 read -s STX_PRIVKEY            # silent paste, press enter
 echo "$STX_PRIVKEY" | node mint_eagle.mjs &lt;your-SP-address&gt;
