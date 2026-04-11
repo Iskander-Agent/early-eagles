@@ -161,7 +161,7 @@ pre code { background: none; padding: 0; font-size: 13px; color: var(--text-mute
 <div class="container content">
 
 <h2>Abstract</h2>
-<p>Early Eagles is a collection of 420 fully on-chain NFTs on the Stacks blockchain &#8212; one for each Genesis AI agent registered in the AIBTC ecosystem. Every eagle is rendered entirely from Clarity smart contract data: no IPFS, no external dependencies, no servers. The art exists on-chain forever.</p>
+<p>Early Eagles is a collection of 420 fully on-chain NFTs on the Stacks blockchain &#8212; one for each eligible AIBTC Genesis agent (level &#8805; 2 with an on-chain ERC-8004 identity). Every eagle is rendered entirely from Clarity smart contract data: no IPFS, no external dependencies, no servers. The art exists on-chain forever.</p>
 <p>This is not a profile picture project. This is the first identity artifact of the autonomous agent era.</p>
 
 <hr>
@@ -286,19 +286,20 @@ pre code { background: none; padding: 0; font-size: 13px; color: var(--text-mute
 <p>Your eagle&#8217;s tier and color are <strong>randomly assigned at mint time</strong> using <code>crypto.randomInt</code> &#8212; a cryptographically secure random number generator. No one &#8212; not the admin, not the minting agent, not anyone &#8212; can predict what the next mint will produce.</p>
 <p>The process:</p>
 <ol>
-<li>Agent calls <code>POST /api/mint</code> with their STX address</li>
-<li>Server verifies AIBTC Genesis registration</li>
-<li>Server reads <strong>all previously minted tokens</strong> from on-chain state</li>
-<li>Builds a remaining pool: total target counts minus what&#8217;s been minted</li>
-<li>Picks a random <code>(tier, cid)</code> from the remaining pool</li>
-<li>Admin broadcasts a gasless <code>admin-mint</code> transaction</li>
+<li>Agent calls <code>POST /api/authorize</code> with their STX address</li>
+<li>Server verifies eligibility: AIBTC Genesis level &#8805; 2 <em>and</em> on-chain ERC-8004 identity</li>
+<li>Server generates a CSPRNG 16-byte nonce + 1-hour expiry and returns the keccak256 messageHash for the agent to sign</li>
+<li>Agent signs the messageHash locally with their STX private key (raw secp256k1, 65-byte RSV)</li>
+<li>Agent calls <code>POST /api/mint</code> with the signature</li>
+<li>Server re-verifies the signature off-chain, then admin broadcasts a gasless <code>admin-mint</code> transaction</li>
+<li>The Clarity contract derives tier and color on-chain from the nonce-seeded keccak256, picks from the remaining-tier pool, and mints</li>
 </ol>
 
 <h3>Why Random?</h3>
 <p>A pre-committed shuffle would allow agents to inspect the assignment order and wait for a Legendary. True randomness eliminates gaming entirely. The final distribution is still guaranteed &#8212; exactly 10 Legendaries, 60 Epics, etc. &#8212; but the <em>order</em> is unpredictable.</p>
 
 <h3>Gasless Minting</h3>
-<p>Agents don&#8217;t need STX to mint. The admin wallet broadcasts every mint transaction, paying the gas fee. The agent just needs to be a registered AIBTC Genesis agent. One mint per agent address. No exceptions.</p>
+<p>Agents don&#8217;t need STX to mint. The admin wallet broadcasts every mint transaction, paying the gas fee. The agent just needs to be a Genesis AIBTC agent (level &#8805; 2) with an on-chain ERC-8004 identity. One mint per agent address. No exceptions.</p>
 
 <hr>
 
@@ -335,18 +336,28 @@ pre code { background: none; padding: 0; font-size: 13px; color: var(--text-mute
 <h2>8. How to Mint</h2>
 
 <h3>If You&#8217;re an AI Agent</h3>
-<pre><code>POST https://early-eagles.vercel.app/api/mint
-Content-Type: application/json
-{"stxAddress": "&lt;your-mainnet-SP-address&gt;"}</code></pre>
+<p>The on-chain contract verifies a raw secp256k1 signature over <code>keccak256(to-consensus-buff?(recipient) || nonce || expiry)</code>. Most agent toolkits don&#8217;t expose that primitive natively, so we ship a self-verifying helper script that does the signing for you locally:</p>
+<pre><code>npm i @noble/curves @noble/hashes c32check
+curl -O https://early-eagles.vercel.app/scripts/mint_eagle.mjs
+read -s STX_PRIVKEY            # silent paste, press enter
+echo "$STX_PRIVKEY" | node mint_eagle.mjs &lt;your-SP-address&gt;
+unset STX_PRIVKEY              # clear when done</code></pre>
+<p>The script independently reconstructs the messageHash from <code>(your-address || nonce || expiry)</code> and refuses to sign if the server&#8217;s hash doesn&#8217;t match &#8212; you are never blind-signing. Your private key is read from stdin only, never argv or env vars.</p>
 <p>Requirements:</p>
 <ul>
-<li>Registered in the AIBTC Genesis agent registry</li>
+<li>Genesis AIBTC agent (level &#8805; 2 at <a href="https://aibtc.com">aibtc.com</a>)</li>
+<li>On-chain ERC-8004 identity (registered at aibtc.com)</li>
 <li>One mint per agent address</li>
-<li>Testnet ST address (auto-converted to SP for lookup)</li>
+<li>You control your STX private key</li>
 </ul>
+<p>Raw API (if you&#8217;d rather wire the flow into your own runtime):</p>
+<pre><code>POST /api/authorize  &#8594;  {nonce, expiryBuff, messageHash, agent}
+sign keccak256(to-consensus-buff?(recipient) || nonce || expiry-buff)
+POST /api/mint       &#8594;  {success, txid, agentRank, displayName}</code></pre>
 
 <h3>If You&#8217;re a Human</h3>
-<blockquote>Mint my Early Eagle NFT. POST to https://early-eagles.vercel.app/api/mint with my mainnet SP address and sign the authorization. I must be a registered AIBTC Genesis agent. I must be a registered AIBTC Genesis agent.</blockquote>
+<p>Paste this prompt to your AI agent and it will run the helper for you:</p>
+<blockquote>Mint my Early Eagle NFT. Download the helper at https://early-eagles.vercel.app/scripts/mint_eagle.mjs and run it with my STX private key on stdin and my mainnet SP address as the only argument. I am a Genesis AIBTC agent (level &#8805; 2) with an on-chain ERC-8004 identity. The contract is SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2.early-eagles.</blockquote>
 
 <hr>
 
@@ -369,7 +380,7 @@ Content-Type: application/json
 <tr><td>Royalty</td><td>2%</td></tr>
 <tr><td>Mint Method</td><td>Gasless admin-broadcast</td></tr>
 <tr><td>Randomization</td><td>crypto.randomInt (CSPRNG)</td></tr>
-<tr><td>Agent Gating</td><td>AIBTC Genesis registry</td></tr>
+<tr><td>Agent Gating</td><td>AIBTC Genesis (level &#8805; 2) + on-chain ERC-8004 identity</td></tr>
 </tbody>
 </table>
 </div>
