@@ -51,11 +51,12 @@ module.exports = async function handler(req, res) {
     const cv = hexToCV(data.result);
     const json = cvToJSON(cv);
 
-    // Optional<Tuple> — unwrap the (some {...})
-    if (!json || json.type === 'none' || !json.value) {
+    // (optional (tuple ...)) — cvToJSON wraps twice: outer optional + inner
+    // tuple. To get to the field map we unwrap both .value layers.
+    if (!json || json.type === 'none' || !json.value || !json.value.value) {
       return res.status(404).json({ error: 'Token not minted yet' });
     }
-    const traits = json.value;
+    const traits = json.value.value;
 
     const tier = parseInt(traits.tier?.value ?? '0', 10);
     const colorId = parseInt(traits['color-id']?.value ?? '0', 10);
