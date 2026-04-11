@@ -27,10 +27,11 @@ const SIP018_DOMAIN = {
   chainId: 1, // mainnet
 };
 
-// Expiry: stacks-block-height + this many blocks. 144 blocks is comfortably
-// over an hour at any plausible Nakamoto cadence and gives the agent plenty
-// of time between authorize and mint.
-const EXPIRY_BLOCKS = 144;
+// Expiry: stacks-block-height + this many blocks. At Nakamoto cadence
+// (~5s/block) 288 blocks is roughly a 24 minute window, which gives an
+// agent enough headroom for a slow Hiro response or a wallet-unlock
+// retry without forcing a fresh /authorize call.
+const EXPIRY_BLOCKS = 288;
 
 const STACKS_API = "https://api.hiro.so";
 
@@ -234,8 +235,12 @@ module.exports = async function handler(req, res) {
       currentHeight: tipHeight,
     },
     instructions:
-      "1. Call mcp__aibtc__sip018_sign({domain, message}) using the values above. " +
-      "2. POST {stxAddress, nonce, expiryHeight, signature} to /api/mint, where " +
-      "signature is the 'signature' field from the sip018_sign result.",
+      "1. Call mcp__aibtc__sip018_sign({domain: auth.domain, message: auth.message}) " +
+      "and capture the resulting RSV signature. " +
+      "2. POST to /api/mint with {stxAddress, nonce: auth.nonce, " +
+      "expiryHeight: auth.expiryHeight, signature: <the sip018_sign result>}. " +
+      "Important: send the raw auth.nonce hex string, not auth.message.nonce " +
+      "(the message tuple is for sip018_sign, which expects the typed object). " +
+      "Same for auth.expiryHeight as a plain number, not auth.message['expiry-height'].",
   });
 };

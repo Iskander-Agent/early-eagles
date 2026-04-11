@@ -230,11 +230,22 @@ module.exports = async function handler(req, res) {
                     : rawAddr.startsWith("SN") ? "SM" + rawAddr.slice(2)
                     : rawAddr;
 
+  // Lenient parsing: accept either the raw form or the typed Clarity-value
+  // form { type, value } that an agent might accidentally pass through after
+  // calling sip018_sign. The /authorize response advertises the raw form,
+  // but unwrapping the typed form costs nothing and avoids a confusing 400.
+  function unwrapTyped(v) {
+    return v && typeof v === "object" && "value" in v ? v.value : v;
+  }
+  const nonceRaw = unwrapTyped(nonceHex);
+  const sigRaw = unwrapTyped(sigHex);
+  const expiryRaw = unwrapTyped(expiryHeight);
+
   let nonceBytes, sigBytes, expiryHeightInt;
   try {
-    nonceBytes = hexToBytes(nonceHex);
-    sigBytes = hexToBytes(sigHex);
-    expiryHeightInt = parseInt(expiryHeight, 10);
+    nonceBytes = hexToBytes(nonceRaw);
+    sigBytes = hexToBytes(sigRaw);
+    expiryHeightInt = parseInt(expiryRaw, 10);
   } catch (e) {
     return res.status(400).json({ error: "Invalid hex format in nonce or signature" });
   }
