@@ -67,8 +67,8 @@ setInterval(() => {
 
 // -- AIBTC eligibility lookup ------------------------------------------------
 // Two parallel fetches, both 5s timeout:
-//   1. https://aibtc.com/agents/{addr} - public RSC HTML page. Contains level,
-//      displayName, btcAddress, bnsName as escaped JSON in __next_f.push blocks.
+//   1. https://aibtc.com/api/agents/{addr} - JSON API returning level,
+//      displayName, btcAddress, bnsName directly (no HTML scraping needed).
 //   2. Hiro /extended/v1/tokens/nft/holdings - ground truth for the on-chain
 //      ERC-8004 identity. Returns the agent's agentId, independent of any
 //      AIBTC backend caching/staleness.
@@ -81,8 +81,8 @@ function timeoutSignal(ms) {
 }
 
 async function fetchAibtcEligibility(stxAddress) {
-  const [pageSettled, hiroSettled] = await Promise.allSettled([
-    fetch("https://aibtc.com/agents/" + stxAddress, {
+  const [apiSettled, hiroSettled] = await Promise.allSettled([
+    fetch("https://aibtc.com/api/agents/" + stxAddress, {
       headers: { "User-Agent": "EarlyEagles/2.0" },
       signal: timeoutSignal(5000),
     }),
@@ -93,10 +93,13 @@ async function fetchAibtcEligibility(stxAddress) {
     ),
   ]);
 
-  if (pageSettled.status === "rejected" || !pageSettled.value.ok) {
-    const detail = pageSettled.status === "rejected"
-      ? pageSettled.reason.message
-      : "HTTP " + pageSettled.value.status;
+  if (apiSettled.status === "rejected" || !apiSettled.value.ok) {
+    if (apiSettled.status === "fulfilled" && apiSettled.value.status === 404) {
+      return { found: false, reason: "Agent not found on AIBTC network" };
+    }
+    const detail = apiSettled.status === "rejected"
+      ? apiSettled.reason.message
+      : "HTTP " + apiSettled.value.status;
     throw new Error("AIBTC profile fetch failed: " + detail);
   }
   if (hiroSettled.status === "rejected" || !hiroSettled.value.ok) {
@@ -106,28 +109,24 @@ async function fetchAibtcEligibility(stxAddress) {
     throw new Error("Hiro identity lookup failed: " + detail);
   }
 
-  const html = await pageSettled.value.text();
+  const data = await apiSettled.value.json();
   const hiro = await hiroSettled.value.json();
 
-  const levelMatch = html.match(/level\\":(\d+)/);
-  if (!levelMatch) {
+  if (!data || typeof data.level !== "number") {
     return { found: false, reason: "Agent not found on AIBTC network" };
   }
-  const levelNameMatch = html.match(/levelName\\":\\"([A-Za-z]+)/);
-  const displayNameMatch = html.match(/displayName\\":\\"([^"\\]+)/);
-  const btcAddrMatch = html.match(/btcAddress\\":\\"([a-zA-Z0-9]+)/);
-  const bnsMatch = html.match(/bnsName\\":\\"([^"\\]+)/);
 
+  const agent = data.agent || {};
   const holding = (hiro.results || [])[0];
   const agentId = holding ? parseInt(holding.value.repr.replace(/^u/, ""), 10) : null;
 
   return {
     found: true,
-    level: parseInt(levelMatch[1], 10),
-    levelName: levelNameMatch ? levelNameMatch[1] : "Unknown",
-    displayName: displayNameMatch ? displayNameMatch[1] : null,
-    btcAddress: btcAddrMatch ? btcAddrMatch[1] : null,
-    bnsName: bnsMatch ? bnsMatch[1] : null,
+    level: data.level,
+    levelName: data.levelName || "Unknown",
+    displayName: agent.displayName || null,
+    btcAddress: agent.btcAddress || null,
+    bnsName: agent.bnsName || null,
     agentId: Number.isFinite(agentId) ? agentId : null,
   };
 }

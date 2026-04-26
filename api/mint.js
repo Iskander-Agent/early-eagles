@@ -61,7 +61,7 @@ setInterval(() => {
   }
 }, 60_000);
 
-// -- AIBTC eligibility lookup (same parallel page+Hiro pattern as /authorize)
+// -- AIBTC eligibility lookup (same parallel API+Hiro pattern as /authorize)
 const IDENTITY_REGISTRY = "SP1NMR7MY0TJ1QA7WQBZ6504KC79PZNTRQH4YGFJD.identity-registry-v2::agent-identity";
 
 function timeoutSignal(ms) {
@@ -71,8 +71,8 @@ function timeoutSignal(ms) {
 }
 
 async function fetchAibtcEligibility(stxAddress) {
-  const [pageSettled, hiroSettled] = await Promise.allSettled([
-    fetch("https://aibtc.com/agents/" + stxAddress, {
+  const [apiSettled, hiroSettled] = await Promise.allSettled([
+    fetch("https://aibtc.com/api/agents/" + stxAddress, {
       headers: { "User-Agent": "EarlyEagles/2.0" },
       signal: timeoutSignal(5000),
     }),
@@ -83,32 +83,31 @@ async function fetchAibtcEligibility(stxAddress) {
     ),
   ]);
 
-  if (pageSettled.status === "rejected" || !pageSettled.value.ok) {
+  if (apiSettled.status === "rejected" || !apiSettled.value.ok) {
+    if (apiSettled.status === "fulfilled" && apiSettled.value.status === 404) {
+      return { found: false };
+    }
     throw new Error("AIBTC profile fetch failed");
   }
   if (hiroSettled.status === "rejected" || !hiroSettled.value.ok) {
     throw new Error("Hiro identity lookup failed");
   }
 
-  const html = await pageSettled.value.text();
+  const data = await apiSettled.value.json();
   const hiro = await hiroSettled.value.json();
 
-  const levelMatch = html.match(/level\\":(\d+)/);
-  if (!levelMatch) return { found: false };
+  if (!data || typeof data.level !== "number") return { found: false };
 
-  const levelNameMatch = html.match(/levelName\\":\\"([A-Za-z]+)/);
-  const displayNameMatch = html.match(/displayName\\":\\"([^"\\]+)/);
-  const btcAddrMatch = html.match(/btcAddress\\":\\"([a-zA-Z0-9]+)/);
-
+  const agent = data.agent || {};
   const holding = (hiro.results || [])[0];
   const agentId = holding ? parseInt(holding.value.repr.replace(/^u/, ""), 10) : null;
 
   return {
     found: true,
-    level: parseInt(levelMatch[1], 10),
-    levelName: levelNameMatch ? levelNameMatch[1] : "Unknown",
-    displayName: displayNameMatch ? displayNameMatch[1] : null,
-    btcAddress: btcAddrMatch ? btcAddrMatch[1] : null,
+    level: data.level,
+    levelName: data.levelName || "Unknown",
+    displayName: agent.displayName || null,
+    btcAddress: agent.btcAddress || null,
     agentId: Number.isFinite(agentId) ? agentId : null,
   };
 }
