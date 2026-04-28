@@ -162,6 +162,29 @@ nav {
   font-size: 11px; padding: 1px 6px; border-radius: 8px;
   background: rgba(255,255,255,0.08); color: var(--text-dim);
 }
+.filter-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.search-input {
+  background: var(--surface); border: 1px solid var(--border-sub);
+  border-radius: 20px; padding: 7px 16px; font-size: 13px;
+  color: var(--text); outline: none; width: 200px;
+  font-family: 'Inter', sans-serif;
+  transition: border-color var(--transition), box-shadow var(--transition), width var(--transition);
+}
+.search-input::placeholder { color: var(--text-dim); }
+.search-input:focus { border-color: var(--gold); box-shadow: 0 0 16px rgba(212,168,75,0.1); width: 260px; }
+.sort-select {
+  background: var(--surface); border: 1px solid var(--border-sub);
+  border-radius: 20px; padding: 7px 14px; font-size: 12px;
+  color: var(--text-muted); outline: none; cursor: pointer;
+  font-family: 'Rajdhani', sans-serif; font-weight: 600;
+  letter-spacing: 0.04em; text-transform: uppercase;
+  -webkit-appearance: none; appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%238892a4' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 12px center;
+  padding-right: 30px;
+  transition: border-color var(--transition);
+}
+.sort-select:hover, .sort-select:focus { border-color: var(--border); color: var(--text); }
 
 /* ── Gallery Grid ── */
 .gallery-section { padding: 32px 0 60px; }
@@ -223,6 +246,35 @@ nav {
 
 
 
+
+/* ── Card Info (below iframe) ── */
+.card-info {
+  padding: 12px 14px 14px; background: var(--surface);
+  border: 1px solid var(--border-sub); border-top: none;
+  border-radius: 0 0 var(--radius) var(--radius);
+}
+.card-info-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.card-eagle-name {
+  font-family: 'Rajdhani', sans-serif; font-size: 15px; font-weight: 700;
+  color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.card-tier-badge {
+  display: inline-block; padding: 2px 8px; border-radius: 10px; flex-shrink: 0;
+  font-family: 'Rajdhani', sans-serif; font-size: 10px; font-weight: 700;
+  letter-spacing: 0.05em; text-transform: uppercase;
+}
+.card-tier-legendary { background: rgba(212,168,75,0.2); color: var(--gold); border: 1px solid rgba(212,168,75,0.35); }
+.card-tier-epic { background: rgba(160,80,255,0.15); color: #c084fc; border: 1px solid rgba(160,80,255,0.3); }
+.card-tier-rare { background: rgba(56,189,248,0.12); color: #7dd3fc; border: 1px solid rgba(56,189,248,0.25); }
+.card-tier-uncommon { background: rgba(52,211,153,0.12); color: #6ee7b7; border: 1px solid rgba(52,211,153,0.25); }
+.card-tier-common { background: rgba(156,163,175,0.12); color: #9ca3af; border: 1px solid rgba(156,163,175,0.2); }
+.card-owner {
+  font-family: 'Courier New', monospace; font-size: 11px; color: var(--text-dim);
+  margin-top: 6px; display: flex; align-items: center; gap: 6px;
+}
+.card-owner a { color: var(--text-dim); text-decoration: none; transition: color var(--transition); }
+.card-owner a:hover { color: var(--gold); }
+.card-iframe-wrap { border-radius: var(--radius) var(--radius) 0 0; }
 
 /* ── Skeleton Cards ── */
 .skeleton-card {
@@ -337,6 +389,14 @@ nav {
       <button class="filter-pill" data-tier="rare"      onclick="setFilter('rare', this)">◇ Rare <span class="filter-count" id="count-rare">—</span></button>
       <button class="filter-pill" data-tier="uncommon"  onclick="setFilter('uncommon', this)">○ Uncommon <span class="filter-count" id="count-uncommon">—</span></button>
       <button class="filter-pill" data-tier="common"    onclick="setFilter('common', this)">● Common <span class="filter-count" id="count-common">—</span></button>
+      <div class="filter-right">
+        <input class="search-input" id="search-input" type="text" placeholder="Search by name..." spellcheck="false" autocomplete="off">
+        <select class="sort-select" id="sort-select" onchange="applySort(this.value)">
+          <option value="newest">Newest First</option>
+          <option value="oldest">Oldest First</option>
+          <option value="rarity">Rarest First</option>
+        </select>
+      </div>
     </div>
   </div>
 </div>
@@ -381,6 +441,8 @@ const TIER_IDS     = ['legendary', 'epic', 'rare', 'uncommon', 'common'];
 /* ── State ── */
 let eaglesData     = [];      // [{id, name, tier, tierName, tierId, owner, html}]
 let activeFilter   = 'all';
+let searchQuery    = '';
+let sortMode       = 'newest';
 let refreshTimer   = null;
 let isLoading      = false;
 
@@ -421,10 +483,8 @@ function buildEagleCard(eagle, index) {
   card.dataset.tier = eagle.tierId;
   card.style.animationDelay = `${Math.min(index * 60, 600)}ms`;
 
-  const ownerDisplay = eagle.owner ? abbreviateAddress(eagle.owner) : 'Unknown';
-  const explorerHref = eagle.owner
-    ? `${CONFIG.explorerBase}/address/${eagle.owner}?chain=${CONFIG.network}`
-    : '#';
+  const ownerDisplay = eagle.owner || 'Unknown';
+  const tierCss = eagle.tierId || 'common';
 
   card.innerHTML = `
     <div class="card-iframe-wrap" id="wrap-${eagle.id}">
@@ -433,6 +493,16 @@ function buildEagleCard(eagle, index) {
           <div style="font-size:28px;margin-bottom:8px;opacity:0.4;">🦅</div>
           <div style="font-size:11px;color:var(--text-dim);font-family:Rajdhani,sans-serif;letter-spacing:0.05em;">Loading…</div>
         </div>
+      </div>
+    </div>
+    <div class="card-info">
+      <div class="card-info-top">
+        <span class="card-eagle-name">${escHtml(eagle.name || 'Eagle #' + eagle.id)}</span>
+        <span class="card-tier-badge card-tier-${tierCss}">${eagle.tierName || 'Common'}</span>
+      </div>
+      <div class="card-owner">
+        <span>Owner:</span>
+        <a href="${CONFIG.explorerBase}/address/${encodeURIComponent(ownerDisplay)}?chain=${CONFIG.network}" target="_blank" rel="noopener">${escHtml(ownerDisplay)}</a>
       </div>
     </div>`;
 
@@ -485,17 +555,12 @@ function scaleIframe(iframe, wrap) {
   iframe.style.transform = `scale(${scale})`;
 }
 
-/* ── Render grid (with filter applied) ── */
+/* ── Render grid (with filter, search, sort applied) ── */
 function renderGrid() {
   const grid = document.getElementById('eagles-grid');
   grid.innerHTML = '';
 
-  const filtered = activeFilter === 'all'
-    ? eaglesData
-    : eaglesData.filter(e => e.tierId === activeFilter);
-
   if (eaglesData.length === 0) {
-    // Empty state
     const empty = document.createElement('div');
     empty.className = 'empty-state';
     empty.innerHTML = `
@@ -507,10 +572,36 @@ function renderGrid() {
     return;
   }
 
+  // Filter by tier
+  let filtered = activeFilter === 'all'
+    ? [...eaglesData]
+    : eaglesData.filter(e => e.tierId === activeFilter);
+
+  // Filter by search query
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    filtered = filtered.filter(e =>
+      (e.name || '').toLowerCase().includes(q) ||
+      (e.owner || '').toLowerCase().includes(q) ||
+      String(e.id).includes(q)
+    );
+  }
+
+  // Sort
+  if (sortMode === 'newest') {
+    filtered.sort((a, b) => b.id - a.id);
+  } else if (sortMode === 'oldest') {
+    filtered.sort((a, b) => a.id - b.id);
+  } else if (sortMode === 'rarity') {
+    filtered.sort((a, b) => a.tier - b.tier || a.id - b.id);
+  }
+
   if (filtered.length === 0) {
     const noRes = document.createElement('div');
     noRes.className = 'no-results';
-    noRes.textContent = `No ${activeFilter} eagles minted yet.`;
+    noRes.innerHTML = searchQuery
+      ? `No eagles matching "<strong>${escHtml(searchQuery)}</strong>"`
+      : `No ${activeFilter} eagles minted yet.`;
     grid.appendChild(noRes);
     return;
   }
@@ -605,6 +696,22 @@ function setFilter(tier, el) {
   if (el) el.classList.add('active');
   renderGrid();
 }
+
+/* ── Sort handler ── */
+function applySort(mode) {
+  sortMode = mode;
+  renderGrid();
+}
+
+/* ── Search handler (debounced) ── */
+let _searchTimeout = null;
+document.getElementById('search-input').addEventListener('input', function(e) {
+  clearTimeout(_searchTimeout);
+  _searchTimeout = setTimeout(() => {
+    searchQuery = e.target.value.trim();
+    renderGrid();
+  }, 250);
+});
 
 /* ── Escape HTML ── */
 function escHtml(str) {

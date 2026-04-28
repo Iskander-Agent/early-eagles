@@ -462,6 +462,63 @@ nav {
   backdrop-filter: blur(2px);
 }
 
+/* ── RECENT MINTS TICKER ── */
+#recent-mints { background: var(--navy-mid); padding: 48px 0; overflow: hidden; }
+.recent-header { text-align: center; margin-bottom: 24px; }
+.recent-header h2 { font-size: clamp(1.3rem, 3vw, 1.8rem); }
+.recent-header p { color: var(--text-muted); font-size: 13px; margin-top: 6px; }
+.ticker-track {
+  display: flex; gap: 16px; width: max-content;
+  animation: tickerScroll 30s linear infinite;
+}
+.ticker-track:hover { animation-play-state: paused; }
+@keyframes tickerScroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.ticker-card {
+  flex-shrink: 0; width: 220px;
+  background: var(--surface); border: 1px solid var(--border-sub);
+  border-radius: var(--radius); padding: 16px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  cursor: default;
+}
+.ticker-card:hover { border-color: var(--border); box-shadow: 0 0 20px rgba(212,168,75,0.08); }
+.ticker-card-top {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 10px;
+}
+.ticker-eagle-id {
+  font-family: 'Rajdhani', sans-serif; font-size: 16px; font-weight: 700; color: var(--text);
+}
+.ticker-tier-badge {
+  display: inline-block; padding: 2px 8px; border-radius: 10px;
+  font-family: 'Rajdhani', sans-serif; font-size: 10px; font-weight: 700;
+  letter-spacing: 0.05em; text-transform: uppercase;
+}
+.ticker-tier-legendary { background: rgba(212,168,75,0.2); color: var(--gold); }
+.ticker-tier-epic { background: rgba(160,80,255,0.15); color: #c084fc; }
+.ticker-tier-rare { background: rgba(56,189,248,0.12); color: #7dd3fc; }
+.ticker-tier-uncommon { background: rgba(52,211,153,0.12); color: #6ee7b7; }
+.ticker-tier-common { background: rgba(156,163,175,0.12); color: #9ca3af; }
+.ticker-agent-name {
+  font-size: 13px; color: var(--text-muted); white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px;
+}
+.ticker-owner {
+  font-family: 'Courier New', monospace; font-size: 11px; color: var(--text-dim);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ticker-empty {
+  text-align: center; padding: 40px 24px; color: var(--text-dim); font-size: 14px;
+}
+.ticker-container { position: relative; }
+.ticker-container::before, .ticker-container::after {
+  content: ''; position: absolute; top: 0; bottom: 0; width: 60px; z-index: 2; pointer-events: none;
+}
+.ticker-container::before { left: 0; background: linear-gradient(90deg, var(--navy-mid), transparent); }
+.ticker-container::after { right: 0; background: linear-gradient(270deg, var(--navy-mid), transparent); }
+
 /* ── ELIGIBILITY CHECKER ── */
 #eligibility { background: #060a0f; padding: 56px 0; }
 .elig-wrap { max-width: 560px; margin: 0 auto; text-align: center; }
@@ -664,6 +721,22 @@ nav {
         <span class="tier-card-alert" id="sc-common-alert">Almost gone</span>
         <div class="tier-card-sold-out" id="sc-common-sold">Sold Out</div>
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── RECENT MINTS TICKER ── -->
+<section id="recent-mints">
+  <div class="container">
+    <div class="recent-header">
+      <div class="section-label">⚡ Live Activity</div>
+      <h2>Recent Mints</h2>
+      <p>The latest eagles claimed by Genesis agents</p>
+    </div>
+  </div>
+  <div class="ticker-container">
+    <div class="ticker-track" id="ticker-track">
+      <div class="ticker-empty" id="ticker-empty">Loading recent mints...</div>
     </div>
   </div>
 </section>
@@ -1385,6 +1458,63 @@ function showEligResult(status, title, reason, data) {
 function agentRow(key, val) {
   return `<div class="elig-agent-row"><span class="elig-agent-key">${key}</span><span class="elig-agent-val">${val}</span></div>`;
 }
+
+/* ── Recent Mints Ticker ── */
+const TIER_NAMES_MAP = ['Legendary', 'Epic', 'Rare', 'Uncommon', 'Common'];
+const TIER_CSS_MAP   = ['legendary', 'epic', 'rare', 'uncommon', 'common'];
+
+async function loadRecentMints() {
+  try {
+    const res = await fetch(`${CONFIG.workerUrl}/api/gallery`);
+    if (!res.ok) throw new Error('Gallery API ' + res.status);
+    const data = await res.json();
+
+    if (!data.eagles || data.eagles.length === 0) {
+      document.getElementById('ticker-empty').textContent = 'No eagles minted yet — be the first!';
+      return;
+    }
+
+    // Show all minted eagles, most recent first
+    const recent = [...data.eagles].reverse();
+    const track = document.getElementById('ticker-track');
+    track.innerHTML = '';
+
+    // Build cards — duplicate for seamless loop
+    const cards = recent.map(e => buildTickerCard(e)).join('');
+    track.innerHTML = cards + cards; // doubled for infinite scroll
+
+    // Adjust animation speed based on count
+    const totalWidth = recent.length * (220 + 16); // card width + gap
+    const speed = Math.max(20, totalWidth / 80); // px per second
+    track.style.animationDuration = speed + 's';
+  } catch (e) {
+    console.warn('loadRecentMints failed:', e);
+    document.getElementById('ticker-empty').textContent = 'Could not load recent mints';
+  }
+}
+
+function buildTickerCard(eagle) {
+  const tierIdx = typeof eagle.tier === 'number' ? eagle.tier : 4;
+  const tierName = TIER_NAMES_MAP[tierIdx] || 'Common';
+  const tierCss = TIER_CSS_MAP[tierIdx] || 'common';
+  const name = eagle.name || `Eagle #${eagle.id}`;
+  const owner = eagle.owner || '???';
+
+  return `<div class="ticker-card">
+    <div class="ticker-card-top">
+      <span class="ticker-eagle-id">🦅 #${eagle.id}</span>
+      <span class="ticker-tier-badge ticker-tier-${tierCss}">${tierName}</span>
+    </div>
+    <div class="ticker-agent-name">${escapeHtml(name)}</div>
+    <div class="ticker-owner">${escapeHtml(owner)}</div>
+  </div>`;
+}
+
+function escapeHtml(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+loadRecentMints();
 
 /* ── Copy helpers ── */
 function copyBlock(btn, id) {
