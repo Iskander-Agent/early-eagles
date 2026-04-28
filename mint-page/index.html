@@ -387,11 +387,161 @@ nav {
 .gap-8 { gap: 8px; }
 .gap-12 { gap: 12px; }
 
+/* ── SCARCITY DASHBOARD ── */
+#scarcity { background: var(--navy); padding: 60px 0 20px; }
+.scarcity-header { text-align: center; margin-bottom: 36px; }
+.scarcity-header h2 { font-size: clamp(1.5rem, 3.5vw, 2.2rem); }
+.scarcity-header p { color: var(--text-muted); font-size: 14px; margin-top: 8px; }
+.scarcity-grid {
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px;
+}
+.tier-card {
+  background: var(--surface); border: 1px solid var(--border-sub);
+  border-radius: var(--radius); padding: 20px 16px; text-align: center;
+  position: relative; overflow: hidden;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+}
+.tier-card:hover { transform: translateY(-3px); }
+.tier-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+.tier-card[data-tier="legendary"]::before { background: var(--gold); }
+.tier-card[data-tier="epic"]::before { background: #a855f7; }
+.tier-card[data-tier="rare"]::before { background: #38bdf8; }
+.tier-card[data-tier="uncommon"]::before { background: #34d399; }
+.tier-card[data-tier="common"]::before { background: #6b7280; }
+.tier-card[data-tier="legendary"]:hover { border-color: rgba(212,168,75,0.5); box-shadow: 0 0 30px rgba(212,168,75,0.15); }
+.tier-card[data-tier="epic"]:hover { border-color: rgba(168,85,247,0.5); box-shadow: 0 0 30px rgba(168,85,247,0.12); }
+.tier-card[data-tier="rare"]:hover { border-color: rgba(56,189,248,0.5); box-shadow: 0 0 30px rgba(56,189,248,0.12); }
+.tier-card[data-tier="uncommon"]:hover { border-color: rgba(52,211,153,0.5); box-shadow: 0 0 30px rgba(52,211,153,0.12); }
+.tier-card[data-tier="common"]:hover { border-color: rgba(107,114,128,0.4); box-shadow: 0 0 30px rgba(107,114,128,0.1); }
+.tier-card-badge { margin-bottom: 12px; }
+.tier-card-remaining {
+  font-family: 'Rajdhani', sans-serif; font-size: 32px; font-weight: 700;
+  line-height: 1; margin-bottom: 2px;
+}
+.tier-card[data-tier="legendary"] .tier-card-remaining { color: var(--gold); }
+.tier-card[data-tier="epic"] .tier-card-remaining { color: #c084fc; }
+.tier-card[data-tier="rare"] .tier-card-remaining { color: #7dd3fc; }
+.tier-card[data-tier="uncommon"] .tier-card-remaining { color: #6ee7b7; }
+.tier-card[data-tier="common"] .tier-card-remaining { color: #9ca3af; }
+.tier-card-label {
+  font-size: 11px; color: var(--text-dim); text-transform: uppercase;
+  letter-spacing: 0.06em; margin-bottom: 14px;
+}
+.tier-progress { height: 4px; background: rgba(255,255,255,0.06); border-radius: 2px; overflow: hidden; }
+.tier-progress-fill {
+  height: 100%; border-radius: 2px; transition: width 1s cubic-bezier(0.4,0,0.2,1);
+}
+.tier-card[data-tier="legendary"] .tier-progress-fill { background: linear-gradient(90deg, var(--gold), var(--gold-light)); }
+.tier-card[data-tier="epic"] .tier-progress-fill { background: linear-gradient(90deg, #a855f7, #c084fc); }
+.tier-card[data-tier="rare"] .tier-progress-fill { background: linear-gradient(90deg, #0ea5e9, #7dd3fc); }
+.tier-card[data-tier="uncommon"] .tier-progress-fill { background: linear-gradient(90deg, #10b981, #6ee7b7); }
+.tier-card[data-tier="common"] .tier-progress-fill { background: linear-gradient(90deg, #6b7280, #9ca3af); }
+.tier-card-pct {
+  font-family: 'Rajdhani', sans-serif; font-size: 12px; font-weight: 600;
+  color: var(--text-dim); margin-top: 8px;
+}
+.tier-card-alert {
+  display: none; margin-top: 10px;
+  font-family: 'Rajdhani', sans-serif; font-size: 11px; font-weight: 700;
+  letter-spacing: 1px; text-transform: uppercase;
+  padding: 3px 10px; border-radius: 10px;
+}
+.tier-card[data-tier="legendary"] .tier-card-alert { background: rgba(212,168,75,0.15); color: var(--gold); }
+.tier-card[data-tier="epic"] .tier-card-alert { background: rgba(168,85,247,0.12); color: #c084fc; }
+.tier-card[data-tier="rare"] .tier-card-alert { background: rgba(56,189,248,0.1); color: #7dd3fc; }
+.tier-card[data-tier="uncommon"] .tier-card-alert { background: rgba(52,211,153,0.1); color: #6ee7b7; }
+.tier-card[data-tier="common"] .tier-card-alert { background: rgba(107,114,128,0.1); color: #9ca3af; }
+.tier-card-sold-out {
+  position: absolute; inset: 0; background: rgba(13,17,23,0.85);
+  display: none; align-items: center; justify-content: center;
+  font-family: 'Rajdhani', sans-serif; font-size: 16px; font-weight: 700;
+  color: var(--red); letter-spacing: 2px; text-transform: uppercase;
+  backdrop-filter: blur(2px);
+}
+
+/* ── ELIGIBILITY CHECKER ── */
+#eligibility { background: #060a0f; padding: 56px 0; }
+.elig-wrap { max-width: 560px; margin: 0 auto; text-align: center; }
+.elig-header { margin-bottom: 28px; }
+.elig-header h2 { font-size: clamp(1.5rem, 3.5vw, 2.2rem); }
+.elig-header p { color: var(--text-muted); font-size: 14px; margin-top: 8px; }
+.elig-input-row {
+  display: flex; gap: 10px; margin-bottom: 8px;
+}
+.elig-input {
+  flex: 1; background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 14px 16px;
+  font-family: 'Courier New', monospace; font-size: 14px; color: var(--text);
+  outline: none; transition: border-color var(--transition), box-shadow var(--transition);
+}
+.elig-input::placeholder { color: var(--text-dim); font-family: 'Inter', sans-serif; font-size: 13px; }
+.elig-input:focus { border-color: var(--gold); box-shadow: 0 0 20px rgba(212,168,75,0.12); }
+.elig-check-btn {
+  background: var(--gold); color: #0d1117; border: none; border-radius: var(--radius-sm);
+  padding: 14px 24px; font-family: 'Rajdhani', sans-serif; font-weight: 700;
+  font-size: 14px; letter-spacing: 0.08em; text-transform: uppercase;
+  cursor: pointer; white-space: nowrap;
+  transition: all var(--transition);
+}
+.elig-check-btn:hover { background: var(--gold-light); transform: translateY(-1px); box-shadow: 0 4px 20px rgba(212,168,75,0.3); }
+.elig-check-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+.elig-hint { font-size: 12px; color: var(--text-dim); margin-bottom: 20px; }
+.elig-result { display: none; text-align: left; margin-top: 20px; animation: fadeSlideUp 0.4s ease; }
+@keyframes fadeSlideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+.elig-result-card {
+  background: var(--surface); border: 1px solid var(--border-sub);
+  border-radius: var(--radius); overflow: hidden;
+}
+.elig-result-header {
+  display: flex; align-items: center; gap: 12px;
+  padding: 18px 20px; border-bottom: 1px solid var(--border-sub);
+}
+.elig-status-icon {
+  width: 40px; height: 40px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; flex-shrink: 0;
+}
+.elig-status-icon.ok { background: rgba(0,255,136,0.12); }
+.elig-status-icon.fail { background: rgba(255,77,106,0.1); }
+.elig-status-icon.minted { background: rgba(212,168,75,0.12); }
+.elig-status-title { font-family: 'Rajdhani', sans-serif; font-size: 18px; font-weight: 700; }
+.elig-status-title.ok { color: var(--green); }
+.elig-status-title.fail { color: var(--red); }
+.elig-status-title.minted { color: var(--gold); }
+.elig-status-reason { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+.elig-agent-details { padding: 16px 20px; }
+.elig-agent-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 0; border-bottom: 1px solid var(--border-sub);
+}
+.elig-agent-row:last-child { border-bottom: none; }
+.elig-agent-key { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-dim); }
+.elig-agent-val {
+  font-family: 'Courier New', monospace; font-size: 13px; color: var(--text);
+  text-align: right; word-break: break-all; max-width: 60%;
+}
+.elig-agent-val .level-badge {
+  display: inline-block; padding: 2px 10px; border-radius: 10px;
+  font-family: 'Rajdhani', sans-serif; font-size: 12px; font-weight: 700;
+  letter-spacing: 0.05em; text-transform: uppercase;
+  background: rgba(0,255,136,0.1); color: var(--green); border: 1px solid rgba(0,255,136,0.25);
+}
+.elig-cta {
+  padding: 16px 20px; border-top: 1px solid var(--border-sub); text-align: center;
+}
+
+@media (max-width: 900px) { .scarcity-grid { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 640px) {
   nav .nav-links { display: none; }
   .hero-stats-bar { flex-direction: column; gap: 0; }
   .hero-stat + .hero-stat { border-left: none; border-top: 1px solid var(--border-sub); }
   .section { padding: 56px 0; }
+  .scarcity-grid { grid-template-columns: repeat(2, 1fr); }
+  .scarcity-grid .tier-card:last-child { grid-column: span 2; max-width: 50%; margin: 0 auto; }
+  .elig-input-row { flex-direction: column; }
 }
 </style>
 </head>
@@ -402,10 +552,12 @@ nav {
   <div class="container nav-inner">
     <a class="nav-brand" href="#">🦅 Early Eagles</a>
     <div class="nav-links">
+      <a href="#scarcity">Supply</a>
+      <a href="#eligibility">Check Eligibility</a>
       <a href="#agents">How to Mint</a>
       <a href="#about">About</a>
       <a href="/gallery" target="_blank">Gallery</a>
-        <a href="/whitepaper" target="_blank">Whitepaper</a>
+      <a href="/whitepaper" target="_blank">Whitepaper</a>
       <a href="#contracts">Contracts</a>
     </div>
   </div>
@@ -451,8 +603,90 @@ nav {
     </div>
 
     <div class="hero-ctas">
-      <a class="btn btn-primary" href="#agents">⚡ How to Mint</a>
+      <a class="btn btn-primary" href="#eligibility">🔍 Check Eligibility</a>
+      <a class="btn btn-ghost" href="#agents">⚡ How to Mint</a>
       <a class="btn btn-ghost" href="/gallery" target="_blank">🖼 View Gallery</a>
+    </div>
+  </div>
+</section>
+
+<!-- ── SCARCITY DASHBOARD ── -->
+<section id="scarcity">
+  <div class="container">
+    <div class="scarcity-header">
+      <div class="section-label">🔥 Live Supply</div>
+      <h2>Tier Availability</h2>
+      <p>Real-time remaining supply per tier — pulled directly from the contract</p>
+    </div>
+    <div class="scarcity-grid">
+      <div class="tier-card" data-tier="legendary">
+        <div class="tier-card-badge"><span class="tier-badge tier-legendary">Legendary</span></div>
+        <div class="tier-card-remaining" id="sc-legendary-rem">—</div>
+        <div class="tier-card-label">of 10 remaining</div>
+        <div class="tier-progress"><div class="tier-progress-fill" id="sc-legendary-bar" style="width:0%"></div></div>
+        <div class="tier-card-pct" id="sc-legendary-pct">—</div>
+        <span class="tier-card-alert" id="sc-legendary-alert">Almost gone</span>
+        <div class="tier-card-sold-out" id="sc-legendary-sold">Sold Out</div>
+      </div>
+      <div class="tier-card" data-tier="epic">
+        <div class="tier-card-badge"><span class="tier-badge tier-epic">Epic</span></div>
+        <div class="tier-card-remaining" id="sc-epic-rem">—</div>
+        <div class="tier-card-label">of 60 remaining</div>
+        <div class="tier-progress"><div class="tier-progress-fill" id="sc-epic-bar" style="width:0%"></div></div>
+        <div class="tier-card-pct" id="sc-epic-pct">—</div>
+        <span class="tier-card-alert" id="sc-epic-alert">Almost gone</span>
+        <div class="tier-card-sold-out" id="sc-epic-sold">Sold Out</div>
+      </div>
+      <div class="tier-card" data-tier="rare">
+        <div class="tier-card-badge"><span class="tier-badge tier-rare">Rare</span></div>
+        <div class="tier-card-remaining" id="sc-rare-rem">—</div>
+        <div class="tier-card-label">of 80 remaining</div>
+        <div class="tier-progress"><div class="tier-progress-fill" id="sc-rare-bar" style="width:0%"></div></div>
+        <div class="tier-card-pct" id="sc-rare-pct">—</div>
+        <span class="tier-card-alert" id="sc-rare-alert">Almost gone</span>
+        <div class="tier-card-sold-out" id="sc-rare-sold">Sold Out</div>
+      </div>
+      <div class="tier-card" data-tier="uncommon">
+        <div class="tier-card-badge"><span class="tier-badge tier-uncommon">Uncommon</span></div>
+        <div class="tier-card-remaining" id="sc-uncommon-rem">—</div>
+        <div class="tier-card-label">of 150 remaining</div>
+        <div class="tier-progress"><div class="tier-progress-fill" id="sc-uncommon-bar" style="width:0%"></div></div>
+        <div class="tier-card-pct" id="sc-uncommon-pct">—</div>
+        <span class="tier-card-alert" id="sc-uncommon-alert">Almost gone</span>
+        <div class="tier-card-sold-out" id="sc-uncommon-sold">Sold Out</div>
+      </div>
+      <div class="tier-card" data-tier="common">
+        <div class="tier-card-badge"><span class="tier-badge tier-common">Common</span></div>
+        <div class="tier-card-remaining" id="sc-common-rem">—</div>
+        <div class="tier-card-label">of 120 remaining</div>
+        <div class="tier-progress"><div class="tier-progress-fill" id="sc-common-bar" style="width:0%"></div></div>
+        <div class="tier-card-pct" id="sc-common-pct">—</div>
+        <span class="tier-card-alert" id="sc-common-alert">Almost gone</span>
+        <div class="tier-card-sold-out" id="sc-common-sold">Sold Out</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ── ELIGIBILITY CHECKER ── -->
+<section id="eligibility">
+  <div class="container">
+    <div class="elig-wrap">
+      <div class="elig-header">
+        <div class="section-label">🔍 Check Your Status</div>
+        <h2>Am I Eligible?</h2>
+        <p>Paste any Stacks address to instantly check mint eligibility</p>
+      </div>
+      <div class="elig-input-row">
+        <input class="elig-input" id="elig-addr" type="text" placeholder="SP... or ST..." spellcheck="false" autocomplete="off">
+        <button class="elig-check-btn" id="elig-btn" onclick="checkEligibility()">Check</button>
+      </div>
+      <div class="elig-hint">Genesis AIBTC agent (level ≥ 2) + on-chain ERC-8004 identity required</div>
+      <div class="elig-result" id="elig-result">
+        <div class="elig-result-card" id="elig-card"></div>
+      </div>
     </div>
   </div>
 </section>
@@ -970,6 +1204,187 @@ async function fetchStats() {
 
 fetchStats();
 statsInterval = setInterval(fetchStats, 30000);
+
+/* ── Scarcity Dashboard ── */
+const TIER_CAPS = { legendary: 10, epic: 60, rare: 80, uncommon: 150, common: 120 };
+const TIER_KEYS = ['legendary', 'epic', 'rare', 'uncommon', 'common'];
+
+function updateScarcity(uintFields) {
+  for (const tier of TIER_KEYS) {
+    const remaining = uintFields[tier + '-remaining'];
+    if (remaining == null) continue;
+    const cap = TIER_CAPS[tier];
+    const claimed = cap - remaining;
+    const pct = cap > 0 ? Math.round((claimed / cap) * 100) : 0;
+
+    const remEl = document.getElementById('sc-' + tier + '-rem');
+    const barEl = document.getElementById('sc-' + tier + '-bar');
+    const pctEl = document.getElementById('sc-' + tier + '-pct');
+    const alertEl = document.getElementById('sc-' + tier + '-alert');
+    const soldEl = document.getElementById('sc-' + tier + '-sold');
+
+    if (remEl) remEl.textContent = remaining;
+    if (barEl) barEl.style.width = pct + '%';
+    if (pctEl) pctEl.textContent = pct + '% claimed';
+
+    // Alert when ≤ 20% remaining (but not sold out)
+    if (alertEl) {
+      if (remaining === 0) {
+        alertEl.style.display = 'none';
+      } else if (remaining <= Math.ceil(cap * 0.2)) {
+        alertEl.style.display = 'inline-block';
+        alertEl.textContent = remaining <= 3 ? 'Last ' + remaining + '!' : 'Almost gone';
+      } else {
+        alertEl.style.display = 'none';
+      }
+    }
+    // Sold out overlay
+    if (soldEl) {
+      soldEl.style.display = remaining === 0 ? 'flex' : 'none';
+    }
+  }
+}
+
+// Extend fetchStats to also feed scarcity dashboard
+const _origFetchStats = fetchStats;
+fetchStats = async function() {
+  try {
+    const url = `${CONFIG.stacksApiUrl}/v2/contracts/call-read/${CONFIG.contractAddress}/${CONFIG.contractName}/get-mint-stats`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sender: CONFIG.contractAddress, arguments: [] })
+    });
+    const data = await res.json();
+    if (!data.okay || !data.result) return;
+
+    const hex = data.result.replace('0x', '');
+    if (hex.slice(0, 2) !== '0c') return;
+    let pos = 2;
+    const fieldCount = parseInt(hex.slice(pos, pos + 8), 16);
+    pos += 8;
+
+    const uintFields = {};
+    for (let i = 0; i < fieldCount; i++) {
+      const nameLen = parseInt(hex.slice(pos, pos + 2), 16);
+      pos += 2;
+      const nameHex = hex.slice(pos, pos + nameLen * 2);
+      const name = (nameHex.match(/.{2}/g) || []).map(b => String.fromCharCode(parseInt(b, 16))).join('');
+      pos += nameLen * 2;
+      const valType = hex.slice(pos, pos + 2);
+      pos += 2;
+      if (valType === '01') {
+        uintFields[name] = parseInt(hex.slice(pos, pos + 32), 16);
+        pos += 32;
+      } else {
+        return;
+      }
+    }
+
+    // Update hero stats
+    const minted = uintFields['total-minted'];
+    const legendaryLeft = uintFields['legendary-remaining'];
+    if (minted != null) {
+      const mintedEl = document.getElementById('minted-count');
+      if (mintedEl) mintedEl.textContent = `${minted} / ${TOTAL_SUPPLY}`;
+    }
+    if (legendaryLeft != null) {
+      const legendaryEl = document.getElementById('legendary-remaining');
+      if (legendaryEl) legendaryEl.textContent = legendaryLeft;
+    }
+
+    // Update scarcity dashboard
+    updateScarcity(uintFields);
+  } catch (e) {
+    console.warn('fetchStats failed:', e);
+  }
+};
+
+// Re-run with merged logic
+fetchStats();
+
+/* ── Eligibility Checker ── */
+const eligInput = document.getElementById('elig-addr');
+const eligBtn   = document.getElementById('elig-btn');
+
+// Enter key triggers check
+eligInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') checkEligibility();
+});
+
+async function checkEligibility() {
+  const addr = eligInput.value.trim();
+  if (!addr) return;
+
+  if (!/^S[PMTN][A-Za-z0-9]{38,41}$/.test(addr)) {
+    showEligResult('fail', 'Invalid Address', 'Enter a valid Stacks address starting with SP or ST', null);
+    return;
+  }
+
+  eligBtn.disabled = true;
+  eligBtn.innerHTML = '<span class="spinner" style="width:14px;height:14px;border-width:2px;"></span>';
+
+  try {
+    const res = await fetch(`${CONFIG.workerUrl}/api/eligibility?address=${encodeURIComponent(addr)}`);
+    const data = await res.json();
+
+    if (data.eligible && !data.alreadyMinted) {
+      showEligResult('ok', 'Eligible to Mint!', 'This agent qualifies for an Early Eagle', data);
+    } else if (data.eligible && data.alreadyMinted) {
+      showEligResult('minted', 'Already Minted', 'This agent already owns an Early Eagle', data);
+    } else {
+      showEligResult('fail', 'Not Eligible', data.reason || 'Does not meet requirements', data);
+    }
+  } catch (e) {
+    showEligResult('fail', 'Lookup Failed', 'Could not reach the API — try again shortly', null);
+  } finally {
+    eligBtn.disabled = false;
+    eligBtn.textContent = 'Check';
+  }
+}
+
+function showEligResult(status, title, reason, data) {
+  const wrap = document.getElementById('elig-result');
+  const card = document.getElementById('elig-card');
+
+  const iconMap = { ok: '✅', fail: '❌', minted: '🦅' };
+
+  let html = `
+    <div class="elig-result-header">
+      <div class="elig-status-icon ${status}">${iconMap[status]}</div>
+      <div>
+        <div class="elig-status-title ${status}">${title}</div>
+        <div class="elig-status-reason">${reason}</div>
+      </div>
+    </div>`;
+
+  if (data && data.agent) {
+    const a = data.agent;
+    html += '<div class="elig-agent-details">';
+    if (a.displayName) html += agentRow('Agent', a.displayName);
+    if (a.bnsName) html += agentRow('BNS', a.bnsName);
+    if (a.levelName) html += agentRow('Level', `<span class="level-badge">${a.levelName}</span>`);
+    if (a.agentId != null) html += agentRow('Agent ID', '#' + a.agentId);
+    if (a.btcAddress) html += agentRow('BTC', a.btcAddress);
+    html += agentRow('Address', data.address);
+    html += '</div>';
+  }
+
+  if (status === 'ok') {
+    html += `<div class="elig-cta"><a class="btn btn-primary btn-sm" href="#agents">⚡ Mint Now</a></div>`;
+  }
+
+  card.innerHTML = html;
+  wrap.style.display = 'block';
+  // Re-trigger animation
+  wrap.style.animation = 'none';
+  wrap.offsetHeight; // reflow
+  wrap.style.animation = '';
+}
+
+function agentRow(key, val) {
+  return `<div class="elig-agent-row"><span class="elig-agent-key">${key}</span><span class="elig-agent-val">${val}</span></div>`;
+}
 
 /* ── Copy helpers ── */
 function copyBlock(btn, id) {
