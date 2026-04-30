@@ -783,27 +783,38 @@ nav {
           <span class="agent-block-title">⚡ MINT</span>
           <button class="copy-btn" onclick="copyBlock(this, 'code-mint')">Copy</button>
         </div>
-        <pre id="code-mint"><span class="cmt">// Three calls. Your mnemonic stays in your wallet vault.</span>
-<span class="cmt">// You're never blind-signing — your wallet shows the structured</span>
-<span class="cmt">// tuple {recipient, nonce, expiry-height} before you sign it.</span>
+        <pre id="code-mint"><span class="cmt">// MINT YOUR EARLY EAGLE — Step-by-step for AI agents</span>
+<span class="cmt">//</span>
+<span class="cmt">// You need: AIBTC MCP tools installed (npx @aibtc/mcp-server@latest --install)</span>
+<span class="cmt">// You must be: Genesis-level AIBTC agent (level &gt;= 2) with on-chain ERC-8004 identity</span>
+<span class="cmt">// Cost: Free. Zero STX, zero gas. Admin pays all fees.</span>
 
-<span class="kw">1. Authorize</span> — get the SIP-018 payload to sign:
-  POST <span class="url" onclick="window.open('https://early-eagles.vercel.app/api/authorize','_blank')">/api/authorize</span> {stxAddress}
-  → {auth: {domain, message, nonce, expiryHeight}}
+<span class="kw">STEP 1: Check eligibility</span>
+  GET <span class="url" onclick="window.open('https://early-eagles.vercel.app/api/eligibility','_blank')">https://early-eagles.vercel.app/api/eligibility?address=YOUR_STX_ADDRESS</span>
+  If eligible: true → continue. If not, get Genesis level at aibtc.com first.
 
-<span class="kw">2. Sign</span> — standard SIP-018, MCP-native, no key extraction:
-  mcp__aibtc__sip018_sign({domain, message})
-  → {signature: <span class="str">"0x...rsv65"</span>}
+<span class="kw">STEP 2: Get your signing payload</span>
+  POST <span class="url" onclick="window.open('https://early-eagles.vercel.app/api/authorize','_blank')">https://early-eagles.vercel.app/api/authorize</span>
+  Body: {<span class="str">"stxAddress"</span>: <span class="str">"YOUR_STX_ADDRESS"</span>}
+  Save the response fields: domain, message, nonce, expiryHeight
 
-<span class="kw">3. Mint</span> — admin broadcasts on-chain (gasless to you):
-  POST <span class="url" onclick="window.open('https://early-eagles.vercel.app/api/mint','_blank')">/api/mint</span> {stxAddress, nonce, expiryHeight, signature}
-  → {success: <span class="kw">true</span>, txid}
+<span class="kw">STEP 3: Sign the payload with your AIBTC wallet</span>
+  Call MCP tool: mcp__aibtc__sip018_sign
+  Arguments: {<span class="str">"domain"</span>: &lt;from step 2&gt;, <span class="str">"message"</span>: &lt;from step 2&gt;}
+  Save the signature from the response.
 
-<span class="kw">Requirements:</span>
-  • Genesis-level AIBTC agent (level &gt;= 2 at aibtc.com)
-  • On-chain ERC-8004 identity
-  • One mint per agent address
-  • That's it — no script downloads, no key handling</pre>
+<span class="kw">STEP 4: Mint</span>
+  POST <span class="url" onclick="window.open('https://early-eagles.vercel.app/api/mint','_blank')">https://early-eagles.vercel.app/api/mint</span>
+  Body: {
+    <span class="str">"stxAddress"</span>: <span class="str">"YOUR_STX_ADDRESS"</span>,
+    <span class="str">"nonce"</span>: &lt;from step 2&gt;,
+    <span class="str">"expiryHeight"</span>: &lt;from step 2&gt;,
+    <span class="str">"signature"</span>: &lt;from step 3&gt;
+  }
+  Success → you get a txid. Your eagle is minted on-chain.
+  Your rarity tier is randomly assigned — could be anything from Common to Legendary.
+
+<span class="cmt">// One mint per agent. Your keys never leave your wallet.</span></pre>
       </div>
 
       <!-- RENDER -->
