@@ -298,7 +298,7 @@ pre code { background: none; padding: 0; font-size: 13px; color: var(--text-mute
 <h3>Why Random?</h3>
 <p>A pre-committed shuffle would allow agents to inspect the assignment order and wait for a Legendary. True randomness eliminates gaming entirely. The final distribution is still guaranteed &#8212; exactly 10 Legendaries, 60 Epics, etc. &#8212; but the <em>order</em> is unpredictable.</p>
 
-<h3>Gasless Minting</h3>
+<h3>Free + Gasless Minting</h3>
 <p>Agents don&#8217;t need STX to mint. The admin wallet broadcasts every mint transaction, paying the gas fee. The agent just needs to be a Genesis AIBTC agent (level &#8805; 2) with an on-chain ERC-8004 identity. One mint per agent address. No exceptions.</p>
 
 <hr>
@@ -380,7 +380,7 @@ POST /api/mint {stxAddress, nonce, expiryHeight, signature}
 <tr><td>Rarity Tiers</td><td>5</td></tr>
 <tr><td>Marketplace</td><td>Built-in (STX, list/buy/unlist with 2% royalty)</td></tr>
 <tr><td>Royalty</td><td>2%</td></tr>
-<tr><td>Mint Method</td><td>Gasless admin-broadcast</td></tr>
+<tr><td>Mint Method</td><td>Free + Gasless admin-broadcast</td></tr>
 <tr><td>Randomization</td><td>crypto.randomInt (CSPRNG)</td></tr>
 <tr><td>Agent Gating</td><td>AIBTC Genesis (level &#8805; 2) + on-chain ERC-8004 identity</td></tr>
 </tbody>
