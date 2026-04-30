@@ -844,26 +844,35 @@ nav {
           <span class="agent-block-title">🔧 RENDER (DIY)</span>
           <button class="copy-btn" onclick="copyBlock(this, 'code-render-diy')">Copy</button>
         </div>
-        <pre id="code-render-diy"><span class="cmt">// Manual on-chain rendering — if you want full control.</span>
+        <pre id="code-render-diy"><span class="cmt">// RENDER AN EAGLE MANUALLY — Full on-chain, no scripts needed</span>
+<span class="cmt">//</span>
+<span class="cmt">// Each eagle is assembled from 4 shared segments + 1 per-token param string.</span>
+<span class="cmt">// All data lives on-chain in two contracts:</span>
 
-<span class="kw">NFT:</span>      SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2.early-eagles-v2
-<span class="kw">Renderer:</span> SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2.early-eagles-renderer
-<span class="kw">API:</span>      https://api.hiro.so
+<span class="kw">NFT contract:</span>      SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2.early-eagles-v2
+<span class="kw">Renderer contract:</span> SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2.early-eagles-renderer
 
-<span class="cmt">// 1. Fetch 4 segments from Renderer (same for all eagles):</span>
-<span class="cmt">//    get-seg1(), get-eagle(), get-seg2(), get-seg3()</span>
+<span class="kw">STEP 1: Fetch the 4 shared segments</span> (same for every eagle)
+  Call these read-only functions on the <span class="kw">Renderer</span> contract:
+  POST https://api.hiro.so/v2/contracts/call-read/SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2/early-eagles-renderer/get-seg1
+  Body: {<span class="str">"sender"</span>: <span class="str">"SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2"</span>, <span class="str">"arguments"</span>: []}
+  Repeat for: get-eagle, get-seg2, get-seg3
 
-<span class="cmt">// 2. Fetch per-token params from NFT:</span>
-<span class="cmt">//    get-render-params(uint token-id)</span>
+<span class="kw">STEP 2: Fetch per-token params</span> (unique to each eagle)
+  Call on the <span class="kw">NFT</span> contract:
+  POST https://api.hiro.so/v2/contracts/call-read/SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2/early-eagles-v2/get-render-params
+  Body: {<span class="str">"sender"</span>: <span class="str">"SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2"</span>, <span class="str">"arguments"</span>: [<span class="str">"0x0100000000000000000000000000000000"</span>]}
+  <span class="cmt">// Replace last 2 hex digits with token ID (e.g. 05 for token #5)</span>
 
-<span class="cmt">// 3. Assemble: seg1 + eagle + seg2 + params + seg3 = HTML</span>
+<span class="kw">STEP 3: Decode the hex responses</span>
+  Each response has a <span class="str">"result"</span> field containing a Clarity hex value.
+  • Segments (seg1/eagle/seg2/seg3): starts with 0x0d — skip first 5 bytes (0d + 4-byte length), rest is ASCII
+  • Render params: starts with 0x070d — skip first 6 bytes (07 + 0d + 4-byte length), rest is ASCII
+  <span class="cmt">// The 07 prefix means (ok ...). Strip it or the HTML breaks.</span>
 
-<span class="cmt">// ⚠️ DECODING:</span>
-<span class="cmt">//   Segments return string-ascii  → hex: 0d [4-byte len] [data]</span>
-<span class="cmt">//   Render params return (ok string-ascii)</span>
-<span class="cmt">//     → hex: 07 0d [4-byte len] [data]</span>
-<span class="cmt">//   Strip the 07 or it corrupts the HTML.</span>
-<span class="cmt">// Full decode docs in page source comments.</span></pre>
+<span class="kw">STEP 4: Assemble the HTML</span>
+  Concatenate in order: seg1 + eagle + seg2 + params + seg3
+  Save as .html and open in a browser. That's your eagle.</pre>
       </div>
 
 
@@ -873,26 +882,30 @@ nav {
           <span class="agent-block-title">💱 TRADE</span>
           <button class="copy-btn" onclick="copyBlock(this, 'code-trade')">Copy</button>
         </div>
-        <pre id="code-trade"><span class="cmt">// Built-in marketplace — no external platform needed.</span>
-<span class="cmt">// 2% royalty on every sale.</span>
+        <pre id="code-trade"><span class="cmt">// TRADE EAGLES — Built-in marketplace, no external platform needed</span>
+<span class="cmt">//</span>
+<span class="cmt">// Contract: SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2.early-eagles-v2</span>
+<span class="cmt">// 2% royalty on every sale. Prices are in microSTX (1 STX = 1,000,000 uSTX).</span>
+<span class="cmt">// Minimum price: 1000 uSTX (0.001 STX).</span>
 
-<span class="cmt">// List for sale (min 0.001 STX):</span>
-(contract-call?
-  <span class="str">'SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2</span>
-  <span class="str">.early-eagles-v2</span>
-  list-for-sale u&lt;tokenId&gt; u&lt;priceInMicroSTX&gt;)
+<span class="kw">LIST FOR SALE</span>
+  Use your AIBTC MCP tools to call the contract:
+  Contract: <span class="str">SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2.early-eagles-v2</span>
+  Function: <span class="str">list-for-sale</span>
+  Arguments: token-id (uint), price (uint, in microSTX)
+  <span class="cmt">// Example: list token #5 for 10 STX → args: u5, u10000000</span>
 
-<span class="cmt">// Buy:</span>
-(contract-call?
-  <span class="str">'SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2</span>
-  <span class="str">.early-eagles-v2</span>
-  buy u&lt;tokenId&gt;)
+<span class="kw">BUY</span>
+  Contract: <span class="str">SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2.early-eagles-v2</span>
+  Function: <span class="str">buy</span>
+  Arguments: token-id (uint)
+  <span class="cmt">// You pay the listed price in STX. 2% goes to the artist, 98% to the seller.</span>
 
-<span class="cmt">// Unlist:</span>
-(contract-call?
-  <span class="str">'SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2</span>
-  <span class="str">.early-eagles-v2</span>
-  unlist u&lt;tokenId&gt;)</pre>
+<span class="kw">UNLIST</span>
+  Contract: <span class="str">SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2.early-eagles-v2</span>
+  Function: <span class="str">unlist</span>
+  Arguments: token-id (uint)
+  <span class="cmt">// Only the seller who listed it can unlist.</span></pre>
       </div>
 
 
