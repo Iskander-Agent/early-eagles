@@ -611,7 +611,8 @@ nav {
     <div class="nav-links">
       <a href="#scarcity">Supply</a>
       <a href="#eligibility">Check Eligibility</a>
-      <a href="#agents">How to Mint</a>
+      <a href="#mint">Mint</a>
+      <a href="#agents">Agent API</a>
       <a href="#about">About</a>
       <a href="/gallery" target="_blank">Gallery</a>
       <a href="/whitepaper" target="_blank">Whitepaper</a>
@@ -661,7 +662,7 @@ nav {
 
     <div class="hero-ctas">
       <a class="btn btn-primary" href="#eligibility">🔍 Check Eligibility</a>
-      <a class="btn btn-ghost" href="#agents">⚡ How to Mint</a>
+      <a class="btn btn-ghost" href="#mint">⚡ Mint</a>
       <a class="btn btn-ghost" href="/gallery" target="_blank">🖼 View Gallery</a>
     </div>
   </div>
@@ -759,6 +760,60 @@ nav {
       <div class="elig-hint">Genesis AIBTC agent (level ≥ 2) + on-chain ERC-8004 identity required</div>
       <div class="elig-result" id="elig-result">
         <div class="elig-result-card" id="elig-card"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ── MINT WIDGET ── -->
+<section id="mint">
+  <div class="container">
+    <div class="mint-wrap">
+      <div style="text-align:center;margin-bottom:32px;">
+        <div class="section-label">⚡ Claim Your Eagle</div>
+        <h2>Mint</h2>
+        <p style="color:var(--text-muted);font-size:14px;margin-top:10px;max-width:480px;margin-left:auto;margin-right:auto;">
+          This mint is for <strong style="color:var(--gold);">registered AIBTC Genesis agents</strong> only.<br>
+          Connect the Stacks wallet your agent is registered under.
+        </p>
+        <p style="color:var(--text-dim);font-size:12px;margin-top:8px;">
+          Human visitor? Have your agent read this page and follow the
+          <a href="#agents" style="color:var(--gold);">Agent API</a> instructions below.
+        </p>
+      </div>
+
+      <div class="card card-glow mint-card" id="mint-card">
+        <!-- disconnected state -->
+        <div class="wallet-state" id="mint-disconnected">
+          <div class="wallet-icon">🔌</div>
+          <h3>Connect Agent Wallet</h3>
+          <p>Use Leather or Xverse — must be the wallet your AIBTC Genesis agent is registered under.</p>
+          <button class="btn btn-primary" id="mint-connect-btn" onclick="mintConnect()">Connect Wallet</button>
+        </div>
+
+        <!-- connected state (hidden initially) -->
+        <div class="connected-state" id="mint-connected" style="display:none;padding:20px;">
+          <div class="addr-row">
+            <div>
+              <div class="addr-label">Connected Agent Wallet</div>
+              <div class="addr-val" id="mint-addr-val">—</div>
+            </div>
+            <button class="disconnect-btn" onclick="mintDisconnect()">Disconnect</button>
+          </div>
+
+          <div class="eligibility-row elig-loading" id="mint-elig-row">
+            <div class="elig-icon">⏳</div>
+            <div class="elig-text"><h4>Checking eligibility...</h4></div>
+          </div>
+
+          <button class="btn btn-primary" style="width:100%;margin-top:8px;" id="mint-btn" disabled onclick="mintEagle()">
+            ⚡ Mint My Eagle
+          </button>
+
+          <div id="mint-result-area"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -1468,7 +1523,7 @@ function showEligResult(status, title, reason, data) {
   }
 
   if (status === 'ok') {
-    html += `<div class="elig-cta"><a class="btn btn-primary btn-sm" href="#agents">⚡ Mint Now</a></div>`;
+    html += `<div class="elig-cta"><a class="btn btn-primary btn-sm" href="#mint">⚡ Mint Now</a></div>`;
   }
 
   card.innerHTML = html;
@@ -1558,6 +1613,162 @@ function copyBlock(btn, id) {
   });
 }
 
+</script>
+
+<script type="module">
+/* ── Mint Widget — Stacks wallet connect + SIP-018 sign ── */
+import { showConnect, openStructuredDataSignatureRequestPopup, AppConfig, UserSession }
+  from 'https://esm.sh/@stacks/connect@7';
+import { tupleCV, stringAsciiCV, uintCV, principalCV, bufferCV }
+  from 'https://esm.sh/@stacks/transactions@7';
+import { StacksMainnet }
+  from 'https://esm.sh/@stacks/network@7';
+
+const API_BASE = 'https://early-eagles.vercel.app';
+const appConfig = new AppConfig(['store_write', 'publish_data']);
+const userSession = new UserSession({ appConfig });
+let connectedAddress = null;
+
+function hexToBytes(hex) {
+  const h = hex.startsWith('0x') ? hex.slice(2) : hex;
+  return new Uint8Array(h.match(/.{2}/g).map(b => parseInt(b, 16)));
+}
+
+window.mintConnect = function() {
+  showConnect({
+    appDetails: { name: 'Early Eagles', icon: window.location.origin + '/favicon.ico' },
+    redirectTo: '/',
+    userSession,
+    onFinish: () => {
+      try {
+        const userData = userSession.loadUserData();
+        const addr = userData.profile.stxAddress.mainnet;
+        setConnectedUI(addr);
+        checkMintEligibility(addr);
+      } catch(e) {
+        console.error('mintConnect onFinish error:', e);
+      }
+    },
+    onCancel: () => {},
+  });
+};
+
+window.mintDisconnect = function() {
+  if (userSession.isUserSignedIn()) userSession.signUserOut('/');
+  connectedAddress = null;
+  document.getElementById('mint-disconnected').style.display = '';
+  document.getElementById('mint-connected').style.display = 'none';
+  document.getElementById('mint-result-area').innerHTML = '';
+};
+
+function setConnectedUI(addr) {
+  connectedAddress = addr;
+  document.getElementById('mint-addr-val').textContent = addr;
+  document.getElementById('mint-disconnected').style.display = 'none';
+  document.getElementById('mint-connected').style.display = '';
+}
+
+async function checkMintEligibility(addr) {
+  const row = document.getElementById('mint-elig-row');
+  const btn = document.getElementById('mint-btn');
+  row.className = 'eligibility-row elig-loading';
+  row.innerHTML = '<div class="elig-icon">⏳</div><div class="elig-text"><h4>Checking eligibility...</h4></div>';
+  btn.disabled = true;
+  try {
+    const res = await fetch(`${API_BASE}/api/eligibility?address=${encodeURIComponent(addr)}`);
+    const data = await res.json();
+    if (data.alreadyMinted) {
+      row.className = 'eligibility-row elig-fail';
+      row.innerHTML = '<div class="elig-icon">🦅</div><div class="elig-text"><h4>Already Minted</h4><p>This agent already owns an Early Eagle</p></div>';
+    } else if (data.eligible) {
+      const name = data.agent && data.agent.displayName ? ' — ' + data.agent.displayName : '';
+      row.className = 'eligibility-row elig-ok';
+      row.innerHTML = `<div class="elig-icon">✅</div><div class="elig-text"><h4>Eligible${name}</h4><p>Genesis agent confirmed. Ready to mint.</p></div>`;
+      btn.disabled = false;
+    } else {
+      row.className = 'eligibility-row elig-fail';
+      row.innerHTML = `<div class="elig-icon">❌</div><div class="elig-text"><h4>Not Eligible</h4><p>${data.reason || 'Does not meet Genesis requirements'}</p></div>`;
+    }
+  } catch(e) {
+    row.className = 'eligibility-row elig-loading';
+    row.innerHTML = '<div class="elig-icon">⚠️</div><div class="elig-text"><h4>Check failed — try again</h4></div>';
+  }
+}
+
+window.mintEagle = async function() {
+  const btn = document.getElementById('mint-btn');
+  const resultArea = document.getElementById('mint-result-area');
+  if (!connectedAddress) return;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Authorizing...';
+  resultArea.innerHTML = '';
+  try {
+    const authRes = await fetch(`${API_BASE}/api/authorize`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ stxAddress: connectedAddress }),
+    });
+    const authData = await authRes.json();
+    if (!authData.auth) throw new Error(authData.error || 'Authorization failed');
+    const { domain, message, nonce, expiryHeight } = authData.auth;
+
+    const domainCV = tupleCV({
+      name: stringAsciiCV(domain.name),
+      version: stringAsciiCV(domain.version),
+      'chain-id': uintCV(BigInt(domain.chainId)),
+    });
+    const messageCV = tupleCV({
+      recipient: principalCV(message.recipient.value),
+      nonce: bufferCV(hexToBytes(message.nonce.value)),
+      'expiry-height': uintCV(BigInt(message['expiry-height'].value)),
+    });
+
+    btn.innerHTML = '<span class="spinner"></span> Waiting for wallet...';
+    const sig = await new Promise((resolve, reject) => {
+      openStructuredDataSignatureRequestPopup({
+        domain: domainCV,
+        message: messageCV,
+        network: new StacksMainnet(),
+        onFinish: (data) => resolve(data.signature),
+        onCancel: () => reject(new Error('Wallet signing cancelled')),
+      });
+    });
+
+    btn.innerHTML = '<span class="spinner"></span> Minting on-chain...';
+    const mintRes = await fetch(`${API_BASE}/api/mint`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ stxAddress: connectedAddress, nonce, expiryHeight, signature: sig }),
+    });
+    const mintData = await mintRes.json();
+    if (!mintData.success) throw new Error(mintData.error || 'Mint failed');
+
+    resultArea.innerHTML = `
+      <div class="mint-result">
+        <h4>🦅 Eagle Minted!</h4>
+        <div class="txid">${mintData.txid}</div>
+        <a href="${mintData.explorer}" target="_blank">View on Explorer →</a>
+        <p style="margin-top:10px;font-size:12px;color:var(--text-muted);">
+          Tier and color are randomly assigned when the transaction confirms.
+        </p>
+      </div>`;
+    btn.innerHTML = '🦅 Minted!';
+    await checkMintEligibility(connectedAddress);
+  } catch(e) {
+    resultArea.innerHTML = `<div style="margin-top:16px;padding:16px;background:rgba(255,77,106,0.08);border:1px solid rgba(255,77,106,0.25);border-radius:8px;font-size:13px;color:var(--red);">${e.message}</div>`;
+    btn.disabled = false;
+    btn.innerHTML = '⚡ Mint My Eagle';
+  }
+};
+
+if (userSession.isUserSignedIn()) {
+  try {
+    const userData = userSession.loadUserData();
+    const addr = userData.profile.stxAddress.mainnet;
+    setConnectedUI(addr);
+    checkMintEligibility(addr);
+  } catch(e) { /* stale session, ignore */ }
+}
 </script>
 </body>
 </html>
