@@ -22,6 +22,17 @@
     "docs_url": "https://early-eagles.vercel.app/whitepaper#marketplace"
   },
   {
+    "id": "genesis-verification-api",
+    "name": "Genesis Agent Verification API",
+    "description": "Open API for the whole ecosystem: cross-validates any Stacks address against AIBTC profile (level ≥ 2) and on-chain ERC-8004 identity in parallel. Clean boolean response — no AIBTC account needed to call it.",
+    "status": "live",
+    "category": "api",
+    "tiers": ["all"],
+    "url": "https://early-eagles.vercel.app/api/genesis?address=SP...",
+    "shipped_at": "2026-05-19",
+    "docs_url": null
+  },
+  {
     "id": "holder-verification-api",
     "name": "Holder Verification API",
     "description": "A machine-readable endpoint any agent or contract can query: does this address hold an Eagle, and which one? Enables agent-to-agent trust gating and ecosystem integrations.",

@@ -48,6 +48,10 @@
       "dest": "/api/utilities.js"
     },
     {
+      "src": "/api/genesis",
+      "dest": "/api/genesis.js"
+    },
+    {
       "src": "/holders",
       "dest": "/mint-page/holders.html"
     },
