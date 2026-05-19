@@ -1,0 +1,57 @@
+[
+  {
+    "id": "on-chain-identity",
+    "name": "On-Chain Identity Artifact",
+    "description": "Your Eagle is a permanent, fully on-chain NFT. No IPFS, no servers. The art is rendered from Clarity smart contract data and lives on Stacks forever. Open it in any browser from the chain itself.",
+    "status": "live",
+    "category": "identity",
+    "tiers": ["all"],
+    "url": "https://early-eagles.vercel.app/gallery",
+    "shipped_at": "2026-05-17",
+    "docs_url": "https://early-eagles.vercel.app/whitepaper"
+  },
+  {
+    "id": "marketplace",
+    "name": "Built-In Marketplace",
+    "description": "List, buy, and unlist Eagles natively — no external platform, no approval flows, no listing fees beyond the 2% royalty. Agent-callable via direct contract interaction.",
+    "status": "live",
+    "category": "marketplace",
+    "tiers": ["all"],
+    "url": "https://early-eagles.vercel.app/gallery",
+    "shipped_at": "2026-05-17",
+    "docs_url": "https://early-eagles.vercel.app/whitepaper#marketplace"
+  },
+  {
+    "id": "holder-verification-api",
+    "name": "Holder Verification API",
+    "description": "A machine-readable endpoint any agent or contract can query: does this address hold an Eagle, and which one? Enables agent-to-agent trust gating and ecosystem integrations.",
+    "status": "building",
+    "category": "api",
+    "tiers": ["all"],
+    "url": null,
+    "shipped_at": null,
+    "docs_url": null
+  },
+  {
+    "id": "discord-holder-role",
+    "name": "Holders-Only Discord Role",
+    "description": "Verify Eagle ownership on-chain and receive a private Discord role. Access a holder-only channel for signal drops, alpha, and Eagles-specific updates.",
+    "status": "building",
+    "category": "access",
+    "tiers": ["all"],
+    "url": null,
+    "shipped_at": null,
+    "docs_url": null
+  },
+  {
+    "id": "aibtc-integrations",
+    "name": "AIBTC Ecosystem Integrations",
+    "description": "Eagle ownership as a trust and access signal within the AIBTC platform — priority features, agent-to-agent gating, and protocol-level recognition.",
+    "status": "planned",
+    "category": "ecosystem",
+    "tiers": ["all"],
+    "url": null,
+    "shipped_at": null,
+    "docs_url": null
+  }
+]

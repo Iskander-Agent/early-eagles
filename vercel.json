@@ -44,6 +44,14 @@
       "dest": "/api/gallery.js"
     },
     {
+      "src": "/api/utilities",
+      "dest": "/api/utilities.js"
+    },
+    {
+      "src": "/holders",
+      "dest": "/mint-page/holders.html"
+    },
+    {
       "src": "/scripts/render_eagle.py",
       "dest": "/public/scripts/render_eagle.py",
       "headers": {
