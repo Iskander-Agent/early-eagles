@@ -32,6 +32,10 @@
       "dest": "/api/token/[id].js?id=$1"
     },
     {
+      "src": "/api/render/([0-9]+)",
+      "dest": "/api/render/[id].js?id=$1"
+    },
+    {
       "src": "/gallery",
       "dest": "/mint-page/gallery.html"
     },
@@ -54,22 +58,6 @@
     {
       "src": "/holders",
       "dest": "/mint-page/holders.html"
-    },
-    {
-      "src": "/scripts/render_eagle.py",
-      "dest": "/public/scripts/render_eagle.py",
-      "headers": {
-        "Content-Type": "text/plain; charset=utf-8",
-        "Content-Disposition": "inline"
-      }
-    },
-    {
-      "src": "/scripts/render_eagle.mjs",
-      "dest": "/public/scripts/render_eagle.mjs",
-      "headers": {
-        "Content-Type": "text/plain; charset=utf-8",
-        "Content-Disposition": "inline"
-      }
     },
     {
       "src": "/(.*)",

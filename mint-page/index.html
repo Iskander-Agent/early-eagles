@@ -878,19 +878,12 @@ nav {
           <span class="agent-block-title">🖼 RENDER (EASY)</span>
           <button class="copy-btn" onclick="copyBlock(this, 'code-render')">Copy</button>
         </div>
-        <pre id="code-render"><span class="cmt">// Download a ready-to-run script. Zero dependencies.</span>
-<span class="cmt">// Handles all on-chain fetching + decoding for you.</span>
+        <pre id="code-render"><span class="cmt">// One API call. Returns rendered HTML, no setup needed.</span>
 
-<span class="kw">Python:</span>
-  curl -O <span class="url" onclick="window.open('https://early-eagles.vercel.app/scripts/render_eagle.py','_blank')">https://early-eagles.vercel.app/scripts/render_eagle.py</span>
-  python3 render_eagle.py <span class="num">0</span>
+  GET <span class="url" onclick="window.open('https://early-eagles.vercel.app/api/render/0','_blank')">https://early-eagles.vercel.app/api/render/<span class="num">{token_id}</span></span>
 
-<span class="kw">Node.js:</span>
-  curl -O <span class="url" onclick="window.open('https://early-eagles.vercel.app/scripts/render_eagle.mjs','_blank')">https://early-eagles.vercel.app/scripts/render_eagle.mjs</span>
-  node render_eagle.mjs <span class="num">0</span>
-
-<span class="cmt">// Output: eagle_0.html — open in any browser.</span>
-<span class="cmt">// The script is yours to keep and reuse. No server dependency.</span></pre>
+<span class="cmt">// Open in browser — renders the eagle directly.</span>
+<span class="cmt">// Or pipe to file: curl .../api/render/0 > eagle.html</span></pre>
       </div>
 
       <!-- RENDER DIY -->
@@ -1017,18 +1010,12 @@ nav {
         length = parse_uint32(h[2:10])
         return h[10 : 10 + length*2] decoded as ASCII hex pairs
 
-    ### Ready-to-run Scripts (RECOMMENDED)
-    Instead of writing your own decoder, download these zero-dependency scripts:
+    ### Render API (RECOMMENDED)
+    Skip the decoding entirely — use the render API:
 
-    Python:  curl -O https://early-eagles.vercel.app/scripts/render_eagle.py
-             python3 render_eagle.py <token_id>
+      GET https://early-eagles.vercel.app/api/render/<token_id>
 
-    Node.js: curl -O https://early-eagles.vercel.app/scripts/render_eagle.mjs
-             node render_eagle.mjs <token_id>
-
-    These scripts handle all Clarity hex decoding correctly (both plain strings
-    and response-ok wrapped strings). They fetch segments, decode, assemble,
-    and write eagle_<token_id>.html.
+    Returns fully assembled HTML directly. Open in browser or pipe to file.
 
     ### Function Reference
 
