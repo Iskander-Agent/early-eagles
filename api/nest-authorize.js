@@ -124,8 +124,9 @@ module.exports = async function handler(req, res) {
     return res.status(403).json({ error: 'Address holds no Early Eagles. Must hold ≥1 Eagle to authorize a Telegram account.' });
   }
 
-  // Use the lowest token_id as the canonical Eagle for this address
-  // (if someone holds multiple Eagles, each can only authorize one human — they pick one)
+  // Use the lowest token_id as the canonical Eagle for this address.
+  // Sort first — Hiro API doesn't guarantee order.
+  token_ids.sort((a, b) => a - b);
   const eagle_token_id = token_ids[0];
 
   // 3. Check if this Eagle already has a linked Telegram user → evict old mapping
