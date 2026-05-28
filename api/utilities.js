@@ -51,9 +51,8 @@ module.exports = async function handler(req, res) {
       `Coming soon: ${building.map(u => u.name).join(', ')}.`
     : 'Utility integrations are in progress. Check back soon.';
 
-  res.setHeader('Cache-Control', 'no-store');
+  res.setHeader('Cache-Control', 's-maxage=120, stale-while-revalidate=300');
   return res.status(200).json({
-    _build: 'v3-docs',
     total: utilities.length,
     counts: { live: live.length, building: building.length, planned: planned.length },
     agent_summary: agentSummary,
