@@ -1,0 +1,10 @@
+{
+  "group_id": -1003933725593,
+  "rate_limits": {
+    "eagle": 20,
+    "genesis": 10,
+    "unknown": 5
+  },
+  "audit_interval_ms": 21600000,
+  "nest_api_base": "https://early-eagles.vercel.app"
+}

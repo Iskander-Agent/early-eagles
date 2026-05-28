@@ -94,6 +94,34 @@ module.exports = async function handler(req, res) {
   const isAuthorize = path.endsWith('/authorize');
   const isCheck     = path.endsWith('/check');
 
+  // ── GET /api/nest/members?secret=... — admin audit list ─────────────────
+  if (req.method === 'GET' && path.endsWith('/members')) {
+    const secret = (req.query || {}).secret;
+    if (!secret || secret !== process.env.NEST_ADMIN_SECRET) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+    const kv = getKv();
+    if (!kv) return res.status(503).json({ error: 'KV not configured' });
+    // Scan all nest:eagle:* keys to build delegation list
+    let cursor = 0, members = [];
+    try {
+      do {
+        const [nextCursor, keys] = await kv.scan(cursor, { match: 'nest:eagle:*', count: 100 });
+        cursor = nextCursor;
+        for (const key of keys) {
+          const eagle_token_id = parseInt(key.replace('nest:eagle:', ''), 10);
+          const telegram_user_id = await kv.get(key);
+          const stacks_address = await kv.get(`nest:addr:${eagle_token_id}`);
+          if (telegram_user_id) members.push({ eagle_token_id, telegram_user_id: String(telegram_user_id), stacks_address });
+        }
+      } while (cursor !== 0);
+    } catch (e) {
+      return res.status(503).json({ error: 'KV scan failed', detail: e.message });
+    }
+    res.setHeader('Cache-Control', 'no-store');
+    return res.status(200).json({ count: members.length, members });
+  }
+
   // ── GET /api/nest/check?telegram_user_id=... ─────────────────────────────
   if (req.method === 'GET' && isCheck) {
     if (!rateOk(ip + ':check', 30)) return res.status(429).json({ authorized: false, reason: 'Too many requests' });
@@ -176,6 +204,7 @@ module.exports = async function handler(req, res) {
       if (existing_eagle !== null && existing_eagle !== eagle_token_id) { await kv.del(`nest:eagle:${existing_eagle}`); }
       await kv.set(eagleKey, tg);
       await kv.set(tgKey, eagle_token_id);
+      await kv.set(`nest:addr:${eagle_token_id}`, address); // for audit: track authorizing address
     } catch {
       return res.status(503).json({ error: 'Storage unavailable. Try again shortly.' });
     }

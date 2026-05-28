@@ -60,7 +60,7 @@
       "dest": "/api/verify.js"
     },
     {
-      "src": "/api/nest/(authorize|check)",
+      "src": "/api/nest/(authorize|check|members)",
       "dest": "/api/nest.js"
     },
     {
