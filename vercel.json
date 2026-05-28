@@ -60,12 +60,8 @@
       "dest": "/api/holder.js"
     },
     {
-      "src": "/api/nest/authorize",
-      "dest": "/api/nest-authorize.js"
-    },
-    {
-      "src": "/api/nest/check",
-      "dest": "/api/nest-check.js"
+      "src": "/api/nest/(authorize|check)",
+      "dest": "/api/nest.js"
     },
     {
       "src": "^/api/nest$",
