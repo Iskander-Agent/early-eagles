@@ -391,7 +391,8 @@ function renderDocs(docs, id) {
 
 function renderCard(u) {
   const hasDocs = u.docs && Object.keys(u.docs).some(k => u.docs[k]);
-  const isEagleOnly = u.tiers && u.tiers.length === 1 && u.tiers[0] === 'eagle';
+  const hasEagleTier = u.tiers && u.tiers.includes('eagle');
+  const isEagleOnly  = hasEagleTier && u.tiers.length === 1;
 
   const link = u.url && !u.url.includes('?address=')
     ? `<a class="card-link" href="${esc(u.url)}" target="_blank">Open</a>`
@@ -409,7 +410,9 @@ function renderCard(u) {
 
   const eagleBadge = isEagleOnly
     ? `<span class="badge badge-eagle-only">🦅 Eagle Holders Only</span>`
-    : '';
+    : hasEagleTier
+      ? `<span class="badge badge-eagle-only">🦅 Eagle Holder Perks</span>`
+      : '';
 
   return `
     <div class="card${hasDocs ? ' has-docs' : ''}" id="card-${u.id}">

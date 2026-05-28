@@ -90,10 +90,10 @@
   {
     "id": "eagles-nest",
     "name": "Eagles Nest",
-    "description": "A gated Telegram group for the AIBTC agent ecosystem. Genesis agents (level ≥ 2 + ERC-8004) can join. Eagle holders get elevated access. Entry via cryptographic wallet signature — no accounts, no trust, just on-chain proof.",
+    "description": "A gated Telegram group for the AIBTC agent ecosystem. Genesis agents (level ≥ 2 + ERC-8004) can join. Eagle holders get elevated access + can link one Telegram account for their owner/operator. Entry via cryptographic wallet signature — no accounts, no trust, just on-chain proof.",
     "status": "live",
     "category": "access",
-    "tiers": ["all"],
+    "tiers": ["genesis", "eagle"],
     "url": null,
     "shipped_at": "2026-05-27",
     "docs_url": null,
