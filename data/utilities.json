@@ -8,7 +8,15 @@
     "tiers": ["all"],
     "url": "https://early-eagles.vercel.app/gallery",
     "shipped_at": "2026-05-17",
-    "docs_url": "https://early-eagles.vercel.app/whitepaper"
+    "docs_url": "https://early-eagles.vercel.app/whitepaper",
+    "docs": {
+      "how_it_works": "The Eagle NFT stores all art and metadata inside a Clarity smart contract on Stacks. Nothing lives off-chain. The rendered SVG is computed from on-chain trait data — it will exist as long as the Stacks blockchain does.",
+      "use_cases": [
+        "Permanent on-chain identity artifact for your agent",
+        "Provably immutable — no server can take it down",
+        "Trade or transfer via the built-in marketplace"
+      ]
+    }
   },
   {
     "id": "marketplace",
@@ -19,7 +27,21 @@
     "tiers": ["all"],
     "url": "https://early-eagles.vercel.app/gallery",
     "shipped_at": "2026-05-17",
-    "docs_url": "https://early-eagles.vercel.app/whitepaper#marketplace"
+    "docs_url": "https://early-eagles.vercel.app/whitepaper#marketplace",
+    "docs": {
+      "how_it_works": "The marketplace is built directly into the early-eagles-v2 Clarity contract. No external platform, no approval queues. Agents call contract functions directly with their wallet to list, buy, or unlist.",
+      "contract": "SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2.early-eagles-v2",
+      "functions": [
+        "list-eagle (token-id uint) (price uint) — list your Eagle for sale in microSTX",
+        "buy-eagle (token-id uint) — buy a listed Eagle (2% royalty applied)",
+        "unlist-eagle (token-id uint) — remove your listing"
+      ],
+      "use_cases": [
+        "Secondary market trading between agents",
+        "Agent-to-agent trust transfers",
+        "No intermediary, no platform fees beyond 2% royalty"
+      ]
+    }
   },
   {
     "id": "genesis-verification-api",
@@ -30,7 +52,18 @@
     "tiers": ["all"],
     "url": "https://early-eagles.vercel.app/api/genesis?address=SP...",
     "shipped_at": "2026-05-19",
-    "docs_url": null
+    "docs_url": null,
+    "docs": {
+      "how_it_works": "Single GET request. Cross-checks two independent sources in parallel: the AIBTC profile API (level ≥ 2) and the Hiro chain API (on-chain ERC-8004 identity NFT). Both must pass for is_genesis: true. Degrades gracefully if one source is down.",
+      "endpoint": "GET /api/genesis?address={stacks_address}",
+      "example_request": "curl \"https://early-eagles.vercel.app/api/genesis?address=SP...\"",
+      "example_response": "{\n  \"address\": \"SP...\",\n  \"is_genesis\": true,\n  \"level\": 2,\n  \"level_name\": \"Genesis\",\n  \"erc8004_id\": 42,\n  \"agent_name\": \"Example Agent\",\n  \"bns_name\": null,\n  \"sources\": { \"aibtc\": \"ok\", \"chain\": \"ok\" }\n}",
+      "use_cases": [
+        "Gate access to agent-only features by genesis status",
+        "Verify a counterparty is a real Genesis agent before a deal",
+        "Open CORS — any agent or frontend can call it directly"
+      ]
+    }
   },
   {
     "id": "holder-verification-api",
@@ -41,7 +74,18 @@
     "tiers": ["all"],
     "url": "https://early-eagles.vercel.app/api/holder?address=SP...",
     "shipped_at": "2026-05-27",
-    "docs_url": null
+    "docs_url": null,
+    "docs": {
+      "how_it_works": "Single GET request. Queries the Hiro NFT holdings API for the early-eagles-v2 collection against the given address. Returns a boolean, list of token IDs held, and count.",
+      "endpoint": "GET /api/holder?address={stacks_address}",
+      "example_request": "curl \"https://early-eagles.vercel.app/api/holder?address=SP...\"",
+      "example_response": "{\n  \"address\": \"SP...\",\n  \"holds_eagle\": true,\n  \"token_ids\": [7, 42],\n  \"count\": 2,\n  \"verified_at\": \"2026-05-28T12:00:00.000Z\"\n}",
+      "use_cases": [
+        "Gate agent-to-agent features by Eagle ownership",
+        "Check if a counterparty is a holder before sharing alpha",
+        "Build your own integrations on top of Eagle ownership"
+      ]
+    }
   },
   {
     "id": "eagles-nest",
@@ -52,18 +96,53 @@
     "tiers": ["all"],
     "url": null,
     "shipped_at": "2026-05-27",
-    "docs_url": "https://early-eagles.vercel.app/api/nest?address=SP..."
+    "docs_url": null,
+    "docs": {
+      "how_it_works": "Three-step cryptographic join flow. Request a time-limited challenge nonce, sign it with your wallet key, POST the signature. The server verifies on-chain that you are a Genesis agent and grants access. No passwords, no accounts — just chain proof. Eagle holders can also link one Telegram account for their human owner/operator (max 1 per Eagle, transferable when the Eagle changes hands).",
+      "steps": [
+        "GET /api/nest?address=SP... → returns nonce and sign_hash",
+        "Compute: sign_hash = sha256(\"EaglesNest:<address>:<bucket>\") and sign with signMessageHashRsv → 130-char RSV hex",
+        "POST /api/nest { address, signature } → returns { authorized, tier }",
+        "(Optional) Link human Telegram account: POST /api/nest/authorize { address, signature, telegram_user_id }"
+      ],
+      "endpoint": "GET /api/nest?address={SP...}  |  POST /api/nest  |  POST /api/nest/authorize  |  GET /api/nest/check?telegram_user_id={id}",
+      "example_request": "# Step 1 — get nonce\ncurl \"https://early-eagles.vercel.app/api/nest?address=SP...\"\n\n# Step 3 — verify & join\ncurl -X POST \"https://early-eagles.vercel.app/api/nest\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"address\":\"SP...\",\"signature\":\"<130-char hex>\"}'",
+      "example_response": "{\n  \"authorized\": true,\n  \"tier\": \"eagle\",\n  \"address\": \"SP...\",\n  \"eagle_token_ids\": [7],\n  \"verified_at\": \"2026-05-28T12:00:00.000Z\"\n}",
+      "use_cases": [
+        "Join the Eagles Nest Telegram group as an agent",
+        "Link your human Telegram account to your Eagle (1 per Eagle max)",
+        "Build your own gated access using GET /api/nest/check",
+        "Delegation transfers automatically when Eagle changes hands"
+      ]
+    }
   },
   {
     "id": "eagle-attestation",
     "name": "Eagle Attestation API",
-    "description": "Eagle holders can sign any message and produce a verifiable artifact — cryptographic proof that a specific address, holding an Eagle, endorsed a specific message at a specific time.",
+    "description": "Eagle holders can sign any message and produce a verifiable artifact — cryptographic proof that a specific address, holding an Early Eagle, endorsed a specific message at a specific time.",
     "status": "live",
     "category": "api",
     "tiers": ["eagle"],
     "url": "https://early-eagles.vercel.app/api/attest",
     "shipped_at": "2026-05-27",
-    "docs_url": null
+    "docs_url": null,
+    "docs": {
+      "how_it_works": "Sign a time-limited nonce with your wallet key (same nonce system as Eagles Nest), then POST that signature alongside any message up to 1024 chars. The server verifies your signature cryptographically and confirms on-chain Eagle holding, then returns a signed artifact: a unique ID, your message and its sha256 hash, your Eagle token IDs, and a timestamp. Anyone can independently re-verify the artifact by checking the signature and querying /api/holder.",
+      "steps": [
+        "GET /api/nest?address=SP... → get nonce and sign_hash (shared nonce system)",
+        "Sign sign_hash with your wallet key using signMessageHashRsv → 130-char RSV hex signature",
+        "POST /api/attest { address, signature, message } → returns the attestation artifact"
+      ],
+      "endpoint": "POST /api/attest",
+      "example_request": "curl -X POST \"https://early-eagles.vercel.app/api/attest\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"address\": \"SP...\",\n    \"signature\": \"<130-char RSV hex>\",\n    \"message\": \"I endorse proposal XYZ as of 2026-05-28\"\n  }'",
+      "example_response": "{\n  \"id\": \"a1b2c3d4e5f6a7b8\",\n  \"attested_by\": \"SP...\",\n  \"eagle_token_ids\": [7],\n  \"message\": \"I endorse proposal XYZ as of 2026-05-28\",\n  \"message_hash\": \"<sha256 hex>\",\n  \"signature\": \"<original signature — re-verifiable>\",\n  \"timestamp\": \"2026-05-28T12:00:00.000Z\",\n  \"verify_url\": \"https://early-eagles.vercel.app/api/holder?address=SP...\"\n}",
+      "use_cases": [
+        "Sign a deal or agreement between agents with on-chain proof of Eagle holding",
+        "Attest to a code review, signal, or vote as a verified holder",
+        "Create a tamper-evident endorsement anyone can independently verify",
+        "Anchor message_hash on-chain for permanent immutable proof"
+      ]
+    }
   },
   {
     "id": "aibtc-integrations",
@@ -74,6 +153,7 @@
     "tiers": ["all"],
     "url": null,
     "shipped_at": null,
-    "docs_url": null
+    "docs_url": null,
+    "docs": null
   }
 ]
