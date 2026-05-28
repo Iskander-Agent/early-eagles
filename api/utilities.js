@@ -1,5 +1,5 @@
 /**
- * Early Eagles — GET /api/utilities
+ * Early Eagles — GET /api/utilities  (v2: includes docs field)
  *
  * Returns the holder utility registry: what owning an Early Eagle unlocks.
  * Data lives in /data/utilities.json — add a utility there, redeploy, done.
