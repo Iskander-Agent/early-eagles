@@ -56,6 +56,22 @@
       "dest": "/api/genesis.js"
     },
     {
+      "src": "/api/holder",
+      "dest": "/api/holder.js"
+    },
+    {
+      "src": "/api/nest",
+      "dest": "/api/nest.js"
+    },
+    {
+      "src": "/api/attest",
+      "dest": "/api/attest.js"
+    },
+    {
+      "src": "/api/eligibility",
+      "dest": "/api/eligibility.js"
+    },
+    {
       "src": "/holders",
       "dest": "/mint-page/holders.html"
     },
