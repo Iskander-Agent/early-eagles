@@ -21,7 +21,7 @@
     },
     {
       "src": "/api/shuffle",
-      "dest": "/api/shuffle.js"
+      "dest": "/api/utilities.js"
     },
     {
       "src": "/api/mint",
@@ -53,11 +53,11 @@
     },
     {
       "src": "/api/genesis",
-      "dest": "/api/genesis.js"
+      "dest": "/api/verify.js"
     },
     {
       "src": "/api/holder",
-      "dest": "/api/holder.js"
+      "dest": "/api/verify.js"
     },
     {
       "src": "/api/nest/(authorize|check)",

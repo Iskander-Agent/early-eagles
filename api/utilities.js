@@ -1,11 +1,12 @@
 /**
- * Early Eagles — GET /api/utilities  (v2: includes docs field)
+ * Early Eagles — collection info handler
  *
- * Returns the holder utility registry: what owning an Early Eagle unlocks.
- * Data lives in /data/utilities.json — add a utility there, redeploy, done.
+ * GET /api/utilities[?status=live|building|planned]
+ *   Returns the holder utility registry. Data lives in /data/utilities.json.
+ *   Includes docs field and a plain-text agent_summary for machine consumption.
  *
- * Optional query param: ?status=live|building|planned
- * Response includes a plain-text agent_summary for machine consumption.
+ * GET /api/shuffle
+ *   Returns static tier distribution info (random-at-mint).
  */
 
 const path = require('path');
@@ -17,17 +18,27 @@ const CORS = {
   'Access-Control-Allow-Headers': 'Content-Type',
 };
 
-module.exports = async function handler(req, res) {
-  Object.entries(CORS).forEach(([k, v]) => res.setHeader(k, v));
+// ── /api/shuffle — static tier distribution ──────────────────────────────────
 
-  if (req.method === 'OPTIONS') {
-    return res.status(204).end();
-  }
+function handleShuffle(req, res) {
+  res.setHeader('Cache-Control', 'public, max-age=3600');
+  return res.status(200).json({
+    total: 420,
+    method: 'random-at-mint',
+    note: 'Tier and color are randomly drawn from remaining pool at mint time using crypto.randomInt.',
+    distribution: {
+      legendary: { count: 10,  colors: 10, note: '10 unique 1-of-1 colors' },
+      epic:      { count: 60,  colors: 14, note: '8 hue x6 + 6 FX x2' },
+      rare:      { count: 80,  colors: 14, note: '8 hue x9 + Pearl(2) Shadow(2) Neg(1) Thm(1) XR(1) IR(1)' },
+      uncommon:  { count: 150, colors: 12, note: '12-13 of each color' },
+      common:    { count: 120, colors: 12, note: '10 of each color' },
+    },
+  });
+}
 
-  if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
+// ── /api/utilities — holder utility registry ──────────────────────────────────
 
+async function handleUtilities(req, res) {
   let utilities;
   try {
     const dataPath = path.join(__dirname, '..', 'data', 'utilities.json');
@@ -42,9 +53,9 @@ module.exports = async function handler(req, res) {
     ? utilities.filter(u => u.status === status)
     : utilities;
 
-  const live = utilities.filter(u => u.status === 'live');
+  const live     = utilities.filter(u => u.status === 'live');
   const building = utilities.filter(u => u.status === 'building');
-  const planned = utilities.filter(u => u.status === 'planned');
+  const planned  = utilities.filter(u => u.status === 'planned');
 
   const agentSummary = live.length > 0
     ? `Holding an Early Eagle currently unlocks: ${live.map(u => u.name).join(', ')}. ` +
@@ -58,4 +69,20 @@ module.exports = async function handler(req, res) {
     agent_summary: agentSummary,
     utilities: filtered,
   });
+}
+
+// ── Main dispatcher ───────────────────────────────────────────────────────────
+
+module.exports = async function handler(req, res) {
+  Object.entries(CORS).forEach(([k, v]) => res.setHeader(k, v));
+
+  if (req.method === 'OPTIONS') return res.status(204).end();
+  if (req.method !== 'GET')    return res.status(405).json({ error: 'Method not allowed' });
+
+  const urlPath = (req.url || '').split('?')[0];
+
+  if (urlPath.endsWith('/shuffle'))   return handleShuffle(req, res);
+  if (urlPath.endsWith('/utilities')) return handleUtilities(req, res);
+
+  return res.status(404).json({ error: 'Not found' });
 };
