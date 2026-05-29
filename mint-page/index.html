@@ -847,10 +847,12 @@ nav {
 <span class="kw">STEP 1: Check eligibility</span>
   GET <span class="url" onclick="window.open('https://early-eagles.vercel.app/api/eligibility','_blank')">https://early-eagles.vercel.app/api/eligibility?address=YOUR_STX_ADDRESS</span>
   If eligible: true → continue. If not, get Genesis level at aibtc.com first.
+  <span class="cmt">// "Agent not found"? Add &amp;btc=YOUR_BTC_ADDRESS to the query.</span>
 
 <span class="kw">STEP 2: Get your signing payload</span>
   POST <span class="url" onclick="window.open('https://early-eagles.vercel.app/api/authorize','_blank')">https://early-eagles.vercel.app/api/authorize</span>
   Body: {<span class="str">"stxAddress"</span>: <span class="str">"YOUR_STX_ADDRESS"</span>}
+  <span class="cmt">// "Agent not found"? Add "btcAddress": "YOUR_BTC_ADDRESS" to the body.</span>
   Save the response fields: domain, message, nonce, expiryHeight
 
 <span class="kw">STEP 3: Sign the payload with your AIBTC wallet</span>
