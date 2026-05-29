@@ -35,38 +35,10 @@ setInterval(() => {
   for (const [k, v] of RATE_MAP) if (now > v.r) RATE_MAP.delete(k);
 }, 300_000);
 
-const IDENTITY_REGISTRY_ADDR = "SP1NMR7MY0TJ1QA7WQBZ6504KC79PZNTRQH4YGFJD";
-const IDENTITY_REGISTRY_NAME = "identity-registry-v2";
-
 function sig(ms) {
   const c = new AbortController();
   setTimeout(() => c.abort(), ms);
   return c.signal;
-}
-
-// BTC fallback for agents affected by AIBTC bug #896 (stale STX in registry).
-async function getBtcAddressFromRegistry(agentId) {
-  try {
-    const idHex = "0x01" + BigInt(agentId).toString(16).padStart(32, "0");
-    const r = await fetch(
-      `${STACKS_API}/v2/contracts/call-read/${IDENTITY_REGISTRY_ADDR}/${IDENTITY_REGISTRY_NAME}/get-agent-wallet`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sender: ADMIN_ADDRESS, arguments: [idHex] }),
-        signal: sig(4000),
-      }
-    );
-    if (!r.ok) return null;
-    const d = await r.json();
-    if (!d.okay || !d.result) return null;
-    const hex = d.result.startsWith("0x") ? d.result.slice(2) : d.result;
-    const decoded = Buffer.from(hex, "hex").toString("latin1");
-    const m = decoded.match(/bc1[a-z0-9]{25,87}/);
-    return m ? m[0] : null;
-  } catch {
-    return null;
-  }
 }
 
 // Check if address already minted (read-only contract call)
@@ -101,6 +73,7 @@ module.exports = async function handler(req, res) {
   }
 
   const rawAddr = (req.query || {}).address;
+  const rawBtc  = (req.query || {}).btc;
   if (!rawAddr || typeof rawAddr !== "string") {
     return res.status(400).json({ error: "Missing ?address= parameter" });
   }
@@ -111,6 +84,10 @@ module.exports = async function handler(req, res) {
   const mainnetAddr = rawAddr.startsWith("ST") ? "SP" + rawAddr.slice(2)
                     : rawAddr.startsWith("SN") ? "SM" + rawAddr.slice(2)
                     : rawAddr;
+
+  // Optional BTC address hint for bug #896 agents (stale STX in AIBTC registry)
+  const btcHint = (rawBtc && typeof rawBtc === "string" && /^bc1[a-z0-9]{25,87}$/.test(rawBtc))
+    ? rawBtc : null;
 
   // Parallel: AIBTC profile + Hiro identity + already-minted check
   const [apiRes, hiroRes, minted] = await Promise.allSettled([
@@ -145,7 +122,7 @@ module.exports = async function handler(req, res) {
   const agentId = holding ? parseInt(holding.value.repr.replace(/^u/, ""), 10) : null;
   const resolvedAgentId = Number.isFinite(agentId) ? agentId : null;
 
-  // --- AIBTC profile (STX address path) ---
+  // --- AIBTC profile: try STX first, BTC hint fallback (bug #896) ---
   let data = null;
   if (apiRes.status === "fulfilled" && apiRes.value.ok) {
     const raw = await apiRes.value.json();
@@ -156,21 +133,17 @@ module.exports = async function handler(req, res) {
     return res.status(200).json(result);
   }
 
-  // --- BTC fallback (bug #896: stale STX address in AIBTC registry) ---
-  if (!data && resolvedAgentId != null) {
-    const btcAddr = await getBtcAddressFromRegistry(resolvedAgentId);
-    if (btcAddr) {
-      try {
-        const btcRes = await fetch("https://aibtc.com/api/agents/" + btcAddr, {
-          headers: { "User-Agent": "EarlyEagles/2.0" },
-          signal: sig(5000),
-        });
-        if (btcRes.ok) {
-          const btcData = await btcRes.json();
-          if (btcData && typeof btcData.level === "number") data = btcData;
-        }
-      } catch { /* ignore */ }
-    }
+  if (!data && btcHint) {
+    try {
+      const btcRes = await fetch("https://aibtc.com/api/agents/" + btcHint, {
+        headers: { "User-Agent": "EarlyEagles/2.0" },
+        signal: sig(5000),
+      });
+      if (btcRes.ok) {
+        const btcData = await btcRes.json();
+        if (btcData && typeof btcData.level === "number") data = btcData;
+      }
+    } catch { /* ignore */ }
   }
 
   if (!data) {
