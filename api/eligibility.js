@@ -35,10 +35,38 @@ setInterval(() => {
   for (const [k, v] of RATE_MAP) if (now > v.r) RATE_MAP.delete(k);
 }, 300_000);
 
+const IDENTITY_REGISTRY_ADDR = "SP1NMR7MY0TJ1QA7WQBZ6504KC79PZNTRQH4YGFJD";
+const IDENTITY_REGISTRY_NAME = "identity-registry-v2";
+
 function sig(ms) {
   const c = new AbortController();
   setTimeout(() => c.abort(), ms);
   return c.signal;
+}
+
+// BTC fallback for agents affected by AIBTC bug #896 (stale STX in registry).
+async function getBtcAddressFromRegistry(agentId) {
+  try {
+    const idHex = "0x01" + BigInt(agentId).toString(16).padStart(32, "0");
+    const r = await fetch(
+      `${STACKS_API}/v2/contracts/call-read/${IDENTITY_REGISTRY_ADDR}/${IDENTITY_REGISTRY_NAME}/get-agent-wallet`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sender: ADMIN_ADDRESS, arguments: [idHex] }),
+        signal: sig(4000),
+      }
+    );
+    if (!r.ok) return null;
+    const d = await r.json();
+    if (!d.okay || !d.result) return null;
+    const hex = d.result.startsWith("0x") ? d.result.slice(2) : d.result;
+    const decoded = Buffer.from(hex, "hex").toString("latin1");
+    const m = decoded.match(/bc1[a-z0-9]{25,87}/);
+    return m ? m[0] : null;
+  } catch {
+    return null;
+  }
 }
 
 // Check if address already minted (read-only contract call)
@@ -107,18 +135,45 @@ module.exports = async function handler(req, res) {
     alreadyMinted: minted.status === "fulfilled" ? minted.value : null,
   };
 
-  // AIBTC profile
-  if (apiRes.status === "rejected" || !apiRes.value.ok) {
-    if (apiRes.status === "fulfilled" && apiRes.value.status === 404) {
-      result.reason = "Agent not found on AIBTC network";
-      return res.status(200).json(result);
-    }
+  // --- Parse Hiro (on-chain identity) — source of truth for agentId ---
+  if (hiroRes.status === "rejected" || !hiroRes.value.ok) {
+    result.reason = "Identity lookup failed — try again shortly";
+    return res.status(200).json(result);
+  }
+  const hiro = await hiroRes.value.json();
+  const holding = (hiro.results || [])[0];
+  const agentId = holding ? parseInt(holding.value.repr.replace(/^u/, ""), 10) : null;
+  const resolvedAgentId = Number.isFinite(agentId) ? agentId : null;
+
+  // --- AIBTC profile (STX address path) ---
+  let data = null;
+  if (apiRes.status === "fulfilled" && apiRes.value.ok) {
+    const raw = await apiRes.value.json();
+    if (raw && typeof raw.level === "number") data = raw;
+  } else if (apiRes.status === "rejected" ||
+    (apiRes.value && apiRes.value.status !== 404 && !apiRes.value.ok)) {
     result.reason = "AIBTC lookup failed — try again shortly";
     return res.status(200).json(result);
   }
 
-  const data = await apiRes.value.json();
-  if (!data || typeof data.level !== "number") {
+  // --- BTC fallback (bug #896: stale STX address in AIBTC registry) ---
+  if (!data && resolvedAgentId != null) {
+    const btcAddr = await getBtcAddressFromRegistry(resolvedAgentId);
+    if (btcAddr) {
+      try {
+        const btcRes = await fetch("https://aibtc.com/api/agents/" + btcAddr, {
+          headers: { "User-Agent": "EarlyEagles/2.0" },
+          signal: sig(5000),
+        });
+        if (btcRes.ok) {
+          const btcData = await btcRes.json();
+          if (btcData && typeof btcData.level === "number") data = btcData;
+        }
+      } catch { /* ignore */ }
+    }
+  }
+
+  if (!data) {
     result.reason = "Agent not found on AIBTC network";
     return res.status(200).json(result);
   }
@@ -139,21 +194,12 @@ module.exports = async function handler(req, res) {
   }
 
   // ERC-8004 identity
-  if (hiroRes.status === "rejected" || !hiroRes.value.ok) {
-    result.reason = "Identity lookup failed — try again shortly";
-    return res.status(200).json(result);
-  }
-
-  const hiro = await hiroRes.value.json();
-  const holding = (hiro.results || [])[0];
-  const agentId = holding ? parseInt(holding.value.repr.replace(/^u/, ""), 10) : null;
-
-  if (!agentId && agentId !== 0) {
+  if (!resolvedAgentId && resolvedAgentId !== 0) {
     result.reason = "No on-chain ERC-8004 identity found";
     return res.status(200).json(result);
   }
 
-  result.agent.agentId = agentId;
+  result.agent.agentId = resolvedAgentId;
   result.eligible = true;
 
   if (result.alreadyMinted) {

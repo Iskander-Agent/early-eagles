@@ -72,12 +72,47 @@ setInterval(() => {
 //   2. Hiro /extended/v1/tokens/nft/holdings - ground truth for the on-chain
 //      ERC-8004 identity. Returns the agent's agentId, independent of any
 //      AIBTC backend caching/staleness.
+//
+// Fallback (bug #896): some agents have a stale STX address in AIBTC's
+// registry. If the STX lookup returns not-found but Hiro confirms an
+// on-chain ERC-8004 identity, we retrieve the BTC address from the
+// identity registry and retry the AIBTC lookup by BTC address.
 const IDENTITY_REGISTRY = "SP1NMR7MY0TJ1QA7WQBZ6504KC79PZNTRQH4YGFJD.identity-registry-v2::agent-identity";
+const IDENTITY_REGISTRY_ADDR = "SP1NMR7MY0TJ1QA7WQBZ6504KC79PZNTRQH4YGFJD";
+const IDENTITY_REGISTRY_NAME = "identity-registry-v2";
 
 function timeoutSignal(ms) {
   const c = new AbortController();
   setTimeout(() => c.abort(), ms);
   return c.signal;
+}
+
+// Resolve BTC address for an agent-id via the on-chain identity registry.
+// Returns a bc1q... address string, or null if unavailable.
+async function getBtcAddressFromRegistry(agentId) {
+  try {
+    const idHex = "0x01" + BigInt(agentId).toString(16).padStart(32, "0");
+    const r = await fetch(
+      STACKS_API + "/v2/contracts/call-read/" + IDENTITY_REGISTRY_ADDR +
+      "/" + IDENTITY_REGISTRY_NAME + "/get-agent-wallet",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sender: ADMIN_ADDRESS, arguments: [idHex] }),
+        signal: timeoutSignal(4000),
+      }
+    );
+    if (!r.ok) return null;
+    const d = await r.json();
+    if (!d.okay || !d.result) return null;
+    // Decode hex → bytes → latin1 string, then scan for a native segwit address.
+    const hex = d.result.startsWith("0x") ? d.result.slice(2) : d.result;
+    const decoded = Buffer.from(hex, "hex").toString("latin1");
+    const m = decoded.match(/bc1[a-z0-9]{25,87}/);
+    return m ? m[0] : null;
+  } catch {
+    return null;
+  }
 }
 
 async function fetchAibtcEligibility(stxAddress) {
@@ -87,39 +122,61 @@ async function fetchAibtcEligibility(stxAddress) {
       signal: timeoutSignal(5000),
     }),
     fetch(
-      "https://api.hiro.so/extended/v1/tokens/nft/holdings?principal=" + stxAddress +
+      STACKS_API + "/extended/v1/tokens/nft/holdings?principal=" + stxAddress +
       "&asset_identifiers=" + encodeURIComponent(IDENTITY_REGISTRY),
       { signal: timeoutSignal(5000) }
     ),
   ]);
 
-  if (apiSettled.status === "rejected" || !apiSettled.value.ok) {
-    if (apiSettled.status === "fulfilled" && apiSettled.value.status === 404) {
-      return { found: false, reason: "Agent not found on AIBTC network" };
-    }
-    const detail = apiSettled.status === "rejected"
-      ? apiSettled.reason.message
-      : "HTTP " + apiSettled.value.status;
-    throw new Error("AIBTC profile fetch failed: " + detail);
-  }
+  // --- Parse Hiro (on-chain identity) first — used for BTC fallback ---
   if (hiroSettled.status === "rejected" || !hiroSettled.value.ok) {
     const detail = hiroSettled.status === "rejected"
       ? hiroSettled.reason.message
       : "HTTP " + hiroSettled.value.status;
     throw new Error("Hiro identity lookup failed: " + detail);
   }
-
-  const data = await apiSettled.value.json();
   const hiro = await hiroSettled.value.json();
+  const holding = (hiro.results || [])[0];
+  const agentId = holding ? parseInt(holding.value.repr.replace(/^u/, ""), 10) : null;
+  const resolvedAgentId = Number.isFinite(agentId) ? agentId : null;
 
-  if (!data || typeof data.level !== "number") {
+  // --- Parse AIBTC profile (STX address path) ---
+  let data = null;
+  if (apiSettled.status === "fulfilled" && apiSettled.value.ok) {
+    const raw = await apiSettled.value.json();
+    if (raw && typeof raw.level === "number") data = raw;
+  } else if (
+    apiSettled.status === "rejected" ||
+    (apiSettled.value && apiSettled.value.status !== 404 && !apiSettled.value.ok)
+  ) {
+    const detail = apiSettled.status === "rejected"
+      ? apiSettled.reason.message
+      : "HTTP " + apiSettled.value.status;
+    throw new Error("AIBTC profile fetch failed: " + detail);
+  }
+
+  // --- BTC fallback (bug #896: stale STX in AIBTC registry) ---
+  if (!data && resolvedAgentId != null) {
+    const btcAddr = await getBtcAddressFromRegistry(resolvedAgentId);
+    if (btcAddr) {
+      try {
+        const btcRes = await fetch("https://aibtc.com/api/agents/" + btcAddr, {
+          headers: { "User-Agent": "EarlyEagles/2.0" },
+          signal: timeoutSignal(5000),
+        });
+        if (btcRes.ok) {
+          const btcData = await btcRes.json();
+          if (btcData && typeof btcData.level === "number") data = btcData;
+        }
+      } catch { /* ignore — fall through to not-found */ }
+    }
+  }
+
+  if (!data) {
     return { found: false, reason: "Agent not found on AIBTC network" };
   }
 
   const agent = data.agent || {};
-  const holding = (hiro.results || [])[0];
-  const agentId = holding ? parseInt(holding.value.repr.replace(/^u/, ""), 10) : null;
-
   return {
     found: true,
     level: data.level,
@@ -127,7 +184,7 @@ async function fetchAibtcEligibility(stxAddress) {
     displayName: agent.displayName || null,
     btcAddress: agent.btcAddress || null,
     bnsName: agent.bnsName || null,
-    agentId: Number.isFinite(agentId) ? agentId : null,
+    agentId: resolvedAgentId,
   };
 }
 
