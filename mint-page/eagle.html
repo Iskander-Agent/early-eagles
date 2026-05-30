@@ -1,0 +1,1216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title id="page-title">Early Eagles — Loading...</title>
+<meta name="description" id="page-desc" content="A fully on-chain Early Eagle NFT on the Stacks blockchain.">
+<meta property="og:title" id="og-title" content="Early Eagles — On-Chain NFT">
+<meta property="og:description" id="og-desc" content="420 fully on-chain NFTs on Stacks. One per Genesis AIBTC agent.">
+<meta property="og:image" content="https://early-eagles.vercel.app/og-eagle.png">
+<meta property="og:url" id="og-url" content="https://early-eagles.vercel.app">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Early Eagles">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" id="tw-title" content="Early Eagles">
+<meta name="twitter:description" id="tw-desc" content="Fully on-chain NFT on Stacks.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── Reset & Root ── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --gold:        #d4a84b;
+  --gold-light:  #e8c26a;
+  --gold-dim:    rgba(212,168,75,0.15);
+  --gold-glow:   rgba(212,168,75,0.3);
+  --navy:        #0d1117;
+  --navy-mid:    #131a24;
+  --navy-light:  #1a2433;
+  --surface:     #0f1520;
+  --surface2:    #161f2e;
+  --border:      rgba(212,168,75,0.18);
+  --border-sub:  rgba(255,255,255,0.07);
+  --text:        #e8eaf0;
+  --text-muted:  #8892a4;
+  --text-dim:    #4a5568;
+  --green:       #00ff88;
+  --green-dim:   rgba(0,255,136,0.12);
+  --radius:      12px;
+  --radius-sm:   8px;
+  --transition:  0.2s ease;
+  /* Tier color — overridden by JS after load */
+  --tier-glow:   rgba(212,168,75,0.25);
+  --tier-accent: #d4a84b;
+  --tier-text:   #e8c26a;
+  --tier-border: rgba(212,168,75,0.4);
+  --tier-dim:    rgba(212,168,75,0.12);
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--navy);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+h1, h2, h3 { font-family: 'Rajdhani', sans-serif; font-weight: 700; letter-spacing: 0.02em; }
+.mono { font-family: 'JetBrains Mono', monospace; }
+
+/* ── Particles ── */
+#particles {
+  position: fixed; inset: 0;
+  pointer-events: none; z-index: 0;
+  overflow: hidden;
+}
+.particle {
+  position: absolute; bottom: -10px;
+  border-radius: 50%;
+  background: var(--tier-accent);
+  animation: particleRise linear infinite;
+}
+@keyframes particleRise {
+  from { transform: translateY(0) translateX(0); opacity: 0; }
+  8%   { opacity: 1; }
+  92%  { opacity: 1; }
+  to   { transform: translateY(-105vh) translateX(var(--drift, 40px)); opacity: 0; }
+}
+
+/* ── NAV ── */
+nav {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(13,17,23,0.92); backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border-sub);
+  padding: 14px 0;
+}
+.container { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
+.nav-inner { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.nav-brand {
+  font-family: 'Rajdhani', sans-serif; font-weight: 700;
+  font-size: 20px; color: var(--gold); text-decoration: none;
+  display: flex; align-items: center; gap: 8px;
+  white-space: nowrap;
+}
+.nav-links { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.nav-links a {
+  font-family: 'Rajdhani', sans-serif; font-weight: 500; font-size: 13px;
+  letter-spacing: 0.05em; text-transform: uppercase;
+  color: var(--text-muted); text-decoration: none;
+  padding: 6px 12px; border-radius: 6px; transition: all var(--transition);
+}
+.nav-links a:hover { color: var(--gold); background: var(--gold-dim); }
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: 'Rajdhani', sans-serif; font-weight: 600; font-size: 14px;
+  letter-spacing: 0.05em; text-transform: uppercase;
+  padding: 10px 22px; border-radius: var(--radius-sm);
+  border: none; cursor: pointer; text-decoration: none;
+  transition: all var(--transition);
+}
+.btn-primary {
+  background: var(--gold); color: #0d1117;
+  box-shadow: 0 0 20px rgba(212,168,75,0.3);
+}
+.btn-primary:hover {
+  background: var(--gold-light);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 30px rgba(212,168,75,0.5);
+}
+.btn-sm { padding: 8px 16px; font-size: 12px; }
+
+/* ── Eagle Nav Bar ── */
+.eagle-nav {
+  position: relative; z-index: 10;
+  padding: 14px 0;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border-sub);
+}
+.eagle-nav-inner {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+}
+.back-link {
+  font-family: 'Rajdhani', sans-serif; font-size: 13px; font-weight: 600;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--text-muted); text-decoration: none;
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 12px; border-radius: 6px;
+  border: 1px solid var(--border-sub);
+  transition: all var(--transition);
+}
+.back-link:hover { color: var(--tier-text); border-color: var(--tier-border); background: var(--tier-dim); }
+.eagle-arrows {
+  display: flex; align-items: center; gap: 10px;
+}
+.arrow-btn {
+  font-family: 'Rajdhani', sans-serif; font-size: 12px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  background: var(--surface2); border: 1px solid var(--border-sub);
+  color: var(--text-muted); padding: 7px 16px; border-radius: 6px;
+  cursor: pointer; transition: all var(--transition);
+}
+.arrow-btn:hover:not(:disabled) { border-color: var(--tier-border); color: var(--tier-text); background: var(--tier-dim); }
+.arrow-btn:disabled { opacity: 0.3; cursor: default; }
+.eagle-counter-pill {
+  font-family: 'Rajdhani', sans-serif; font-size: 13px; font-weight: 700;
+  letter-spacing: 0.08em;
+  background: var(--tier-dim); border: 1px solid var(--tier-border);
+  color: var(--tier-text); padding: 5px 14px; border-radius: 20px;
+}
+
+/* ── Main Layout ── */
+.eagle-main {
+  position: relative; z-index: 1;
+  padding: 48px 0 64px;
+}
+.eagle-layout {
+  display: grid;
+  grid-template-columns: 400px 1fr;
+  gap: 56px;
+  align-items: start;
+}
+
+/* ── Art Column ── */
+.eagle-art-col { position: relative; }
+.eagle-card-scene {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+}
+.eagle-glow {
+  position: absolute;
+  inset: -40px;
+  background: radial-gradient(ellipse at center, var(--tier-glow) 0%, transparent 65%);
+  filter: blur(40px);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  transition: opacity 0.5s ease;
+  opacity: 0.8;
+}
+.eagle-card-wrapper {
+  position: relative;
+  z-index: 1;
+  border-radius: 20px;
+  transition: transform 0.12s linear;
+  will-change: transform;
+  cursor: default;
+}
+/* Holographic shimmer border — visible on hover */
+.eagle-card-wrapper::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 22px;
+  background: linear-gradient(135deg, var(--tier-accent), #c084fc, #7dd3fc, var(--tier-accent));
+  background-size: 300% 300%;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  z-index: -1;
+  animation: shimmerBorder 4s ease infinite;
+}
+.eagle-card-wrapper:hover::before { opacity: 0.8; }
+@keyframes shimmerBorder {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+.eagle-card-inner {
+  position: relative;
+  width: 100%;
+  padding-bottom: calc(480 / 340 * 100%);
+  background: #080d14;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,0.08);
+  overflow: hidden;
+}
+/* Glare overlay — moves with mouse */
+.card-glare {
+  position: absolute; inset: 0;
+  background: radial-gradient(circle at var(--glare-x, 50%) var(--glare-y, 30%), rgba(255,255,255,0.08) 0%, transparent 60%);
+  pointer-events: none; z-index: 3;
+  border-radius: 18px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.eagle-card-wrapper:hover .card-glare { opacity: 1; }
+/* Skeleton shimmer */
+.card-skeleton {
+  position: absolute; inset: 0; z-index: 2;
+  background: var(--surface);
+  border-radius: 18px;
+  overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 16px;
+  transition: opacity 0.4s ease;
+}
+.card-skeleton.hidden { opacity: 0; pointer-events: none; }
+.skeleton-eagle-icon { font-size: 48px; opacity: 0.2; animation: skel-pulse 2s ease-in-out infinite; }
+.skeleton-label {
+  font-family: 'Rajdhani', sans-serif; font-size: 11px; font-weight: 600;
+  letter-spacing: 3px; text-transform: uppercase; color: var(--text-dim);
+}
+@keyframes skel-pulse { 0%,100%{opacity:0.15} 50%{opacity:0.35} }
+.skeleton-shimmer-bar {
+  position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.03) 50%, transparent 100%);
+  background-size: 200% 100%;
+  animation: shimmerSweep 1.8s ease-in-out infinite;
+}
+@keyframes shimmerSweep {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.eagle-iframe {
+  position: absolute; top: 0; left: 0;
+  width: 340px; height: 480px;
+  transform-origin: top left;
+  border: none;
+  z-index: 1;
+}
+
+/* Float animation for mobile / idle */
+@keyframes floatCard {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-8px); }
+}
+
+/* On-chain badge */
+.onchain-badge {
+  display: flex; align-items: center; justify-content: center;
+  gap: 10px; flex-wrap: wrap;
+  margin-top: 20px;
+  font-size: 12px; color: var(--text-dim);
+}
+.onchain-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--green); box-shadow: 0 0 8px var(--green);
+  animation: pulse 2s ease-in-out infinite; flex-shrink: 0;
+}
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.8)} }
+.onchain-badge a {
+  color: var(--tier-accent);
+  text-decoration: none; transition: opacity var(--transition);
+  font-family: 'Rajdhani', sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 0.04em;
+}
+.onchain-badge a:hover { opacity: 0.7; }
+
+/* ── Details Column ── */
+.eagle-details-col {
+  display: flex; flex-direction: column; gap: 0;
+  padding-top: 4px;
+}
+
+/* Identity */
+.eagle-identity { margin-bottom: 28px; }
+.eagle-tier-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: 'Rajdhani', sans-serif; font-size: 11px; font-weight: 700;
+  letter-spacing: 3px; text-transform: uppercase;
+  color: var(--tier-text);
+  background: var(--tier-dim); border: 1px solid var(--tier-border);
+  border-radius: 20px; padding: 5px 14px;
+  margin-bottom: 14px;
+}
+.eagle-name {
+  font-size: clamp(2.2rem, 5vw, 3.4rem);
+  background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 60%, #a07830 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  line-height: 1; letter-spacing: -0.01em;
+  margin-bottom: 8px;
+}
+.eagle-sub {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.eagle-agent-name {
+  font-size: 16px; color: var(--text-muted);
+  display: flex; align-items: center; gap: 6px;
+}
+.eagle-agent-name strong { color: var(--text); font-weight: 500; }
+.rarity-callout {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--tier-dim); border: 1px solid var(--tier-border);
+  border-radius: var(--radius-sm); padding: 10px 16px;
+  font-size: 13px; color: var(--text-muted);
+}
+.rarity-callout strong { color: var(--tier-text); font-size: 18px; font-family: 'Rajdhani', sans-serif; font-weight: 700; }
+.rarity-bar-track {
+  flex: 1; height: 4px; background: rgba(255,255,255,0.06); border-radius: 2px;
+  overflow: hidden; min-width: 80px;
+}
+.rarity-bar-fill { height: 100%; border-radius: 2px; background: var(--tier-accent); transition: width 1.2s cubic-bezier(0.4,0,0.2,1); }
+
+/* Divider */
+.detail-divider { height: 1px; background: var(--border-sub); margin: 24px 0; }
+
+/* Detail label */
+.detail-label {
+  font-family: 'Rajdhani', sans-serif; font-size: 10px; font-weight: 700;
+  letter-spacing: 3px; text-transform: uppercase; color: var(--text-dim);
+  margin-bottom: 14px;
+}
+
+/* Traits grid */
+.traits-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.trait-pill {
+  background: var(--surface2); border: 1px solid var(--border-sub);
+  border-radius: var(--radius-sm); padding: 12px 14px;
+  transition: transform var(--transition), border-color var(--transition), box-shadow var(--transition);
+  position: relative; overflow: hidden;
+  border-left: 3px solid var(--tier-accent);
+}
+.trait-pill:hover {
+  transform: translateY(-2px);
+  border-color: var(--border);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+}
+.trait-pill-category {
+  font-family: 'Rajdhani', sans-serif; font-size: 10px; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim);
+  margin-bottom: 4px;
+}
+.trait-pill-value {
+  font-family: 'Rajdhani', sans-serif; font-size: 16px; font-weight: 700;
+  color: var(--text); line-height: 1.2;
+}
+.trait-pill-rarity {
+  font-size: 11px; color: var(--tier-text); margin-top: 4px; font-weight: 500;
+}
+.trait-pill-bar {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  height: 2px; background: var(--tier-accent);
+  transform-origin: left; transition: transform 1s cubic-bezier(0.4,0,0.2,1);
+}
+/* Trait-specific left border colors */
+.trait-pill.tier-legendary { border-left-color: #d4a84b; }
+.trait-pill.tier-epic      { border-left-color: #a855f7; }
+.trait-pill.tier-rare      { border-left-color: #0ea5e9; }
+.trait-pill.tier-uncommon  { border-left-color: #10b981; }
+.trait-pill.tier-common    { border-left-color: #6b7280; }
+.trait-pill.trait-color    { border-left-color: var(--color-swatch, #8892a4); }
+.color-swatch-dot {
+  display: inline-block; width: 10px; height: 10px; border-radius: 50%;
+  background: var(--color-swatch, #8892a4);
+  margin-right: 6px; vertical-align: middle;
+  box-shadow: 0 0 6px var(--color-swatch, #8892a4);
+}
+.trait-pill.trait-data { border-left-color: rgba(255,255,255,0.2); }
+.trait-pill.trait-data .trait-pill-value {
+  font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--text-muted);
+}
+
+/* Owner */
+.owner-card {
+  background: var(--surface2); border: 1px solid var(--border-sub);
+  border-radius: var(--radius-sm); padding: 14px 16px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  flex-wrap: wrap;
+}
+.owner-left { display: flex; flex-direction: column; gap: 4px; }
+.owner-verified {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px; color: var(--green); font-weight: 500;
+}
+.owner-addr {
+  font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--text);
+  word-break: break-all;
+}
+.copy-btn {
+  background: transparent; border: 1px solid var(--border-sub);
+  color: var(--text-muted); border-radius: 6px; padding: 6px 14px;
+  font-size: 12px; cursor: pointer; font-family: 'Rajdhani', sans-serif;
+  font-weight: 600; letter-spacing: 0.04em;
+  transition: all var(--transition); white-space: nowrap;
+  display: flex; align-items: center; gap: 6px;
+}
+.copy-btn:hover { border-color: var(--tier-border); color: var(--tier-text); background: var(--tier-dim); }
+.copy-btn.copied { border-color: var(--green); color: var(--green); background: var(--green-dim); }
+.copy-btn svg { transition: opacity 0.2s; }
+
+/* Utilities */
+.utilities-list { display: flex; flex-direction: column; gap: 8px; }
+.utility-row {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 12px 14px;
+  background: var(--surface2); border: 1px solid var(--border-sub);
+  border-radius: var(--radius-sm);
+  transition: border-color var(--transition), background var(--transition);
+}
+.utility-row:hover { border-color: var(--border); background: rgba(255,255,255,0.02); }
+.utility-row.planned { opacity: 0.5; }
+.utility-icon {
+  width: 28px; height: 28px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 6px; font-size: 14px;
+  background: var(--green-dim); color: var(--green);
+}
+.utility-row.planned .utility-icon { background: rgba(255,255,255,0.04); color: var(--text-dim); }
+.utility-text { flex: 1; }
+.utility-name {
+  font-family: 'Rajdhani', sans-serif; font-size: 14px; font-weight: 700;
+  color: var(--text); letter-spacing: 0.02em; line-height: 1.2;
+}
+.utility-row.planned .utility-name { color: var(--text-muted); }
+.utility-desc { font-size: 12px; color: var(--text-dim); margin-top: 2px; line-height: 1.4; }
+.utility-badge {
+  font-family: 'Rajdhani', sans-serif; font-size: 10px; font-weight: 700;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  padding: 2px 8px; border-radius: 10px; flex-shrink: 0; align-self: flex-start;
+}
+.badge-live { background: var(--green-dim); color: var(--green); border: 1px solid rgba(0,255,136,0.25); }
+.badge-planned { background: rgba(255,255,255,0.04); color: var(--text-dim); border: 1px solid var(--border-sub); }
+
+/* ── Share Section ── */
+.share-section {
+  position: relative; z-index: 1;
+  border-top: 1px solid var(--border-sub);
+  padding: 32px 0;
+  background: var(--surface);
+}
+.share-inner {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 20px; flex-wrap: wrap;
+}
+.share-left { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.share-label {
+  font-family: 'Rajdhani', sans-serif; font-size: 11px; font-weight: 700;
+  letter-spacing: 3px; text-transform: uppercase; color: var(--text-dim);
+}
+.share-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: 'Rajdhani', sans-serif; font-weight: 600; font-size: 13px;
+  letter-spacing: 0.05em; text-transform: uppercase;
+  padding: 9px 18px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border-sub);
+  background: var(--surface2); color: var(--text-muted);
+  cursor: pointer; text-decoration: none;
+  transition: all var(--transition);
+}
+.share-btn:hover { border-color: var(--border); color: var(--text); background: rgba(255,255,255,0.04); }
+.share-btn.copied { border-color: var(--green); color: var(--green); background: var(--green-dim); }
+.share-btn-x { border-color: rgba(255,255,255,0.12); }
+.share-btn-x:hover { border-color: rgba(255,255,255,0.3); color: var(--text); background: rgba(255,255,255,0.06); }
+.share-right { display: flex; align-items: center; gap: 10px; }
+.share-cta-text { font-size: 13px; color: var(--text-dim); }
+
+/* ── Error / Not Found ── */
+.error-state {
+  text-align: center; padding: 100px 24px;
+  display: none;
+}
+.error-icon { font-size: 64px; margin-bottom: 20px; opacity: 0.3; }
+.error-state h2 { font-size: 2rem; color: var(--text-muted); margin-bottom: 12px; }
+.error-state p { color: var(--text-dim); font-size: 14px; margin-bottom: 28px; }
+
+/* ── Skeletons (generic) ── */
+.skel-line {
+  height: 14px; border-radius: 6px;
+  background: linear-gradient(90deg, var(--surface) 25%, var(--surface2) 50%, var(--surface) 75%);
+  background-size: 200% 100%;
+  animation: shimmerSweep 1.6s ease-in-out infinite;
+}
+.skel-line.lg { height: 40px; }
+.skel-line.sm { height: 10px; }
+.skel-line.w40 { width: 40%; }
+.skel-line.w60 { width: 60%; }
+.skel-line.w80 { width: 80%; }
+.skel-line.w100 { width: 100%; }
+.skel-gap { height: 10px; }
+.skel-pill {
+  height: 80px; border-radius: var(--radius-sm);
+  background: linear-gradient(90deg, var(--surface) 25%, var(--surface2) 50%, var(--surface) 75%);
+  background-size: 200% 100%;
+  animation: shimmerSweep 1.6s ease-in-out infinite;
+}
+
+/* Reveal animation */
+.reveal {
+  opacity: 0; transform: translateY(20px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.reveal.visible { opacity: 1; transform: translateY(0); }
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .eagle-layout {
+    grid-template-columns: 1fr;
+    gap: 36px;
+  }
+  .eagle-art-col {
+    max-width: 420px;
+    margin: 0 auto;
+    width: 100%;
+  }
+  #particles { display: none; } /* GPU-friendly on mobile */
+}
+@media (max-width: 640px) {
+  nav { padding: 10px 0; }
+  .eagle-main { padding: 28px 0 48px; }
+  .traits-grid { grid-template-columns: 1fr; }
+  .eagle-name { font-size: 2.2rem; }
+  .share-inner { flex-direction: column; align-items: flex-start; }
+  .eagle-nav-inner { flex-wrap: wrap; gap: 10px; }
+  .eagle-arrows { order: -1; }
+}
+@media (max-width: 400px) {
+  .container { padding: 0 16px; }
+}
+</style>
+</head>
+<body>
+<div id="particles"></div>
+
+<!-- ── NAV ── -->
+<nav>
+  <div class="container nav-inner">
+    <a class="nav-brand" href="/">🦅 Early Eagles</a>
+    <div class="nav-links">
+      <a href="/">Mint</a>
+      <a href="/gallery">Gallery</a>
+      <a href="/holders">Utilities</a>
+      <a href="/whitepaper">Whitepaper</a>
+    </div>
+    <a class="btn btn-primary btn-sm" href="/#mint">Mint →</a>
+  </div>
+</nav>
+
+<!-- ── EAGLE NAV BAR ── -->
+<div class="eagle-nav">
+  <div class="container">
+    <div class="eagle-nav-inner">
+      <a href="/gallery" class="back-link">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        Gallery
+      </a>
+      <div class="eagle-arrows">
+        <button class="arrow-btn" id="btn-prev" disabled>← Prev</button>
+        <span class="eagle-counter-pill" id="eagle-counter">—</span>
+        <button class="arrow-btn" id="btn-next" disabled>Next →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── ERROR STATE ── -->
+<div class="error-state" id="error-state">
+  <div class="container">
+    <div class="error-icon">🦅</div>
+    <h2 id="error-title">Eagle Not Found</h2>
+    <p id="error-msg">This eagle hasn't been minted yet, or the ID is invalid.</p>
+    <a href="/gallery" class="btn btn-primary">Browse Gallery</a>
+  </div>
+</div>
+
+<!-- ── MAIN ── -->
+<main class="eagle-main" id="eagle-main">
+  <div class="container">
+    <div class="eagle-layout">
+
+      <!-- ── Art Column ── -->
+      <div class="eagle-art-col reveal" id="art-col">
+        <div class="eagle-card-scene">
+          <!-- Ambient tier glow -->
+          <div class="eagle-glow" id="eagle-glow"></div>
+          <!-- 3D tilt wrapper -->
+          <div class="eagle-card-wrapper" id="eagle-card-wrapper">
+            <!-- Glare overlay -->
+            <div class="card-glare" id="card-glare"></div>
+            <!-- Card inner -->
+            <div class="eagle-card-inner" id="eagle-card-inner">
+              <!-- Skeleton -->
+              <div class="card-skeleton" id="card-skeleton">
+                <div class="skeleton-eagle-icon">🦅</div>
+                <div class="skeleton-label">Loading on-chain data…</div>
+                <div class="skeleton-shimmer-bar"></div>
+              </div>
+              <!-- Eagle iframe (loaded by JS) -->
+              <iframe id="eagle-iframe" sandbox="allow-scripts" scrolling="no"
+                class="eagle-iframe" style="display:none;"></iframe>
+            </div>
+          </div>
+        </div>
+        <!-- On-chain badge -->
+        <div class="onchain-badge">
+          <span class="onchain-dot"></span>
+          <span>Fully on-chain · Stacks mainnet</span>
+          <a href="#" id="explorer-link" target="_blank" rel="noopener noreferrer">Explorer ↗</a>
+        </div>
+      </div>
+
+      <!-- ── Details Column ── -->
+      <div class="eagle-details-col">
+
+        <!-- Identity (skeleton → real) -->
+        <div class="eagle-identity reveal" id="identity-section">
+          <div id="identity-skel">
+            <div class="skel-line w40" style="height:22px;margin-bottom:14px;border-radius:20px;"></div>
+            <div class="skel-line w80 lg" style="margin-bottom:10px;"></div>
+            <div class="skel-line w60" style="margin-bottom:20px;"></div>
+            <div class="skel-line w100" style="height:52px;border-radius:8px;"></div>
+          </div>
+          <div id="identity-content" style="display:none">
+            <div class="eagle-tier-badge" id="eagle-tier-badge">— Tier</div>
+            <h1 class="eagle-name" id="eagle-name">Loading…</h1>
+            <div class="eagle-sub">
+              <div class="eagle-agent-name" id="eagle-agent-name"></div>
+            </div>
+            <div class="rarity-callout" id="rarity-callout">
+              <div>
+                <div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px">Rarity Tier</div>
+                <strong id="rarity-tier-text">—</strong>
+              </div>
+              <div class="rarity-bar-track">
+                <div class="rarity-bar-fill" id="rarity-bar" style="width:0%"></div>
+              </div>
+              <div style="text-align:right">
+                <div id="rarity-pct" style="font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;color:var(--tier-text)">—</div>
+                <div style="font-size:11px;color:var(--text-dim)">of 420</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-divider"></div>
+
+        <!-- Traits -->
+        <div class="reveal" id="traits-section">
+          <div class="detail-label">On-Chain Traits</div>
+          <div class="traits-grid" id="traits-grid">
+            <div class="skel-pill"></div>
+            <div class="skel-pill"></div>
+            <div class="skel-pill"></div>
+            <div class="skel-pill"></div>
+          </div>
+        </div>
+
+        <div class="detail-divider"></div>
+
+        <!-- Owner -->
+        <div class="reveal" id="owner-section">
+          <div class="detail-label">Current Owner</div>
+          <div id="owner-skel">
+            <div class="skel-line w100" style="height:56px;border-radius:8px;"></div>
+          </div>
+          <div id="owner-content" style="display:none">
+            <div class="owner-card">
+              <div class="owner-left">
+                <div class="owner-verified">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                  Verified on-chain holder
+                </div>
+                <div class="owner-addr mono" id="owner-addr">—</div>
+              </div>
+              <div style="display:flex;gap:8px;align-items:center;flex-shrink:0">
+                <button class="copy-btn" id="copy-addr-btn" onclick="copyAddress()">
+                  <svg id="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                  <span id="copy-label">Copy</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-divider"></div>
+
+        <!-- Utilities -->
+        <div class="reveal" id="utilities-section">
+          <div class="detail-label">Holder Utilities — Live Now</div>
+          <div class="utilities-list" id="utilities-list">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
+      </div><!-- /details-col -->
+    </div><!-- /eagle-layout -->
+  </div>
+</main>
+
+<!-- ── SHARE + CTA SECTION ── -->
+<div class="share-section" id="share-section">
+  <div class="container">
+    <div class="share-inner">
+      <div class="share-left">
+        <span class="share-label">Share</span>
+        <button class="share-btn" id="btn-copy-link" onclick="copyLink()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+          <span id="copy-link-label">Copy Link</span>
+        </button>
+        <a class="share-btn share-btn-x" id="btn-share-x" href="#" target="_blank" rel="noopener noreferrer">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.734l7.73-8.835L1.254 2.25H8.08l4.213 5.567zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+          Share on X
+        </a>
+      </div>
+      <div class="share-right">
+        <span class="share-cta-text">Don't have an Eagle?</span>
+        <a href="/#mint" class="btn btn-primary">⚡ Mint Yours →</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════════════
+   CONFIG
+══════════════════════════════════════════════════════════ */
+const ADMIN_ADDRESS   = 'SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2';
+const NFT_CONTRACT    = 'early-eagles-v2';
+const STACKS_API      = 'https://api.hiro.so';
+const EXPLORER_BASE   = 'https://explorer.hiro.so';
+const BASE_URL        = 'https://early-eagles.vercel.app';
+const TOTAL_SUPPLY    = 420;
+
+// Tier definitions
+const TIERS = [
+  { id: 'legendary', name: 'Legendary', symbol: '🔱', supply: 10,
+    glow: 'rgba(212,168,75,0.28)', accent: '#d4a84b', text: '#e8c26a',
+    border: 'rgba(212,168,75,0.45)', dim: 'rgba(212,168,75,0.12)',
+    gradient: 'linear-gradient(135deg,#d4a84b,#e8c26a,#a07830)' },
+  { id: 'epic', name: 'Epic', symbol: '◈', supply: 60,
+    glow: 'rgba(168,85,247,0.22)', accent: '#a855f7', text: '#c084fc',
+    border: 'rgba(168,85,247,0.4)', dim: 'rgba(168,85,247,0.1)',
+    gradient: 'linear-gradient(135deg,#a855f7,#c084fc,#7c3aed)' },
+  { id: 'rare', name: 'Rare', symbol: '◇', supply: 80,
+    glow: 'rgba(56,189,248,0.2)', accent: '#0ea5e9', text: '#7dd3fc',
+    border: 'rgba(56,189,248,0.4)', dim: 'rgba(56,189,248,0.08)',
+    gradient: 'linear-gradient(135deg,#0ea5e9,#7dd3fc,#0369a1)' },
+  { id: 'uncommon', name: 'Uncommon', symbol: '○', supply: 150,
+    glow: 'rgba(52,211,153,0.2)', accent: '#10b981', text: '#6ee7b7',
+    border: 'rgba(52,211,153,0.4)', dim: 'rgba(52,211,153,0.08)',
+    gradient: 'linear-gradient(135deg,#10b981,#6ee7b7,#065f46)' },
+  { id: 'common', name: 'Common', symbol: '●', supply: 120,
+    glow: 'rgba(107,114,128,0.18)', accent: '#6b7280', text: '#9ca3af',
+    border: 'rgba(107,114,128,0.35)', dim: 'rgba(107,114,128,0.08)',
+    gradient: 'linear-gradient(135deg,#6b7280,#9ca3af,#374151)' },
+];
+
+// Color swatches (matched to COLOR_NAMES order in token API)
+const COLOR_SWATCHES = [
+  '#4fa8e8','#2563eb','#9333ea','#ec4899','#dc2626','#ef4444','#f97316',
+  '#f59e0b','#84cc16','#22c55e','#16a34a','#14b8a6',
+  '#d4a84b','#f1f5f9','#111827','#f43f5e','#a8b4b8','#34d399','#a78bfa','#f97316','#1f2937',
+];
+
+const UTILITIES = [
+  { name: 'On-Chain Identity', desc: 'Permanent art rendered from Clarity contract. No IPFS, no servers — lives on Stacks forever.', icon: '🔗', live: true },
+  { name: 'Built-In Marketplace', desc: 'List, buy, unlist — no external platform. Direct contract calls, 2% royalty only.', icon: '🛒', live: true },
+  { name: 'Genesis Verification API', desc: 'Open API to verify any AIBTC Genesis agent across on-chain + profile data. Free to call.', icon: '✅', live: true },
+  { name: 'Holder Verification API', desc: 'Machine-readable endpoint: does this address hold an Eagle? For agent-to-agent trust gating.', icon: '🔍', live: true },
+  { name: 'Eagles Nest', desc: 'Gated Telegram group for Genesis agents and Eagle holders. Cryptographic proof required — no passwords.', icon: '🦅', live: true },
+  { name: 'Eagle Attestation API', desc: 'Sign any message with on-chain proof of Eagle holding. Tamper-evident endorsements for agents.', icon: '📜', live: true },
+  { name: 'AIBTC Ecosystem Integration', desc: 'Priority features and protocol-level recognition within the AIBTC platform — in development.', icon: '🔒', live: false },
+];
+
+/* ══════════════════════════════════════════════════════════
+   STATE
+══════════════════════════════════════════════════════════ */
+let tokenId   = null;
+let tokenData = null;
+let ownerAddr = null;
+
+/* ══════════════════════════════════════════════════════════
+   PARTICLES
+══════════════════════════════════════════════════════════ */
+function initParticles() {
+  if (window.innerWidth < 768) return;
+  const c = document.getElementById('particles');
+  for (let i = 0; i < 14; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const size = 1 + Math.random() * 2;
+    p.style.cssText = [
+      `left:${Math.random() * 100}%`,
+      `width:${size}px`,
+      `height:${size}px`,
+      `opacity:${(0.04 + Math.random() * 0.1).toFixed(2)}`,
+      `animation-duration:${18 + Math.random() * 22}s`,
+      `animation-delay:-${Math.random() * 20}s`,
+      `--drift:${(Math.random() > 0.5 ? 1 : -1) * (20 + Math.random() * 60)}px`,
+    ].join(';');
+    c.appendChild(p);
+  }
+}
+
+/* ══════════════════════════════════════════════════════════
+   TIER THEMING
+══════════════════════════════════════════════════════════ */
+function applyTierTheme(tier) {
+  const t = TIERS[tier] || TIERS[4];
+  const root = document.documentElement;
+  root.style.setProperty('--tier-glow',   t.glow);
+  root.style.setProperty('--tier-accent', t.accent);
+  root.style.setProperty('--tier-text',   t.text);
+  root.style.setProperty('--tier-border', t.border);
+  root.style.setProperty('--tier-dim',    t.dim);
+  return t;
+}
+
+/* ══════════════════════════════════════════════════════════
+   3D TILT
+══════════════════════════════════════════════════════════ */
+function initTilt() {
+  if (window.innerWidth < 768) {
+    // Idle float on mobile
+    const w = document.getElementById('eagle-card-wrapper');
+    if (w) w.style.animation = 'floatCard 4s ease-in-out infinite';
+    return;
+  }
+  const wrapper = document.getElementById('eagle-card-wrapper');
+  if (!wrapper) return;
+  let raf = null;
+  wrapper.addEventListener('mousemove', (e) => {
+    if (raf) return;
+    raf = requestAnimationFrame(() => {
+      const r = wrapper.getBoundingClientRect();
+      const cx = r.left + r.width / 2;
+      const cy = r.top + r.height / 2;
+      const dx = (e.clientX - cx) / (r.width / 2);
+      const dy = (e.clientY - cy) / (r.height / 2);
+      const rx = -dy * 9;
+      const ry = dx * 9;
+      wrapper.style.transition = 'transform 0.08s linear';
+      wrapper.style.transform = `perspective(900px) rotateX(${rx}deg) rotateY(${ry}deg) scale(1.015)`;
+      // Glare
+      const glare = document.getElementById('card-glare');
+      if (glare) {
+        const px = ((e.clientX - r.left) / r.width * 100).toFixed(1);
+        const py = ((e.clientY - r.top) / r.height * 100).toFixed(1);
+        glare.style.setProperty('--glare-x', px + '%');
+        glare.style.setProperty('--glare-y', py + '%');
+      }
+      raf = null;
+    });
+  });
+  wrapper.addEventListener('mouseleave', () => {
+    if (raf) { cancelAnimationFrame(raf); raf = null; }
+    wrapper.style.transition = 'transform 0.6s cubic-bezier(0.23,1,0.32,1)';
+    wrapper.style.transform = 'perspective(900px) rotateX(0) rotateY(0) scale(1)';
+  });
+}
+
+/* ══════════════════════════════════════════════════════════
+   IFRAME SCALING
+══════════════════════════════════════════════════════════ */
+function scaleIframe() {
+  const inner = document.getElementById('eagle-card-inner');
+  const iframe = document.getElementById('eagle-iframe');
+  if (!inner || !iframe) return;
+  const w = inner.clientWidth;
+  if (!w) return;
+  const scale = w / 340;
+  iframe.style.transform = `scale(${scale})`;
+}
+
+/* ══════════════════════════════════════════════════════════
+   REVEAL OBSERVER
+══════════════════════════════════════════════════════════ */
+function initReveal() {
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+}
+
+/* ══════════════════════════════════════════════════════════
+   RENDER TRAITS
+══════════════════════════════════════════════════════════ */
+function renderTraits(props) {
+  const tier = props.tier ?? 4;
+  const t = TIERS[tier] || TIERS[4];
+  const rarityPct = ((t.supply / TOTAL_SUPPLY) * 100).toFixed(1);
+  const colorId = props.color_id ?? 0;
+  const swatch = COLOR_SWATCHES[colorId] || '#8892a4';
+
+  const traits = [
+    {
+      category: 'Tier',
+      value: `${t.symbol} ${t.name}`,
+      extra: `${t.supply} of ${TOTAL_SUPPLY} (${rarityPct}%)`,
+      cls: `tier-${t.id}`,
+      barPct: ((t.supply / TOTAL_SUPPLY) * 100),
+    },
+    {
+      category: 'Color',
+      value: props.color_name || 'Unknown',
+      extra: null,
+      cls: 'trait-color',
+      swatch,
+      barPct: null,
+    },
+    {
+      category: 'Agent',
+      value: props.display_name || props.agent_id || '—',
+      extra: null,
+      cls: 'trait-data',
+      barPct: null,
+    },
+    {
+      category: 'Minted At Block',
+      value: props.minted_at != null ? `#${Number(props.minted_at).toLocaleString()}` : '—',
+      extra: null,
+      cls: 'trait-data',
+      barPct: null,
+    },
+  ];
+
+  // Pull minted_at from attributes if not in properties
+  const mintedAtAttr = (tokenData.attributes || []).find(a => a.trait_type === 'Minted At Block');
+  if (mintedAtAttr && traits[3].value === '—') {
+    traits[3].value = `#${Number(mintedAtAttr.value).toLocaleString()}`;
+  }
+
+  const grid = document.getElementById('traits-grid');
+  grid.innerHTML = '';
+  traits.forEach((tr, i) => {
+    const pill = document.createElement('div');
+    pill.className = `trait-pill ${tr.cls}`;
+    if (tr.swatch) pill.style.setProperty('--color-swatch', tr.swatch);
+
+    const colorDot = tr.swatch
+      ? `<span class="color-swatch-dot" style="--color-swatch:${tr.swatch}"></span>`
+      : '';
+
+    pill.innerHTML = `
+      <div class="trait-pill-category">${tr.category}</div>
+      <div class="trait-pill-value">${colorDot}${tr.value}</div>
+      ${tr.extra ? `<div class="trait-pill-rarity">${tr.extra}</div>` : ''}
+      ${tr.barPct != null ? `<div class="trait-pill-bar" style="transform:scaleX(${(tr.barPct/100).toFixed(3)})"></div>` : ''}
+    `;
+    pill.style.animationDelay = `${i * 80}ms`;
+    grid.appendChild(pill);
+  });
+}
+
+/* ══════════════════════════════════════════════════════════
+   RENDER UTILITIES
+══════════════════════════════════════════════════════════ */
+function renderUtilities() {
+  const list = document.getElementById('utilities-list');
+  list.innerHTML = '';
+  UTILITIES.forEach((u, i) => {
+    const row = document.createElement('div');
+    row.className = `utility-row${u.live ? '' : ' planned'} reveal`;
+    row.style.transitionDelay = `${i * 60}ms`;
+    row.innerHTML = `
+      <div class="utility-icon">${u.live ? '✓' : u.icon}</div>
+      <div class="utility-text">
+        <div class="utility-name">${u.name}</div>
+        <div class="utility-desc">${u.desc}</div>
+      </div>
+      <span class="utility-badge ${u.live ? 'badge-live' : 'badge-planned'}">${u.live ? 'Live' : 'Soon'}</span>
+    `;
+    list.appendChild(row);
+  });
+  // Re-observe new elements
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.1 });
+  list.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+}
+
+/* ══════════════════════════════════════════════════════════
+   COPY HELPERS
+══════════════════════════════════════════════════════════ */
+function copyAddress() {
+  if (!ownerAddr) return;
+  navigator.clipboard.writeText(ownerAddr).then(() => {
+    const btn = document.getElementById('copy-addr-btn');
+    const lbl = document.getElementById('copy-label');
+    btn.classList.add('copied');
+    lbl.textContent = 'Copied!';
+    setTimeout(() => { btn.classList.remove('copied'); lbl.textContent = 'Copy'; }, 2200);
+  }).catch(() => {});
+}
+
+function copyLink() {
+  navigator.clipboard.writeText(window.location.href).then(() => {
+    const btn = document.getElementById('btn-copy-link');
+    const lbl = document.getElementById('copy-link-label');
+    btn.classList.add('copied');
+    lbl.textContent = 'Copied!';
+    setTimeout(() => { btn.classList.remove('copied'); lbl.textContent = 'Copy Link'; }, 2200);
+  }).catch(() => {});
+}
+
+/* ══════════════════════════════════════════════════════════
+   NAVIGATION
+══════════════════════════════════════════════════════════ */
+function goTo(id) {
+  window.location.href = `/eagle/${id}`;
+}
+
+function setupNav(id, totalMinted) {
+  const prevBtn = document.getElementById('btn-prev');
+  const nextBtn = document.getElementById('btn-next');
+  const counter = document.getElementById('eagle-counter');
+  counter.textContent = `#${id}`;
+
+  if (id > 0) {
+    prevBtn.disabled = false;
+    prevBtn.onclick = () => goTo(id - 1);
+  }
+  if (totalMinted && id < totalMinted - 1) {
+    nextBtn.disabled = false;
+    nextBtn.onclick = () => goTo(id + 1);
+  }
+}
+
+/* ══════════════════════════════════════════════════════════
+   META / OG UPDATE
+══════════════════════════════════════════════════════════ */
+function updateMeta(id, tierName, colorName, agentName) {
+  const title = `Early Eagle #${id} — ${tierName} ${colorName}`;
+  const desc = `${tierName} ${colorName} Early Eagle${agentName ? ` · ${agentName}` : ''} · Fully on-chain NFT on Stacks. ${TOTAL_SUPPLY} total supply.`;
+  const url = `${BASE_URL}/eagle/${id}`;
+
+  document.getElementById('page-title').textContent = title;
+  document.getElementById('page-desc').content = desc;
+  document.getElementById('og-title').content = title;
+  document.getElementById('og-desc').content = desc;
+  document.getElementById('og-url').content = url;
+  document.getElementById('tw-title').content = title;
+  document.getElementById('tw-desc').content = desc;
+
+  // Share on X
+  const tweet = `Check out Early Eagle #${id} — ${tierName} ${colorName} 🦅\n\nFully on-chain NFT on @Stacks. No IPFS. Forever.\n\n${url}`;
+  document.getElementById('btn-share-x').href =
+    `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweet)}`;
+
+  // Explorer link
+  document.getElementById('explorer-link').href =
+    `${EXPLORER_BASE}/txid/${ADMIN_ADDRESS}.${NFT_CONTRACT}?chain=mainnet`;
+}
+
+/* ══════════════════════════════════════════════════════════
+   SHOW ERROR
+══════════════════════════════════════════════════════════ */
+function showError(title, msg) {
+  document.getElementById('eagle-main').style.display = 'none';
+  document.getElementById('share-section').style.display = 'none';
+  const err = document.getElementById('error-state');
+  document.getElementById('error-title').textContent = title;
+  document.getElementById('error-msg').textContent = msg;
+  err.style.display = 'block';
+}
+
+/* ══════════════════════════════════════════════════════════
+   MAIN LOAD
+══════════════════════════════════════════════════════════ */
+async function loadEagle(id) {
+  // Fetch token metadata
+  let data;
+  try {
+    const res = await fetch(`/api/token/${id}`);
+    if (res.status === 404) {
+      showError('Not Minted Yet', `Eagle #${id} hasn't been claimed yet. Mint it first!`);
+      return;
+    }
+    if (!res.ok) throw new Error(`API ${res.status}`);
+    data = await res.json();
+  } catch (e) {
+    showError('Failed to Load', 'Could not reach the chain API. Try refreshing.');
+    return;
+  }
+
+  tokenData = data;
+  const props = data.properties || {};
+  const tier = props.tier ?? 4;
+
+  // Apply tier theming immediately
+  const tierInfo = applyTierTheme(tier);
+  ownerAddr = props.owner || null;
+
+  // Fetch total minted for nav (non-blocking)
+  fetch('/api/gallery').then(r => r.json()).then(g => {
+    setupNav(id, g.totalMinted || id + 1);
+  }).catch(() => setupNav(id, null));
+
+  // ── Identity ──
+  document.getElementById('identity-skel').style.display = 'none';
+  const ic = document.getElementById('identity-content');
+  ic.style.display = 'block';
+
+  document.getElementById('eagle-tier-badge').innerHTML =
+    `${tierInfo.symbol} ${tierInfo.name}`;
+  document.getElementById('eagle-tier-badge').style.cssText +=
+    `;color:${tierInfo.text};background:${tierInfo.dim};border-color:${tierInfo.border}`;
+
+  document.getElementById('eagle-name').textContent = `EAGLE #${id}`;
+
+  const agentName = props.display_name || '';
+  if (agentName) {
+    document.getElementById('eagle-agent-name').innerHTML =
+      `<strong>${agentName}</strong>`;
+  }
+
+  // Rarity callout
+  const rarityPct = ((tierInfo.supply / TOTAL_SUPPLY) * 100).toFixed(1);
+  document.getElementById('rarity-tier-text').textContent = tierInfo.name;
+  document.getElementById('rarity-bar').style.width = rarityPct + '%';
+  document.getElementById('rarity-bar').style.background = tierInfo.accent;
+  document.getElementById('rarity-pct').textContent = `${tierInfo.supply} minted`;
+
+  // ── Traits ──
+  renderTraits(props);
+
+  // ── Owner ──
+  document.getElementById('owner-skel').style.display = 'none';
+  document.getElementById('owner-content').style.display = 'block';
+  if (ownerAddr) {
+    document.getElementById('owner-addr').textContent = ownerAddr;
+  } else {
+    document.getElementById('owner-addr').textContent = 'Unknown';
+    document.getElementById('copy-addr-btn').style.display = 'none';
+  }
+
+  // ── Utilities ──
+  renderUtilities();
+
+  // ── Meta & Share ──
+  updateMeta(id, tierInfo.name, props.color_name || '', agentName);
+
+  // ── Eagle Art ──
+  const iframe = document.getElementById('eagle-iframe');
+  iframe.src = `/api/render/${id}`;
+  iframe.addEventListener('load', () => {
+    scaleIframe();
+    setTimeout(() => {
+      document.getElementById('card-skeleton').classList.add('hidden');
+      iframe.style.display = 'block';
+    }, 120);
+  });
+  if (window.ResizeObserver) {
+    const ro = new ResizeObserver(scaleIframe);
+    ro.observe(document.getElementById('eagle-card-inner'));
+  }
+
+  // ── Tilt (after iframe is set) ──
+  initTilt();
+}
+
+/* ══════════════════════════════════════════════════════════
+   BOOT
+══════════════════════════════════════════════════════════ */
+(function boot() {
+  // Parse token ID from URL: /eagle/7
+  const parts = window.location.pathname.replace(/\/$/, '').split('/');
+  const raw = parseInt(parts[parts.length - 1], 10);
+
+  if (isNaN(raw) || raw < 0 || raw > 420) {
+    showError('Invalid Eagle ID', 'That eagle ID is out of range.');
+    return;
+  }
+
+  tokenId = raw;
+  initParticles();
+  initReveal();
+  loadEagle(tokenId);
+})();
+</script>
+</body>
+</html>

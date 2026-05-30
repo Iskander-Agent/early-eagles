@@ -3,6 +3,8 @@
  * Returns JSON metadata for marketplaces + the mint page reveal
  */
 
+const { c32address } = require('c32check');
+
 const TIER_NAMES = ['Legendary', 'Epic', 'Rare', 'Uncommon', 'Common'];
 const TIER_SYMBOLS = ['🔱', '◈', '◇', '○', '●'];
 const COLOR_NAMES = [
@@ -16,8 +18,22 @@ const ADMIN_ADDRESS = 'SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2';
 const NFT_CONTRACT = 'early-eagles-v2';
 const STACKS_API = 'https://api.hiro.so';
 
+function decodeOwnerFull(hexResult) {
+  try {
+    const hex = hexResult.replace('0x', '');
+    let i = 0;
+    if (hex.slice(i, i + 2) === '07') i += 2; // response.ok wrapper
+    if (hex.slice(i, i + 2) === '0a') i += 2; // optional some
+    if (hex.slice(i, i + 2) !== '05') return null; // expect standard principal
+    i += 2;
+    const versionByte = parseInt(hex.slice(i, i + 2), 16);
+    const hashHex = hex.slice(i + 2, i + 42);
+    return c32address(versionByte, hashHex);
+  } catch (e) { return null; }
+}
+
 module.exports = async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', process.env.ALLOWED_ORIGIN || 'https://early-eagles.vercel.app');
+  res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Cache-Control', 'public, max-age=60');
 
   const tokenId = parseInt(req.query.id);
@@ -30,18 +46,22 @@ module.exports = async function handler(req, res) {
 
     // Encode token-id as Clarity uint
     const tokenIdHex = '0x01' + tokenId.toString(16).padStart(32, '0');
-    const callRes = await fetch(
-      `${STACKS_API}/v2/contracts/call-read/${ADMIN_ADDRESS}/${NFT_CONTRACT}/get-traits`,
-      {
+
+    // Fetch traits + owner in parallel
+    const [traitsRes, ownerRes] = await Promise.all([
+      fetch(`${STACKS_API}/v2/contracts/call-read/${ADMIN_ADDRESS}/${NFT_CONTRACT}/get-traits`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sender: ADMIN_ADDRESS,
-          arguments: [tokenIdHex],
-        }),
-      }
-    );
-    const data = await callRes.json();
+        body: JSON.stringify({ sender: ADMIN_ADDRESS, arguments: [tokenIdHex] }),
+      }),
+      fetch(`${STACKS_API}/v2/contracts/call-read/${ADMIN_ADDRESS}/${NFT_CONTRACT}/get-owner`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sender: ADMIN_ADDRESS, arguments: [tokenIdHex] }),
+      }),
+    ]);
+
+    const data = await traitsRes.json();
 
     if (!data.okay || data.result === '0x09') {
       return res.status(404).json({ error: 'Token not minted yet' });
@@ -66,6 +86,15 @@ module.exports = async function handler(req, res) {
     const btcAddress = traits['btc-address']?.value ?? '';
     const mintedAt = parseInt(traits['minted-at']?.value ?? '0', 10);
 
+    // Decode owner address
+    let owner = null;
+    try {
+      const ownerData = await ownerRes.json();
+      if (ownerData.okay && ownerData.result) {
+        owner = decodeOwnerFull(ownerData.result);
+      }
+    } catch (_) { /* non-fatal */ }
+
     return res.status(200).json({
       name: `Early Eagle #${tokenId}`,
       description: `${TIER_SYMBOLS[tier] || '●'} ${TIER_NAMES[tier] || 'Common'} ${COLOR_NAMES[colorId] || 'Unknown'} Eagle - Genesis AIBTC Agent NFT`,
@@ -83,7 +112,9 @@ module.exports = async function handler(req, res) {
         tier_name: TIER_NAMES[tier] || 'Common',
         color_name: COLOR_NAMES[colorId] || 'Unknown',
         agent_id: agentId,
+        display_name: displayName,
         btc_address: btcAddress,
+        owner,
         collection: 'Early Eagles',
         total_supply: 420,
       },

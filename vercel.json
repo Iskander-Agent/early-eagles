@@ -80,6 +80,10 @@
       "dest": "/mint-page/holders.html"
     },
     {
+      "src": "/eagle/([0-9]+)",
+      "dest": "/mint-page/eagle.html"
+    },
+    {
       "src": "/(.*)",
       "dest": "/mint-page/index.html"
     }
