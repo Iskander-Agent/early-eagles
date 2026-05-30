@@ -198,27 +198,8 @@ nav {
   position: relative;
   z-index: 1;
   border-radius: 20px;
-  transition: transform 0.12s linear;
-  will-change: transform;
+  /* NO transition here — managed entirely by JS for smooth tilt */
   cursor: default;
-}
-/* Holographic shimmer border — visible on hover */
-.eagle-card-wrapper::before {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  border-radius: 22px;
-  background: linear-gradient(135deg, var(--tier-accent), #c084fc, #7dd3fc, var(--tier-accent));
-  background-size: 300% 300%;
-  opacity: 0;
-  transition: opacity 0.4s ease;
-  z-index: -1;
-  animation: shimmerBorder 4s ease infinite;
-}
-.eagle-card-wrapper:hover::before { opacity: 0.8; }
-@keyframes shimmerBorder {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
 }
 .eagle-card-inner {
   position: relative;
@@ -272,6 +253,11 @@ nav {
   transform-origin: top left;
   border: none;
   z-index: 1;
+}
+/* Transparent overlay — sits above iframe so mousemove fires through the art */
+.mouse-capture {
+  position: absolute; inset: 0; z-index: 5;
+  border-radius: 18px;
 }
 
 /* Float animation for mobile / idle */
@@ -632,6 +618,8 @@ nav {
               <!-- Eagle iframe (loaded by JS) -->
               <iframe id="eagle-iframe" sandbox="allow-scripts" scrolling="no"
                 class="eagle-iframe" style="display:none;"></iframe>
+              <!-- Transparent overlay — captures mouse events through the iframe -->
+              <div class="mouse-capture" id="mouse-capture"></div>
             </div>
           </div>
         </div>
@@ -855,41 +843,80 @@ function applyTierTheme(tier) {
 ══════════════════════════════════════════════════════════ */
 function initTilt() {
   if (window.innerWidth < 768) {
-    // Idle float on mobile
     const w = document.getElementById('eagle-card-wrapper');
     if (w) w.style.animation = 'floatCard 4s ease-in-out infinite';
     return;
   }
+
   const wrapper = document.getElementById('eagle-card-wrapper');
+  const glare  = document.getElementById('card-glare');
   if (!wrapper) return;
-  let raf = null;
-  wrapper.addEventListener('mousemove', (e) => {
-    if (raf) return;
-    raf = requestAnimationFrame(() => {
-      const r = wrapper.getBoundingClientRect();
-      const cx = r.left + r.width / 2;
-      const cy = r.top + r.height / 2;
-      const dx = (e.clientX - cx) / (r.width / 2);
-      const dy = (e.clientY - cy) / (r.height / 2);
-      const rx = -dy * 9;
-      const ry = dx * 9;
-      wrapper.style.transition = 'transform 0.08s linear';
-      wrapper.style.transform = `perspective(900px) rotateX(${rx}deg) rotateY(${ry}deg) scale(1.015)`;
-      // Glare
-      const glare = document.getElementById('card-glare');
-      if (glare) {
-        const px = ((e.clientX - r.left) / r.width * 100).toFixed(1);
-        const py = ((e.clientY - r.top) / r.height * 100).toFixed(1);
-        glare.style.setProperty('--glare-x', px + '%');
-        glare.style.setProperty('--glare-y', py + '%');
-      }
-      raf = null;
-    });
+
+  const PERSPECTIVE = 900;
+  const MAX_TILT    = 10;   // degrees
+  const SPEED       = 400;  // ms for enter/leave ease
+  const EASING      = 'cubic-bezier(.03,.98,.52,.99)'; // VanillaTilt default — fast accel, soft finish
+
+  let rect            = null;
+  let rafPending      = false;
+  let lastEvent       = null;
+  let transTimeout    = null;
+
+  // Apply transition only on enter/leave, never during movement
+  function setTransition(ms) {
+    clearTimeout(transTimeout);
+    wrapper.style.transition = `transform ${ms}ms ${EASING}`;
+    transTimeout = setTimeout(() => { wrapper.style.transition = ''; }, ms);
+  }
+
+  function applyTilt(e) {
+    if (!rect) return;
+    // Normalize to 0..1, clamped — handles edge entry without jump
+    const x = Math.min(Math.max((e.clientX - rect.left) / rect.width,  0), 1);
+    const y = Math.min(Math.max((e.clientY - rect.top)  / rect.height, 0), 1);
+    // tiltY (rotateX): mouse at top → positive (top tilts toward you), bottom → negative
+    const tiltY = +(MAX_TILT - y * MAX_TILT * 2).toFixed(2);
+    // tiltX (rotateY): mouse at left → negative, right → positive
+    const tiltX = +(x * MAX_TILT * 2 - MAX_TILT).toFixed(2);
+    wrapper.style.transform =
+      `perspective(${PERSPECTIVE}px) rotateX(${tiltY}deg) rotateY(${tiltX}deg) scale3d(1.02,1.02,1.02)`;
+    if (glare) {
+      glare.style.setProperty('--glare-x', (x * 100).toFixed(1) + '%');
+      glare.style.setProperty('--glare-y', (y * 100).toFixed(1) + '%');
+    }
+  }
+
+  // mouseenter: cache rect + apply brief enter transition so first tilt animates in
+  wrapper.addEventListener('mouseenter', () => {
+    rect = wrapper.getBoundingClientRect();
+    wrapper.style.willChange = 'transform';
+    setTransition(SPEED);
   });
+
+  // mousemove: flag + latest-event pattern — one RAF per frame, always freshest coords
+  wrapper.addEventListener('mousemove', (e) => {
+    lastEvent = e;
+    if (!rafPending) {
+      rafPending = true;
+      requestAnimationFrame(() => {
+        if (lastEvent) applyTilt(lastEvent);
+        rafPending = false;
+      });
+    }
+  });
+
+  // mouseleave: apply transition, then reset in next frame so browser sees the transition before transform
   wrapper.addEventListener('mouseleave', () => {
-    if (raf) { cancelAnimationFrame(raf); raf = null; }
-    wrapper.style.transition = 'transform 0.6s cubic-bezier(0.23,1,0.32,1)';
-    wrapper.style.transform = 'perspective(900px) rotateX(0) rotateY(0) scale(1)';
+    clearTimeout(transTimeout);
+    wrapper.style.transition = `transform ${SPEED}ms ${EASING}`;
+    requestAnimationFrame(() => {
+      wrapper.style.transform =
+        `perspective(${PERSPECTIVE}px) rotateX(0deg) rotateY(0deg) scale3d(1,1,1)`;
+    });
+    setTimeout(() => {
+      wrapper.style.willChange = 'auto';
+      wrapper.style.transition = '';
+    }, SPEED);
   });
 }
 
