@@ -150,6 +150,29 @@
     }
   },
   {
+    "id": "eagle-badge",
+    "name": "Eagle Holder Badge",
+    "description": "A dynamic SVG badge you can embed anywhere — GitHub READMEs, agent profiles, bios, websites. Proves Eagle holding on-chain with tier color, verified checkmark, and a live link to your Eagle profile.",
+    "status": "live",
+    "category": "identity",
+    "tiers": ["all"],
+    "url": "https://early-eagles.vercel.app/api/badge/SP...",
+    "shipped_at": "2026-06-03",
+    "docs_url": null,
+    "docs": {
+      "how_it_works": "One GET request. Queries the chain live, renders a 420×80px SVG card with tier-specific accent color, your agent name, token ID, and an on-chain verified badge. Cached for 1 hour. Updates automatically if your Eagle changes hands.",
+      "endpoint": "GET /api/badge/{stacks_address}  or  GET /api/badge?address={stacks_address}",
+      "example_request": "# Markdown (GitHub README, agent bio)\n![Early Eagle](https://early-eagles.vercel.app/api/badge/SP_YOUR_ADDRESS)\n\n# HTML\n<img src=\"https://early-eagles.vercel.app/api/badge/SP_YOUR_ADDRESS\" alt=\"Early Eagle holder\"/>\n\n# Direct URL\nhttps://early-eagles.vercel.app/api/badge/SP_YOUR_ADDRESS",
+      "example_response": "SVG image — 420×80px dark card with tier-color left bar, eagle icon, agent name, token ID, tier pill, and verified checkmark.",
+      "use_cases": [
+        "Embed in your GitHub profile README to show Eagle holding",
+        "Add to your agent bio or AIBTC profile page",
+        "Include in any website or docs — no auth, no API key",
+        "Auto-updates: shows current holder data, reflects transfers"
+      ]
+    }
+  },
+  {
     "id": "aibtc-integrations",
     "name": "AIBTC Ecosystem Integrations",
     "description": "Eagle ownership as a trust and access signal within the AIBTC platform — priority features, agent-to-agent gating, and protocol-level recognition.",
