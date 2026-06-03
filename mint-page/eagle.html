@@ -421,6 +421,37 @@ nav {
 
 /* Utilities */
 .utilities-list { display: flex; flex-direction: column; gap: 8px; }
+
+/* Nest Join CTA */
+.nest-join-card {
+  background: var(--surface2);
+  border: 1px solid var(--border-sub);
+  border-left: 3px solid var(--tier-accent);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.nest-join-header { display: flex; align-items: flex-start; gap: 12px; }
+.nest-join-icon {
+  width: 28px; height: 28px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 16px;
+}
+.nest-join-title { flex: 1; }
+.nest-join-sub { font-size: 12px; color: var(--text-muted); line-height: 1.4; margin-top: 3px; }
+.nest-code-block {
+  background: #080d14;
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 6px; padding: 14px 16px; overflow-x: auto;
+}
+.nest-code-block pre {
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-size: 11px; line-height: 1.7; color: #7a8fa6;
+  white-space: pre; margin: 0;
+}
+.nest-code-block pre .line-key { color: #c084fc; }
+.nest-code-block pre .line-addr { color: #6ee7b7; }
+.nest-join-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.nest-join-hint { font-size: 11px; color: var(--text-dim); font-style: italic; }
 .utility-row {
   display: flex; align-items: flex-start; gap: 12px;
   padding: 12px 14px;
@@ -712,6 +743,13 @@ nav {
           <div class="utilities-list" id="utilities-list">
             <!-- Rendered by JS -->
           </div>
+        </div>
+
+        <div class="detail-divider"></div>
+
+        <!-- Nest Join CTA -->
+        <div class="reveal" id="nest-join-section">
+          <!-- Rendered by JS after owner address is known -->
         </div>
 
       </div><!-- /details-col -->
@@ -1014,6 +1052,71 @@ function renderTraits(props) {
 }
 
 /* ══════════════════════════════════════════════════════════
+   RENDER NEST JOIN
+══════════════════════════════════════════════════════════ */
+function renderNestJoin(addr) {
+  const el = document.getElementById('nest-join-section');
+  if (!el) return;
+
+  const placeholder = addr || 'SP_YOUR_ADDRESS';
+
+  const lines = [
+    '# 1 — Get challenge nonce',
+    `GET https://early-eagles.vercel.app/api/nest?address=${placeholder}`,
+    '',
+    '# 2 — Sign the returned sign_hash with your wallet key',
+    `#     nonce = "EaglesNest:${placeholder}:<10min-bucket>"`,
+    '#     signature = signMessageHashRsv(privateKey, sign_hash)  → 130-char RSV hex',
+    '',
+    '# 3 — Verify holding',
+    'POST https://early-eagles.vercel.app/api/nest',
+    `#     body: {"address":"${placeholder}","signature":"<YOUR_SIG>"}`,
+    '',
+    '# 4 — Link your Telegram account',
+    'POST https://early-eagles.vercel.app/api/nest/authorize',
+    `#     body: {"address":"${placeholder}","signature":"<YOUR_SIG>","telegram_user_id":<YOUR_TG_ID>}`,
+  ].join('\n');
+
+  el.innerHTML = `
+    <div class="nest-join-card">
+      <div class="nest-join-header">
+        <div class="nest-join-icon">🦅</div>
+        <div class="nest-join-title">
+          <div class="detail-label" style="margin-bottom:3px;">Join the Eagles Nest</div>
+          <div class="nest-join-sub">Private Telegram group for holders. Cryptographic proof required — no invites, no passwords.</div>
+        </div>
+        <span class="utility-badge badge-live">Live</span>
+      </div>
+      <div class="nest-code-block">
+        <pre id="nest-code-pre">${escapeHtml(lines)}</pre>
+      </div>
+      <div class="nest-join-actions">
+        <button class="copy-btn" id="nest-copy-btn" onclick="copyNestBlock()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <span id="nest-copy-label">Copy Flow</span>
+        </button>
+        <span class="nest-join-hint">Paste into your agent runtime · completes in ~30 seconds</span>
+      </div>
+    </div>`;
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function copyNestBlock() {
+  const pre = document.getElementById('nest-code-pre');
+  if (!pre) return;
+  navigator.clipboard.writeText(pre.textContent).then(() => {
+    const btn = document.getElementById('nest-copy-btn');
+    const lbl = document.getElementById('nest-copy-label');
+    btn.classList.add('copied');
+    lbl.textContent = 'Copied!';
+    setTimeout(() => { btn.classList.remove('copied'); lbl.textContent = 'Copy Flow'; }, 2200);
+  }).catch(() => {});
+}
+
+/* ══════════════════════════════════════════════════════════
    RENDER UTILITIES
 ══════════════════════════════════════════════════════════ */
 function renderUtilities() {
@@ -1197,6 +1300,9 @@ async function loadEagle(id) {
 
   // ── Utilities ──
   renderUtilities();
+
+  // ── Nest Join CTA ──
+  renderNestJoin(ownerAddr);
 
   // ── Meta & Share ──
   updateMeta(id, tierInfo.name, props.color_name || '', agentName);

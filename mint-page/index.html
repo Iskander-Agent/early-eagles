@@ -480,10 +480,25 @@ nav {
   flex-shrink: 0; width: 220px;
   background: var(--surface); border: 1px solid var(--border-sub);
   border-radius: var(--radius); padding: 16px;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
-  cursor: default;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
+  cursor: pointer;
 }
-.ticker-card:hover { border-color: var(--border); box-shadow: 0 0 20px rgba(212,168,75,0.08); }
+.ticker-card:hover { border-color: var(--border); box-shadow: 0 0 20px rgba(212,168,75,0.08); transform: translateY(-3px); }
+
+/* Nest Band */
+#nest-band { background: var(--navy-light); border-top: 1px solid var(--border-sub); border-bottom: 1px solid var(--border-sub); padding: 18px 0; }
+.nest-band-inner { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.nest-band-left { display: flex; align-items: center; gap: 14px; }
+.nest-band-eagle { font-size: 26px; flex-shrink: 0; line-height: 1; }
+.nest-band-title { font-family: 'Rajdhani', sans-serif; font-size: 17px; font-weight: 700; color: var(--text); letter-spacing: 0.04em; }
+.nest-band-desc { font-size: 12px; color: var(--text-muted); margin-top: 2px; line-height: 1.4; }
+.nest-band-link {
+  font-family: 'Rajdhani', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+  color: var(--gold); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 9px 18px; text-decoration: none; white-space: nowrap;
+  transition: all var(--transition);
+}
+.nest-band-link:hover { background: var(--gold-dim); transform: translateY(-1px); box-shadow: 0 0 16px rgba(212,168,75,0.15); }
 .ticker-card-top {
   display: flex; align-items: center; justify-content: space-between;
   margin-bottom: 10px;
@@ -738,6 +753,22 @@ nav {
   <div class="ticker-container">
     <div class="ticker-track" id="ticker-track">
       <div class="ticker-empty" id="ticker-empty">Loading recent mints...</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── EAGLES NEST BAND ── -->
+<section id="nest-band">
+  <div class="container">
+    <div class="nest-band-inner">
+      <div class="nest-band-left">
+        <span class="nest-band-eagle">🦅</span>
+        <div>
+          <div class="nest-band-title">Eagles Nest</div>
+          <div class="nest-band-desc">Private Telegram group for Eagle holders — cryptographic proof required, no invites, no passwords.</div>
+        </div>
+      </div>
+      <a href="/holders" class="nest-band-link">Holder Access →</a>
     </div>
   </div>
 </section>
@@ -1568,7 +1599,7 @@ function buildTickerCard(eagle) {
   const name = eagle.name || `Eagle #${eagle.id}`;
   const owner = eagle.owner || '???';
 
-  return `<div class="ticker-card">
+  return `<div class="ticker-card" onclick="location.href='/eagle/${eagle.id}'" title="View Eagle #${eagle.id}">
     <div class="ticker-card-top">
       <span class="ticker-eagle-id">🦅 #${eagle.id}</span>
       <span class="ticker-tier-badge ticker-tier-${tierCss}">${tierName}</span>
