@@ -13,9 +13,10 @@
  * Non-holders: 404 + a minimal "no eagle" SVG
  */
 
-const STACKS_API = 'https://api.hiro.so';
-const BASE_URL   = 'https://early-eagles.vercel.app';
-const EAGLE_ASSET = 'SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2.early-eagles-v2::early-eagles';
+const STACKS_API   = 'https://api.hiro.so';
+const BASE_URL     = 'https://early-eagles.vercel.app';
+const ADMIN_ADDRESS = 'SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2';
+const NFT_CONTRACT  = 'early-eagles-v2';
 
 const TIERS = [
   { name: 'Legendary', color: '#d4a84b', dim: 'rgba(212,168,75,0.18)',  text: '#e8c26a' },
@@ -27,7 +28,42 @@ const TIERS = [
 
 const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET, OPTIONS' };
 
+const { c32address } = require('c32check');
+const { fetchCallReadOnlyFunction, cvToValue } = require('@stacks/transactions');
+const { STACKS_MAINNET } = require('@stacks/network');
+
 function abort(ms) { const c = new AbortController(); setTimeout(() => c.abort(), ms); return c.signal; }
+
+// Decode (response (optional (principal))) hex → full SP address or null
+function decodeOwnerFull(hexResult) {
+  try {
+    let hex = (hexResult || '').replace('0x', '');
+    let i = 0;
+    if (hex.slice(i, i + 2) === '07') i += 2; // response ok
+    if (hex.slice(i, i + 2) === '0a') i += 2; // optional some
+    if (hex.slice(i, i + 2) !== '05') return null; // not a standard principal
+    i += 2;
+    const versionByte = parseInt(hex.slice(i, i + 2), 16);
+    const hashHex = hex.slice(i + 2, i + 42);
+    return c32address(versionByte, hashHex);
+  } catch { return null; }
+}
+
+function encodeUint(n) {
+  return '0x01' + n.toString(16).padStart(32, '0');
+}
+
+async function callRead(fn, args = []) {
+  const url = `${STACKS_API}/v2/contracts/call-read/${ADMIN_ADDRESS}/${NFT_CONTRACT}/${fn}`;
+  const r = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ sender: ADMIN_ADDRESS, arguments: args }),
+    signal: abort(7000),
+  });
+  if (!r.ok) throw new Error(`callRead ${fn} → ${r.status}`);
+  return r.json();
+}
 
 function esc(s) {
   return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -43,15 +79,43 @@ function abbrev(addr) {
   return addr.slice(0, 8) + '…' + addr.slice(-6);
 }
 
-async function getTokenIds(address) {
-  const url = `${STACKS_API}/extended/v1/tokens/nft/holdings` +
-    `?principal=${address}&asset_identifiers=${encodeURIComponent(EAGLE_ASSET)}&limit=50`;
-  const r = await fetch(url, { signal: abort(7000) });
-  if (!r.ok) throw new Error(`Hiro ${r.status}`);
-  return ((await r.json()).results || [])
-    .map(h => parseInt((h.value?.repr || '').replace(/^u/, ''), 10))
-    .filter(id => !isNaN(id))
-    .sort((a, b) => a - b);
+// The Hiro NFT holdings indexer does not index SIP-018 admin-broadcast mints.
+// Instead: get total minted from contract, then fan-out get-owner calls.
+async function getTokenIdsByOwner(address) {
+  // 1. Get total minted
+  const statsCV = await fetchCallReadOnlyFunction({
+    contractAddress: ADMIN_ADDRESS,
+    contractName: NFT_CONTRACT,
+    functionName: 'get-mint-stats',
+    functionArgs: [],
+    senderAddress: ADMIN_ADDRESS,
+    network: STACKS_MAINNET,
+  });
+  const stats = cvToValue(statsCV);
+  const totalMinted = parseInt(stats['total-minted']?.value ?? stats['total-minted'], 10) || 0;
+  if (totalMinted === 0) return [];
+
+  // 2. Fan-out get-owner calls in parallel (batch of 10 to avoid rate limits)
+  const ids = Array.from({ length: totalMinted }, (_, i) => i);
+  const owned = [];
+
+  for (let batch = 0; batch < ids.length; batch += 10) {
+    const chunk = ids.slice(batch, batch + 10);
+    const results = await Promise.allSettled(
+      chunk.map(async id => {
+        const data = await callRead('get-owner', [encodeUint(id)]);
+        const owner = data.okay ? decodeOwnerFull(data.result) : null;
+        return owner === address ? id : null;
+      })
+    );
+    for (const r of results) {
+      if (r.status === 'fulfilled' && r.value !== null) owned.push(r.value);
+    }
+    // Small delay between batches to respect Hiro rate limits
+    if (batch + 10 < ids.length) await new Promise(r => setTimeout(r, 300));
+  }
+
+  return owned.sort((a, b) => a - b);
 }
 
 async function getTokenMeta(id) {
@@ -166,10 +230,10 @@ module.exports = async function handler(req, res) {
     return res.status(400).send(errorSVG('Invalid Stacks address', 400));
   }
 
-  // Fetch token IDs
+  // Fetch token IDs via contract calls (Hiro indexer doesn't cover SIP-018 mints)
   let tokenIds;
   try {
-    tokenIds = await getTokenIds(address);
+    tokenIds = await getTokenIdsByOwner(address);
   } catch {
     res.setHeader('Cache-Control', 'public, max-age=30');
     return res.status(503).send(errorSVG('Chain unavailable — try again', 503));
