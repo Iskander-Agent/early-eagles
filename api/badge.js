@@ -130,70 +130,167 @@ async function getTokenMeta(id) {
 
 function buildBadge({ tokenId, count, tier, agentName, address, profileUrl }) {
   const t = TIERS[tier] ?? TIERS[4];
-  const W = 420, H = 80;
+  const W = 460, H = 100;
+  // Unique prefix per tier — prevents filter/gradient ID collisions on multi-badge pages
+  const uid = `ee${tier}`;
 
   const title  = count > 1
     ? `EARLY EAGLES ×${count}`
     : `EARLY EAGLE #${tokenId}`;
-  const line2  = truncate(agentName || abbrev(address), 40);
+  const line2  = truncate(agentName || abbrev(address), 30);
   const line3  = abbrev(address);
 
-  // Tier pill: sits top-right
-  const PILL_W = 76, PILL_X = W - PILL_W - 12;
+  const PILL_W = 88, PILL_X = W - PILL_W - 14;  // 358
+  const ICON_X = 14, ICON_Y = 24, ICON_S = 52;
+  const TEXT_X = ICON_X + ICON_S + 14;           // 80
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Early Eagle #${tokenId} — ${t.name} — ${agentName || address}">
-  <title>Early Eagle #${tokenId} — ${t.name}${agentName ? ' — ' + agentName : ''}</title>
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"
+     role="img" aria-label="${esc(title)} — ${esc(t.name)}${agentName ? ' — ' + esc(agentName) : ''}">
+  <title>${esc(title)}${agentName ? ' — ' + esc(agentName) : ''} (${esc(t.name)} Tier)</title>
   <defs>
-    <linearGradient id="bg-g" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#0f1520"/>
-      <stop offset="100%" stop-color="#0a0d14"/>
+    <!-- Dark background gradient -->
+    <linearGradient id="${uid}bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#111827"/>
+      <stop offset="100%" stop-color="#090c12"/>
     </linearGradient>
-    <clipPath id="r8"><rect width="${W}" height="${H}" rx="8"/></clipPath>
+    <!-- Left ambient glow from tier color -->
+    <radialGradient id="${uid}amb" cx="0" cy="0.5" r="0.55" fx="0.02" fy="0.5">
+      <stop offset="0%" stop-color="${t.color}" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="${t.color}" stop-opacity="0"/>
+    </radialGradient>
+    <!-- Shimmer sweep gradient (narrow bright streak) -->
+    <linearGradient id="${uid}sg" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%"   stop-color="white" stop-opacity="0"/>
+      <stop offset="44%"  stop-color="white" stop-opacity="0"/>
+      <stop offset="50%"  stop-color="white" stop-opacity="0.06"/>
+      <stop offset="56%"  stop-color="white" stop-opacity="0"/>
+      <stop offset="100%" stop-color="white" stop-opacity="0"/>
+    </linearGradient>
+    <!-- Tier accent bar glow filter -->
+    <filter id="${uid}gf" x="-300%" y="-80%" width="700%" height="260%">
+      <feGaussianBlur stdDeviation="5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <!-- Clip everything to rounded badge shape -->
+    <clipPath id="${uid}cl"><rect width="${W}" height="${H}" rx="9"/></clipPath>
   </defs>
 
-  <!-- Background + border -->
-  <rect width="${W}" height="${H}" rx="8" fill="url(#bg-g)"/>
-  <rect width="${W}" height="${H}" rx="8" fill="none" stroke="rgba(212,168,75,0.2)" stroke-width="1"/>
+  <style>
+    @keyframes ${uid}shimmer {
+      0%   { transform: translateX(-${W}px); }
+      100% { transform: translateX(${W * 2}px); }
+    }
+    @keyframes ${uid}glow {
+      0%, 100% { opacity: 0.5; }
+      50%       { opacity: 1; }
+    }
+    @keyframes ${uid}breathe {
+      0%, 100% { opacity: 0.72; }
+      50%       { opacity: 1; }
+    }
+    @keyframes ${uid}float {
+      0%, 100% { transform: translateY(0px); }
+      50%       { transform: translateY(-2.5px); }
+    }
+    @keyframes ${uid}p1 {
+      0%   { transform: translate(0,0);    opacity: 0; }
+      15%  { opacity: 0.7; }
+      100% { transform: translate(-7px,-22px); opacity: 0; }
+    }
+    @keyframes ${uid}p2 {
+      0%   { transform: translate(0,0);   opacity: 0; }
+      20%  { opacity: 0.5; }
+      100% { transform: translate(6px,-20px); opacity: 0; }
+    }
+    @keyframes ${uid}p3 {
+      0%   { transform: translate(0,0);   opacity: 0; }
+      25%  { opacity: 0.55; }
+      100% { transform: translate(-2px,-17px); opacity: 0; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .${uid}shimmer,.${uid}glow,.${uid}float,
+      .${uid}breathe,.${uid}p1,.${uid}p2,.${uid}p3 {
+        animation: none !important;
+      }
+    }
+  </style>
 
-  <!-- Left tier accent bar -->
-  <rect x="0" y="0" width="4" height="${H}" fill="${t.color}" clip-path="url(#r8)" opacity="0.95"/>
+  <g clip-path="url(#${uid}cl)">
+    <!-- Base + ambient -->
+    <rect width="${W}" height="${H}" fill="url(#${uid}bg)"/>
+    <rect width="${W}" height="${H}" fill="url(#${uid}amb)"/>
 
-  <!-- Eagle icon box -->
-  <rect x="14" y="18" width="38" height="44" rx="7" fill="${t.dim}"/>
-  <text x="33" y="46" font-size="22" text-anchor="middle"
-        font-family="Apple Color Emoji,Segoe UI Emoji,Noto Color Emoji,serif">🦅</text>
+    <!-- Border (subtle tier tint) -->
+    <rect width="${W}" height="${H}" rx="9" fill="none"
+          stroke="${t.color}" stroke-width="0.8" stroke-opacity="0.28"/>
 
-  <!-- Token title -->
-  <text x="64" y="30"
-        font-family="Rajdhani,Georgia,sans-serif" font-size="14" font-weight="700"
-        fill="#e8eaf0" letter-spacing="0.6">${esc(title)}</text>
+    <!-- Tier accent bar with bloom glow -->
+    <rect class="${uid}glow" x="0" y="0" width="4.5" height="${H}"
+          fill="${t.color}" filter="url(#${uid}gf)"
+          style="animation:${uid}glow 2s ease-in-out infinite;"/>
 
-  <!-- Agent name / label -->
-  <text x="64" y="49"
-        font-family="Inter,Arial,sans-serif" font-size="11.5"
-        fill="#8892a4">${esc(line2)}</text>
+    <!-- Eagle icon box -->
+    <rect x="${ICON_X}" y="${ICON_Y}" width="${ICON_S}" height="${ICON_S}" rx="10"
+          fill="${t.dim}" stroke="${t.color}" stroke-width="0.6" stroke-opacity="0.35"/>
 
-  <!-- Address -->
-  <text x="64" y="65"
-        font-family="'Courier New',Courier,monospace" font-size="10"
-        fill="#4a5568">${esc(line3)}</text>
+    <!-- Eagle emoji (floating) -->
+    <text class="${uid}float" x="${ICON_X + ICON_S / 2}" y="${ICON_Y + ICON_S / 2 + 10}"
+          font-size="26" text-anchor="middle"
+          font-family="Apple Color Emoji,Segoe UI Emoji,Noto Color Emoji,serif"
+          style="animation:${uid}float 3.4s ease-in-out infinite;">🦅</text>
 
-  <!-- Tier pill -->
-  <rect x="${PILL_X}" y="13" width="${PILL_W}" height="22" rx="5" fill="${t.dim}"/>
-  <text x="${PILL_X + PILL_W / 2}" y="28.5"
-        font-family="Rajdhani,Georgia,sans-serif" font-size="11" font-weight="700"
-        fill="${t.text}" text-anchor="middle" letter-spacing="0.5">${esc(t.name.toUpperCase())}</text>
+    <!-- Micro-particles floating from eagle -->
+    <circle class="${uid}p1" cx="${ICON_X + 14}" cy="${ICON_Y + 12}" r="1.5"
+            fill="${t.color}"
+            style="animation:${uid}p1 2.7s 0.2s ease-out infinite;"/>
+    <circle class="${uid}p2" cx="${ICON_X + ICON_S - 10}" cy="${ICON_Y + 16}" r="1.2"
+            fill="${t.color}"
+            style="animation:${uid}p2 3.1s 1.2s ease-out infinite;"/>
+    <circle class="${uid}p3" cx="${ICON_X + ICON_S / 2 + 5}" cy="${ICON_Y + 7}" r="0.9"
+            fill="${t.text}"
+            style="animation:${uid}p3 2.9s 2s ease-out infinite;"/>
 
-  <!-- Verified pill -->
-  <rect x="${PILL_X}" y="44" width="${PILL_W}" height="20" rx="5" fill="rgba(0,255,136,0.08)"/>
-  <text x="${PILL_X + PILL_W / 2}" y="58"
-        font-family="Inter,Arial,sans-serif" font-size="10"
-        fill="#00ff88" text-anchor="middle">✓ On-Chain</text>
+    <!-- Token title -->
+    <text x="${TEXT_X}" y="41"
+          font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
+          font-size="14.5" font-weight="700" fill="#f0f4ff" letter-spacing="0.3">${esc(title)}</text>
 
-  <!-- Clickable overlay -->
-  <a href="${esc(profileUrl)}" target="_blank">
-    <rect width="${W}" height="${H}" rx="8" fill="transparent"/>
-  </a>
+    <!-- Agent name / label -->
+    <text x="${TEXT_X}" y="59"
+          font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
+          font-size="12" fill="#8090a8">${esc(line2)}</text>
+
+    <!-- Address -->
+    <text x="${TEXT_X}" y="76"
+          font-family="'SF Mono','Fira Code','Fira Mono','Roboto Mono',monospace"
+          font-size="10" fill="#3d4a5c">${esc(line3)}</text>
+
+    <!-- Tier pill -->
+    <rect x="${PILL_X}" y="16" width="${PILL_W}" height="28" rx="7"
+          fill="${t.dim}" stroke="${t.color}" stroke-width="0.65" stroke-opacity="0.45"/>
+    <text x="${PILL_X + PILL_W / 2}" y="34.5"
+          font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
+          font-size="11.5" font-weight="700" fill="${t.text}" text-anchor="middle"
+          letter-spacing="1">${esc(t.name.toUpperCase())}</text>
+
+    <!-- Verified pill (breathing glow) -->
+    <rect class="${uid}breathe" x="${PILL_X}" y="55" width="${PILL_W}" height="26" rx="7"
+          fill="rgba(0,232,122,0.07)" stroke="rgba(0,232,122,0.22)" stroke-width="0.6"
+          style="animation:${uid}breathe 2.5s ease-in-out infinite;"/>
+    <text x="${PILL_X + PILL_W / 2}" y="72"
+          font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
+          font-size="10.5" fill="#00e87a" text-anchor="middle">✓ On-Chain</text>
+
+    <!-- Shimmer sweep (slides left→right continuously) -->
+    <rect class="${uid}shimmer" x="0" y="0" width="${W}" height="${H}"
+          fill="url(#${uid}sg)"
+          style="animation:${uid}shimmer 3.8s 0.6s linear infinite;"/>
+
+    <!-- Clickable overlay -->
+    <a href="${esc(profileUrl)}" target="_blank">
+      <rect width="${W}" height="${H}" fill="transparent" opacity="0"/>
+    </a>
+  </g>
 </svg>`;
 }
 
