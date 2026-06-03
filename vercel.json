@@ -68,6 +68,14 @@
       "dest": "/api/nest.js"
     },
     {
+      "src": "/api/badge/([A-Z0-9]+)",
+      "dest": "/api/badge.js?address=$1"
+    },
+    {
+      "src": "/api/badge",
+      "dest": "/api/badge.js"
+    },
+    {
       "src": "/api/attest",
       "dest": "/api/attest.js"
     },
