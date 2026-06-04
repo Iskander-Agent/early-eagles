@@ -28,7 +28,25 @@ const TIERS = [
 
 const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET, OPTIONS' };
 
-const { c32address } = require('c32check');
+const { c32address, c32addressDecode } = require('c32check');
+const { sha256 } = require('@noble/hashes/sha256');
+
+const BASE58_ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+
+function stxToBtcAddress(stxAddr) {
+  try {
+    const [, hashHex] = c32addressDecode(stxAddr);
+    const hash = Buffer.from(hashHex, 'hex');
+    const versioned = Buffer.concat([Buffer.from([0x00]), hash]);
+    const checksum = Buffer.from(sha256(sha256(versioned))).slice(0, 4);
+    const full = Buffer.concat([versioned, checksum]);
+    let n = BigInt('0x' + full.toString('hex'));
+    let result = '';
+    while (n > 0n) { result = BASE58_ALPHABET[Number(n % 58n)] + result; n /= 58n; }
+    for (const b of full) { if (b !== 0) break; result = '1' + result; }
+    return result;
+  } catch { return null; }
+}
 const { fetchCallReadOnlyFunction, cvToValue } = require('@stacks/transactions');
 const { STACKS_MAINNET } = require('@stacks/network');
 
@@ -128,9 +146,9 @@ async function getTokenMeta(id) {
 
 /* ── SVG builder ──────────────────────────────────────────────────────────── */
 
-function buildBadge({ tokenId, count, tier, agentName, alias, address, profileUrl }) {
+function buildBadge({ tokenId, count, tier, agentName, alias, address, btcAddress, profileUrl }) {
   const t = TIERS[tier] ?? TIERS[4];
-  const W = 260, H = 42;
+  const W = 260, H = 64;
   const uid = `ee${tier}`;
 
   const title = count > 1
@@ -144,6 +162,9 @@ function buildBadge({ tokenId, count, tier, agentName, alias, address, profileUr
   const ICON_X = 8, ICON_Y = 9, ICON_S = 22;
   const TEXT_X = ICON_X + ICON_S + 8;    // 38
   const PILL_W = 68, PILL_X = W - PILL_W - 8;  // 184
+
+  const stxDisplay = abbrev(address);
+  const btcDisplay = btcAddress ? abbrev(btcAddress) : null;
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"
      role="img" aria-label="${esc(title)}${agentName ? ' — ' + esc(agentName) : ''}">
@@ -196,7 +217,7 @@ function buildBadge({ tokenId, count, tier, agentName, alias, address, profileUr
           fill="${t.color}" filter="url(#${uid}gf)"
           style="animation:${uid}gl 4s ease-in-out infinite;"/>
 
-    <!-- Eagle icon box -->
+    <!-- Eagle icon box — vertically centered in header zone -->
     <rect x="${ICON_X}" y="${ICON_Y}" width="${ICON_S}" height="${ICON_S}" rx="5"
           fill="${t.dim}"/>
     <text x="${ICON_X + ICON_S / 2}" y="${ICON_Y + ICON_S / 2 + 5}"
@@ -204,14 +225,36 @@ function buildBadge({ tokenId, count, tier, agentName, alias, address, profileUr
           font-family="Apple Color Emoji,Segoe UI Emoji,Noto Color Emoji,serif">🦅</text>
 
     <!-- Title -->
-    <text x="${TEXT_X}" y="21"
+    <text x="${TEXT_X}" y="20"
           font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
           font-size="10.5" font-weight="700" fill="#edf0f7" letter-spacing="0.15">${esc(title)}</text>
 
     <!-- Sub (alias · agent name, or agent name, or address) -->
-    <text x="${TEXT_X}" y="33"
+    <text x="${TEXT_X}" y="31"
           font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
           font-size="8.5" fill="#68788f">${esc(sub)}</text>
+
+    <!-- Separator -->
+    <line x1="${TEXT_X}" y1="37" x2="${PILL_X - 4}" y2="37"
+          stroke="rgba(255,255,255,0.06)" stroke-width="0.5"/>
+
+    <!-- STX address row -->
+    <text x="${TEXT_X}" y="48"
+          font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
+          font-size="7.5" font-weight="700" fill="${t.text}">STX</text>
+    <text x="${TEXT_X + 20}" y="48"
+          font-family="'SF Mono','Fira Code','Consolas',monospace"
+          font-size="7.5" fill="#8a9ab8">${esc(stxDisplay)}</text>
+
+    <!-- BTC address row -->
+    ${btcDisplay ? `
+    <text x="${TEXT_X}" y="58"
+          font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
+          font-size="7.5" font-weight="700" fill="#f7931a">BTC</text>
+    <text x="${TEXT_X + 20}" y="58"
+          font-family="'SF Mono','Fira Code','Consolas',monospace"
+          font-size="7.5" fill="#8a9ab8">${esc(btcDisplay)}</text>
+    ` : ''}
 
     <!-- Tier pill -->
     <rect x="${PILL_X}" y="9" width="${PILL_W}" height="13" rx="3"
@@ -222,7 +265,7 @@ function buildBadge({ tokenId, count, tier, agentName, alias, address, profileUr
           letter-spacing="0.7">${esc(t.name.toUpperCase())}</text>
 
     <!-- On-Chain label -->
-    <text x="${PILL_X + PILL_W / 2}" y="34"
+    <text x="${PILL_X + PILL_W / 2}" y="31"
           font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
           font-size="7.5" fill="#00c96a" text-anchor="middle">✓ on-chain</text>
 
@@ -265,6 +308,12 @@ module.exports = async function handler(req, res) {
     .replace(/[<>&"\\]/g, '') // strip SVG-unsafe chars
     .slice(0, 20) || null;
 
+  // Optional BTC address override (otherwise derived from STX address)
+  const btcOverride = String((req.query || {}).btc || '')
+    .trim()
+    .replace(/[^A-Za-z0-9]/g, '')
+    .slice(0, 62) || null;
+
   if (!address) {
     res.setHeader('Cache-Control', 'no-store');
     return res.status(400).send(errorSVG('Missing ?address= parameter', 400));
@@ -301,8 +350,9 @@ module.exports = async function handler(req, res) {
     agentName = meta.properties.display_name || null;
   }
 
+  const btcAddress = btcOverride || stxToBtcAddress(address);
   const profileUrl = `${BASE_URL}/eagle/${primaryId}`;
-  const svg = buildBadge({ tokenId: primaryId, count: tokenIds.length, tier, agentName, alias, address, profileUrl });
+  const svg = buildBadge({ tokenId: primaryId, count: tokenIds.length, tier, agentName, alias, address, btcAddress, profileUrl });
 
   res.setHeader('Cache-Control', 'public, max-age=3600, stale-while-revalidate=600');
   return res.status(200).send(svg);

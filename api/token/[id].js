@@ -3,7 +3,25 @@
  * Returns JSON metadata for marketplaces + the mint page reveal
  */
 
-const { c32address } = require('c32check');
+const { c32address, c32addressDecode } = require('c32check');
+const { sha256 } = require('@noble/hashes/sha256');
+
+const BASE58_ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+
+function stxToBtcAddress(stxAddr) {
+  try {
+    const [, hashHex] = c32addressDecode(stxAddr);
+    const hash = Buffer.from(hashHex, 'hex');
+    const versioned = Buffer.concat([Buffer.from([0x00]), hash]);
+    const checksum = Buffer.from(sha256(sha256(versioned))).slice(0, 4);
+    const full = Buffer.concat([versioned, checksum]);
+    let n = BigInt('0x' + full.toString('hex'));
+    let result = '';
+    while (n > 0n) { result = BASE58_ALPHABET[Number(n % 58n)] + result; n /= 58n; }
+    for (const b of full) { if (b !== 0) break; result = '1' + result; }
+    return result;
+  } catch { return null; }
+}
 
 const TIER_NAMES = ['Legendary', 'Epic', 'Rare', 'Uncommon', 'Common'];
 const TIER_SYMBOLS = ['🔱', '◈', '◇', '○', '●'];
@@ -83,10 +101,10 @@ module.exports = async function handler(req, res) {
     const agentId = parseInt(traits['agent-id']?.value ?? '0', 10);
     const displayName = traits['display-name']?.value ?? 'Eagle #' + tokenId;
     const nameAscii = traits['name-ascii']?.value ?? '';
-    const btcAddress = traits['btc-address']?.value ?? '';
+    const btcAddressTrait = traits['btc-address']?.value ?? '';
     const mintedAt = parseInt(traits['minted-at']?.value ?? '0', 10);
 
-    // Decode owner address
+    // Decode owner address + derive BTC
     let owner = null;
     try {
       const ownerData = await ownerRes.json();
@@ -94,6 +112,8 @@ module.exports = async function handler(req, res) {
         owner = decodeOwnerFull(ownerData.result);
       }
     } catch (_) { /* non-fatal */ }
+
+    const btcAddress = btcAddressTrait || (owner ? stxToBtcAddress(owner) : '');
 
     return res.status(200).json({
       name: `Early Eagle #${tokenId}`,
