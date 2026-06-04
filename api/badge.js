@@ -152,7 +152,7 @@ function buildBadge({ tokenId, count, tier, agentName, alias, address, btcAddres
   // Row A: icon + title (left)  |  tier pill (right)
   // Row B: subtitle · ✓ on-chain (left-to-center)  View Profile → (right)
   // Each row uses the FULL width so neither side feels dense or empty.
-  const W = 340, H = 74;
+  const W = 340, H = 58;
   const uid = `ee${tier}`;
 
   const title = count > 1 ? `EARLY EAGLES ×${count}` : `EARLY EAGLE #${tokenId}`;
@@ -161,13 +161,25 @@ function buildBadge({ tokenId, count, tier, agentName, alias, address, btcAddres
 
   // Tier pill right-aligned in row A
   const PILL_W = 72, PILL_H = 16;
-  const PILL_X = W - PILL_W - 8;        // 260
-  const PILL_CX = PILL_X + PILL_W / 2;  // 296
+  const PILL_X = W - PILL_W - 8;
+  const PILL_CX = PILL_X + PILL_W / 2;
 
-  // Address rows
-  const HDR  = 40;          // header ends here
-  const ROW1 = HDR;         // 40 — STX row starts
-  const ROW2 = HDR + 17;    // 57 — BTC row starts
+  // Single address row — HDR divider, one row spanning STX + BTC side-by-side
+  const HDR = 40;
+  const ADDR_Y = HDR + 13;  // 53 — address text baseline
+
+  // Copy icon helper — two overlapping squares (standard clipboard icon)
+  // ix,iy = top-left of icon bounding box (10×10)
+  const copyIcon = (ix, iy, confirmId, val) => `
+    <g onclick="${uid}cp('${confirmId}','${val}')" style="cursor:pointer">
+      <rect x="${ix}"   y="${iy+3}" width="7" height="7" rx="1.2"
+            fill="#0d1525" stroke="rgba(255,255,255,0.18)" stroke-width="0.7"/>
+      <rect x="${ix+2}" y="${iy}"   width="7" height="7" rx="1.2"
+            fill="#0d1525" stroke="rgba(255,255,255,0.32)" stroke-width="0.7"/>
+      <text id="${confirmId}" x="${ix+5}" y="${iy+8}"
+            font-family="-apple-system,BlinkMacSystemFont,sans-serif"
+            font-size="7" font-weight="700" fill="#00c97a" text-anchor="middle"></text>
+    </g>`;
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"
      role="img" aria-label="${esc(title)}${agentName ? ' — ' + esc(agentName) : ''}">
@@ -185,7 +197,7 @@ function buildBadge({ tokenId, count, tier, agentName, alias, address, btcAddres
   </defs>
 
   <script type="text/javascript"><![CDATA[
-    function ${uid}cp(id,v){if(!navigator.clipboard)return;navigator.clipboard.writeText(v).then(function(){var e=document.getElementById(id);if(!e)return;e.textContent='✓';setTimeout(function(){e.textContent='copy';},1600);});}
+    function ${uid}cp(id,v){if(!navigator.clipboard)return;navigator.clipboard.writeText(v).then(function(){var e=document.getElementById(id);if(!e)return;e.textContent='✓';setTimeout(function(){e.textContent='';},1600);});}
   ]]></script>
 
   <g clip-path="url(#${uid}cl)">
@@ -194,13 +206,11 @@ function buildBadge({ tokenId, count, tier, agentName, alias, address, btcAddres
     <rect width="${W}" height="${H}" rx="10" fill="none"
           stroke="${t.color}" stroke-width="0.8" stroke-opacity="0.22"/>
 
-    <!-- Dividers -->
-    <line x1="4"  y1="${HDR}"  x2="${W}" y2="${HDR}"
+    <!-- Header / address divider -->
+    <line x1="4" y1="${HDR}" x2="${W}" y2="${HDR}"
           stroke="rgba(255,255,255,0.08)" stroke-width="0.6"/>
-    <line x1="12" y1="${ROW2}" x2="${W - 4}" y2="${ROW2}"
-          stroke="rgba(255,255,255,0.04)" stroke-width="0.5"/>
 
-    <!-- ── Row A (y 0–22): icon · title LEFT  |  tier pill RIGHT ──────── -->
+    <!-- ── Row A: icon · title LEFT  |  tier pill RIGHT ─────────────── -->
 
     <rect x="12" y="7" width="18" height="18" rx="4" fill="${t.dim}"/>
     <text x="21" y="20" font-size="11" text-anchor="middle"
@@ -217,9 +227,7 @@ function buildBadge({ tokenId, count, tier, agentName, alias, address, btcAddres
           font-size="7.5" font-weight="800" fill="${t.text}" text-anchor="middle"
           letter-spacing="1.2">${esc(t.name.toUpperCase())}</text>
 
-    <!-- ── Row B (y 22–40): subtitle · ✓ on-chain (LEFT→CENTER)  View Profile → (RIGHT) ── -->
-    <!--  All three on the same baseline y=34, spanning the full card width.              -->
-    <!--  No stacked right column — the whole row is one horizontal flow.                 -->
+    <!-- ── Row B: subtitle · ✓ on-chain  ·  View Profile → (all inline) ─ -->
 
     <text x="36" y="34"
           font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
@@ -235,38 +243,26 @@ function buildBadge({ tokenId, count, tier, agentName, alias, address, btcAddres
             font-size="7" fill="${t.text}" text-anchor="end" opacity="0.8">View Profile →</text>
     </a>
 
-    <!-- ── STX row ─────────────────────────────────────────────────────── -->
+    <!-- ── Single address row: STX left  ·  BTC right ────────────────── -->
+    <!-- Addresses abbreviated (abbrev: 8+…+6 chars) at larger 9px font. -->
+    <!-- Copy icon = two overlapping squares (clipboard). No text label.  -->
 
-    <text x="12" y="${ROW1 + 12}"
+    <text x="12" y="${ADDR_Y}"
           font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
-          font-size="6.5" font-weight="700" letter-spacing="0.7" fill="${t.text}">STX</text>
-    <text x="32" y="${ROW1 + 12}"
+          font-size="7" font-weight="700" letter-spacing="0.6" fill="${t.text}">STX</text>
+    <text x="30" y="${ADDR_Y}"
           font-family="'SF Mono','Fira Code','Consolas',monospace"
-          font-size="7.5" fill="#8899b4">${esc(address)}</text>
-    <g onclick="${uid}cp('${uid}sc','${address}')" style="cursor:pointer">
-      <rect x="${W - 40}" y="${ROW1 + 3}" width="33" height="10" rx="3"
-            fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.11)" stroke-width="0.5"/>
-      <text id="${uid}sc" x="${W - 23.5}" y="${ROW1 + 11}"
-            font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
-            font-size="6.5" fill="rgba(255,255,255,0.45)" text-anchor="middle">copy</text>
-    </g>
+          font-size="9" fill="#8899b4">${esc(abbrev(address))}</text>
+    ${copyIcon(114, HDR + 3, `${uid}sc`, address)}
 
-    <!-- ── BTC row ─────────────────────────────────────────────────────── -->
-
-    <text x="12" y="${ROW2 + 12}"
-          font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
-          font-size="6.5" font-weight="700" letter-spacing="0.7" fill="#f7931a">BTC</text>
     ${btcAddress ? `
-    <text x="32" y="${ROW2 + 12}"
+    <text x="134" y="${ADDR_Y}"
+          font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
+          font-size="7" font-weight="700" letter-spacing="0.6" fill="#f7931a">BTC</text>
+    <text x="152" y="${ADDR_Y}"
           font-family="'SF Mono','Fira Code','Consolas',monospace"
-          font-size="7.5" fill="#8899b4">${esc(btcAddress)}</text>
-    <g onclick="${uid}cp('${uid}bc','${btcAddress}')" style="cursor:pointer">
-      <rect x="${W - 40}" y="${ROW2 + 3}" width="33" height="10" rx="3"
-            fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.11)" stroke-width="0.5"/>
-      <text id="${uid}bc" x="${W - 23.5}" y="${ROW2 + 11}"
-            font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
-            font-size="6.5" fill="rgba(255,255,255,0.45)" text-anchor="middle">copy</text>
-    </g>
+          font-size="9" fill="#8899b4">${esc(abbrev(btcAddress))}</text>
+    ${copyIcon(236, HDR + 3, `${uid}bc`, btcAddress)}
     ` : ''}
   </g>
 </svg>`;
