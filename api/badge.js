@@ -164,7 +164,7 @@ function buildBadge({ tokenId, count, tier, agentName, alias, address, btcAddres
 
   const title = count > 1 ? `EARLY EAGLES ×${count}` : `EARLY EAGLE #${tokenId}`;
   const nameBase = agentName || abbrev(address);
-  const sub = truncate(alias ? `${alias} · ${nameBase}` : nameBase, 22);
+  const sub = truncate(alias ? `${alias} · ${nameBase}` : nameBase, 32);
 
   // Tier pill right-aligned in row A
   const PILL_W = 72, PILL_H = 16;
@@ -233,15 +233,15 @@ function buildBadge({ tokenId, count, tier, agentName, alias, address, btcAddres
           font-size="7.5" font-weight="800" fill="${t.text}" text-anchor="middle"
           letter-spacing="1.2">${esc(t.name.toUpperCase())}</text>
 
-    <!-- ── Row B: subtitle · ✓ on-chain  ·  View Profile → (all inline) ─ -->
+    <!-- ── Row B: name (left)  |  ✓ · View Profile → (right cluster) ─── -->
 
     <text x="36" y="37"
           font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
           font-size="10" font-weight="500" fill="#8ba4c4">${esc(sub)}</text>
 
-    <text x="175" y="37"
+    <text x="${W - 82}" y="37"
           font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
-          font-size="7.5" fill="#00c97a">· ✓ on-chain</text>
+          font-size="8" fill="#00c97a">✓</text>
 
     <a href="${esc(profileUrl)}" target="_blank">
       <text x="${W - 8}" y="37"
