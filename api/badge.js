@@ -164,7 +164,7 @@ function buildBadge({ tokenId, count, tier, agentName, alias, address, btcAddres
 
   const title = count > 1 ? `EARLY EAGLES ×${count}` : `EARLY EAGLE #${tokenId}`;
   const nameBase = agentName || abbrev(address);
-  const sub = truncate(alias ? `${alias} · ${nameBase}` : nameBase, 26);
+  const sub = truncate(alias ? `${alias} · ${nameBase}` : nameBase, 22);
 
   // Tier pill right-aligned in row A
   const PILL_W = 72, PILL_H = 16;
@@ -237,38 +237,38 @@ function buildBadge({ tokenId, count, tier, agentName, alias, address, btcAddres
 
     <text x="36" y="37"
           font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
-          font-size="8.5" fill="#4a5c78">${esc(sub)}</text>
+          font-size="10" font-weight="500" fill="#8ba4c4">${esc(sub)}</text>
 
-    <text x="${W/2}" y="37" text-anchor="middle"
+    <text x="175" y="37"
           font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
-          font-size="7" fill="#00c97a">· ✓ on-chain</text>
+          font-size="7.5" fill="#00c97a">· ✓ on-chain</text>
 
     <a href="${esc(profileUrl)}" target="_blank">
       <text x="${W - 8}" y="37"
             font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
-            font-size="7" fill="${t.text}" text-anchor="end" opacity="0.8">View Profile →</text>
+            font-size="8" fill="${t.text}" text-anchor="end" opacity="0.9">View Profile →</text>
     </a>
 
     <!-- ── Single address row: STX left  ·  BTC right ────────────────── -->
     <!-- Addresses abbreviated (abbrev: 8+…+6 chars) at larger 9px font. -->
     <!-- Copy icon = two overlapping squares (clipboard). No text label.  -->
 
-    <text x="12" y="${ADDR_Y}"
+    <text x="51" y="${ADDR_Y}"
           font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
           font-size="7" font-weight="700" letter-spacing="0.6" fill="${t.text}">STX</text>
-    <text x="30" y="${ADDR_Y}"
+    <text x="69" y="${ADDR_Y}"
           font-family="'SF Mono','Fira Code','Consolas',monospace"
           font-size="9" fill="#8899b4">${esc(abbrev(address))}</text>
-    ${copyIcon(114, HDR + 7, `${uid}sc`, address)}
+    ${copyIcon(153, HDR + 7, `${uid}sc`, address)}
 
     ${btcAddress ? `
-    <text x="219" y="${ADDR_Y}"
+    <text x="180" y="${ADDR_Y}"
           font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
           font-size="7" font-weight="700" letter-spacing="0.6" fill="#f7931a">BTC</text>
-    <text x="237" y="${ADDR_Y}"
+    <text x="198" y="${ADDR_Y}"
           font-family="'SF Mono','Fira Code','Consolas',monospace"
           font-size="9" fill="#8899b4">${esc(abbrev(btcAddress))}</text>
-    ${copyIcon(321, HDR + 7, `${uid}bc`, btcAddress)}
+    ${copyIcon(282, HDR + 7, `${uid}bc`, btcAddress)}
     ` : ''}
   </g>
 </svg>`;
