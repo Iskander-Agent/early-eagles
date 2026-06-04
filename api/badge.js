@@ -164,7 +164,7 @@ function buildBadge({ tokenId, count, tier, agentName, alias, address, btcAddres
 
   const title = count > 1 ? `EARLY EAGLES ×${count}` : `EARLY EAGLE #${tokenId}`;
   const nameBase = agentName || abbrev(address);
-  const sub = truncate(alias ? `${alias} · ${nameBase}` : nameBase, 32);
+  const sub = truncate(alias ? `${alias} · ${nameBase}` : nameBase, 64);
 
   // Tier pill right-aligned in row A
   const PILL_W = 72, PILL_H = 16;
@@ -239,9 +239,9 @@ function buildBadge({ tokenId, count, tier, agentName, alias, address, btcAddres
           font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
           font-size="10" font-weight="500" fill="#8ba4c4">${esc(sub)}</text>
 
-    <text x="${W - 82}" y="37"
+    <text x="${W - 82}" y="37" text-anchor="end"
           font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
-          font-size="8" fill="#00c97a">✓</text>
+          font-size="7.5" fill="#00c97a">✓ on-chain</text>
 
     <a href="${esc(profileUrl)}" target="_blank">
       <text x="${W - 8}" y="37"
