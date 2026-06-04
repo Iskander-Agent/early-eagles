@@ -4,11 +4,24 @@
  * Returns pre-built gallery data: renderer segments + all eagle data.
  * Vercel edge-caches this for 60s so users get instant gallery loads.
  * Server-side fetches from Hiro API — no rate limit issues for clients.
+ *
+ * Caching layers:
+ *  1. Vercel edge cache — 60s fresh, 5min stale-while-revalidate
+ *  2. KV persistent cache — survives cold starts; TTL 10min
+ *  3. In-memory cache — fastest path for warm instances
  */
 
 const { fetchCallReadOnlyFunction, cvToValue } = require('@stacks/transactions');
 const { STACKS_MAINNET } = require('@stacks/network');
 const { c32address } = require('c32check');
+
+// Lazy KV loader — only connect when env vars are present (same pattern as nest.js)
+function getKv() {
+  if (!process.env.KV_REST_API_URL || !process.env.KV_REST_API_TOKEN) return null;
+  try { return require('@vercel/kv').kv; } catch { return null; }
+}
+const KV_KEY     = 'gallery:data';
+const KV_TTL_SEC = 600; // 10 minutes — survive cold start bursts
 
 // Mainnet only
 const STACKS_API = 'https://api.hiro.so';
@@ -126,56 +139,69 @@ module.exports = async function handler(req, res) {
       _segCache = { seg1, eagle, seg2, seg3 };
     }
 
-    // 3. Build eagle data — reuse cached eagles, only fetch new ones
+    // 3. Build eagle data — KV → in-memory → fetch delta
+    // Try KV first (survives cold starts)
+    if (_eagleCache.eagles.length === 0) {
+      const kv = getKv();
+      if (kv) {
+        try {
+          const kvData = await kv.get(KV_KEY);
+          if (kvData && kvData.eagles) {
+            _eagleCache = { eagles: kvData.eagles, totalMinted: kvData.totalMinted, builtAt: kvData.builtAt };
+            console.log(`[gallery] KV cache hit: ${kvData.eagles.length} eagles`);
+          }
+        } catch (e) { console.warn('[gallery] KV read failed:', e.message); }
+      }
+    }
+
     let eagles = [..._eagleCache.eagles];
     const startFrom = _eagleCache.totalMinted;
 
-    for (let id = startFrom; id < totalMinted; id++) {
-      try {
-        const uintArg = encodeUint(id);
-
-        // Fetch render params
-        const paramsRes = await callRead(NFT_CONTRACT, 'get-render-params', [uintArg]);
-        let html = null;
-        let meta = { name: `Eagle #${id}`, tier: 0, cid: 0, rank: id };
-
-        if (paramsRes.okay && paramsRes.result) {
-          const jsonStr = decodeRenderParams(paramsRes.result);
-          if (jsonStr) {
-            const parsed = JSON.parse(jsonStr);
-            meta = { ...meta, ...parsed };
-            html = _segCache.seg1 + _segCache.eagle + _segCache.seg2 + jsonStr + _segCache.seg3;
+    if (startFrom < totalMinted) {
+      // Fetch new eagles in parallel batches of 8
+      const newIds = Array.from({ length: totalMinted - startFrom }, (_, i) => startFrom + i);
+      const BATCH = 8;
+      for (let b = 0; b < newIds.length; b += BATCH) {
+        const batch = newIds.slice(b, b + BATCH);
+        const results = await Promise.allSettled(batch.map(async id => {
+          const uintArg = encodeUint(id);
+          const [paramsRes, ownerRes] = await Promise.allSettled([
+            callRead(NFT_CONTRACT, 'get-render-params', [uintArg]),
+            callRead(NFT_CONTRACT, 'get-owner', [uintArg]),
+          ]);
+          let html = null;
+          let meta = { name: `Eagle #${id}`, tier: 0, cid: 0, rank: id };
+          if (paramsRes.status === 'fulfilled' && paramsRes.value?.okay && paramsRes.value?.result) {
+            const jsonStr = decodeRenderParams(paramsRes.value.result);
+            if (jsonStr) {
+              const parsed = JSON.parse(jsonStr);
+              meta = { ...meta, ...parsed };
+              html = _segCache.seg1 + _segCache.eagle + _segCache.seg2 + jsonStr + _segCache.seg3;
+            }
           }
+          let owner = null;
+          if (ownerRes.status === 'fulfilled' && ownerRes.value?.okay && ownerRes.value?.result) {
+            owner = decodeOwner(ownerRes.value.result);
+          }
+          const tierIdx = typeof meta.tier === 'number' ? meta.tier : 0;
+          return { id, name: meta.name || `Eagle #${id}`, tier: tierIdx, tierName: TIER_NAMES[tierIdx] || 'Common', tierId: TIER_IDS[tierIdx] || 'common', rank: meta.rank || id, cid: meta.cid || 0, owner, html };
+        }));
+        for (const r of results) {
+          if (r.status === 'fulfilled') eagles.push(r.value);
+          else console.warn('[gallery] eagle fetch failed:', r.reason?.message);
         }
-
-        // Fetch owner
-        let owner = null;
-        try {
-          const ownerRes = await callRead(NFT_CONTRACT, 'get-owner', [uintArg]);
-          if (ownerRes.okay && ownerRes.result) {
-            owner = decodeOwner(ownerRes.result);
-          }
-        } catch (e) { /* skip */ }
-
-        const tierIdx = typeof meta.tier === 'number' ? meta.tier : 0;
-
-        eagles.push({
-          id,
-          name: meta.name || `Eagle #${id}`,
-          tier: tierIdx,
-          tierName: TIER_NAMES[tierIdx] || 'Common',
-          tierId: TIER_IDS[tierIdx] || 'common',
-          rank: meta.rank || id,
-          cid: meta.cid || 0,
-          owner,
-          html,
-        });
-      } catch (e) {
-        console.warn(`Failed to fetch eagle ${id}:`, e.message);
       }
     }
+
     // Update in-memory cache
     _eagleCache = { eagles, totalMinted, builtAt: Date.now() };
+
+    // Persist to KV so cold starts skip the full refetch
+    const kv = getKv();
+    if (kv && startFrom < totalMinted) {
+      kv.set(KV_KEY, { eagles, totalMinted, builtAt: _eagleCache.builtAt }, { ex: KV_TTL_SEC })
+        .catch(e => console.warn('[gallery] KV write failed:', e.message));
+    }
 
     return res.status(200).json({
       totalMinted,
