@@ -148,27 +148,26 @@ async function getTokenMeta(id) {
 
 function buildBadge({ tokenId, count, tier, agentName, alias, address, btcAddress, profileUrl }) {
   const t = TIERS[tier] ?? TIERS[4];
-  // W=340 fits full STX address (42 chars × ~4.5px) with right margin for copy
-  // H=80: header 48px (2 balanced rows) + 2 address rows 16px each
-  const W = 340, H = 80;
+  // Full-width two-row header — no vertical column split.
+  // Row A: icon + title (left)  |  tier pill (right)
+  // Row B: subtitle · ✓ on-chain (left-to-center)  View Profile → (right)
+  // Each row uses the FULL width so neither side feels dense or empty.
+  const W = 340, H = 74;
   const uid = `ee${tier}`;
 
   const title = count > 1 ? `EARLY EAGLES ×${count}` : `EARLY EAGLE #${tokenId}`;
   const nameBase = agentName || abbrev(address);
-  const sub = truncate(alias ? `${alias} · ${nameBase}` : nameBase, 28);
+  const sub = truncate(alias ? `${alias} · ${nameBase}` : nameBase, 26);
 
-  // Two balanced header rows:
-  //   Row A (y=0–26): icon  +  title left  |  tier pill right
-  //   Row B (y=26–48): space + subtitle    |  on-chain · View Profile →
-  // Address rows below the divider at y=48
-  const HDR   = 48;
-  const ROW1  = HDR;       // 48 — STX
-  const ROW2  = HDR + 16;  // 64 — BTC
+  // Tier pill right-aligned in row A
+  const PILL_W = 72, PILL_H = 16;
+  const PILL_X = W - PILL_W - 8;        // 260
+  const PILL_CX = PILL_X + PILL_W / 2;  // 296
 
-  // Tier pill right-aligned: 8px from right edge
-  const PILL_W = 74, PILL_H = 16;
-  const PILL_X = W - PILL_W - 8;   // 258
-  const PILL_CX = PILL_X + PILL_W / 2;  // 295
+  // Address rows
+  const HDR  = 40;          // header ends here
+  const ROW1 = HDR;         // 40 — STX row starts
+  const ROW2 = HDR + 17;    // 57 — BTC row starts
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"
      role="img" aria-label="${esc(title)}${agentName ? ' — ' + esc(agentName) : ''}">
@@ -195,54 +194,48 @@ function buildBadge({ tokenId, count, tier, agentName, alias, address, btcAddres
     <rect width="${W}" height="${H}" rx="10" fill="none"
           stroke="${t.color}" stroke-width="0.8" stroke-opacity="0.22"/>
 
-    <!-- Header / address section divider -->
-    <line x1="4" y1="${HDR}" x2="${W}" y2="${HDR}"
+    <!-- Dividers -->
+    <line x1="4"  y1="${HDR}"  x2="${W}" y2="${HDR}"
           stroke="rgba(255,255,255,0.08)" stroke-width="0.6"/>
-    <!-- STX / BTC divider -->
     <line x1="12" y1="${ROW2}" x2="${W - 4}" y2="${ROW2}"
           stroke="rgba(255,255,255,0.04)" stroke-width="0.5"/>
 
-    <!-- ── Header row A: icon + title  |  tier pill ──────────────────── -->
+    <!-- ── Row A (y 0–22): icon · title LEFT  |  tier pill RIGHT ──────── -->
 
-    <rect x="12" y="8" width="20" height="20" rx="4" fill="${t.dim}"/>
-    <text x="22" y="23" font-size="12" text-anchor="middle"
+    <rect x="12" y="7" width="18" height="18" rx="4" fill="${t.dim}"/>
+    <text x="21" y="20" font-size="11" text-anchor="middle"
           font-family="Apple Color Emoji,Segoe UI Emoji,Noto Color Emoji,serif">🦅</text>
 
-    <!-- Title — left, vertically centered in row A (y=8–28) -->
-    <text x="38" y="23"
+    <text x="36" y="21"
           font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
           font-size="11" font-weight="700" fill="#eef3ff" letter-spacing="0.2">${esc(title)}</text>
 
-    <!-- Tier pill — right-aligned, row A -->
-    <rect x="${PILL_X}" y="8" width="${PILL_W}" height="${PILL_H}" rx="5"
+    <rect x="${PILL_X}" y="7" width="${PILL_W}" height="${PILL_H}" rx="5"
           fill="${t.dim}" stroke="${t.color}" stroke-width="0.6" stroke-opacity="0.5"/>
-    <text x="${PILL_CX}" y="${8 + PILL_H / 2 + 3}"
+    <text x="${PILL_CX}" y="${7 + PILL_H / 2 + 3}"
           font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
           font-size="7.5" font-weight="800" fill="${t.text}" text-anchor="middle"
           letter-spacing="1.2">${esc(t.name.toUpperCase())}</text>
 
-    <!-- ── Header row B: subtitle  |  on-chain · profile link ────────── -->
+    <!-- ── Row B (y 22–40): subtitle · ✓ on-chain (LEFT→CENTER)  View Profile → (RIGHT) ── -->
+    <!--  All three on the same baseline y=34, spanning the full card width.              -->
+    <!--  No stacked right column — the whole row is one horizontal flow.                 -->
 
-    <!-- Subtitle — left, aligned under title at x=38 -->
-    <text x="38" y="39"
+    <text x="36" y="34"
           font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
           font-size="8.5" fill="#4a5c78">${esc(sub)}</text>
 
-    <!-- ✓ on-chain — right, under tier pill -->
-    <text x="${PILL_CX}" y="36"
+    <text x="178" y="34"
           font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
-          font-size="7.5" fill="#00c97a" text-anchor="middle">✓ on-chain</text>
+          font-size="7" fill="#00c97a">· ✓ on-chain</text>
 
-    <!-- View Profile → — right, row B bottom, inline under on-chain -->
     <a href="${esc(profileUrl)}" target="_blank">
-      <rect x="${PILL_X}" y="40" width="${PILL_W}" height="10" rx="3"
-            fill="rgba(255,255,255,0.04)" stroke="${t.color}" stroke-width="0.5" stroke-opacity="0.3"/>
-      <text x="${PILL_CX}" y="48"
+      <text x="${W - 8}" y="34"
             font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
-            font-size="6.5" fill="${t.text}" text-anchor="middle" opacity="0.85">View Profile →</text>
+            font-size="7" fill="${t.text}" text-anchor="end" opacity="0.8">View Profile →</text>
     </a>
 
-    <!-- ── STX address row ─────────────────────────────────────────────── -->
+    <!-- ── STX row ─────────────────────────────────────────────────────── -->
 
     <text x="12" y="${ROW1 + 12}"
           font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
@@ -251,14 +244,14 @@ function buildBadge({ tokenId, count, tier, agentName, alias, address, btcAddres
           font-family="'SF Mono','Fira Code','Consolas',monospace"
           font-size="7.5" fill="#8899b4">${esc(address)}</text>
     <g onclick="${uid}cp('${uid}sc','${address}')" style="cursor:pointer">
-      <rect x="${W - 42}" y="${ROW1 + 3}" width="35" height="10" rx="3"
+      <rect x="${W - 40}" y="${ROW1 + 3}" width="33" height="10" rx="3"
             fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.11)" stroke-width="0.5"/>
-      <text id="${uid}sc" x="${W - 24.5}" y="${ROW1 + 11}"
+      <text id="${uid}sc" x="${W - 23.5}" y="${ROW1 + 11}"
             font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
-            font-size="6.5" fill="rgba(255,255,255,0.4)" text-anchor="middle">copy</text>
+            font-size="6.5" fill="rgba(255,255,255,0.45)" text-anchor="middle">copy</text>
     </g>
 
-    <!-- ── BTC address row ─────────────────────────────────────────────── -->
+    <!-- ── BTC row ─────────────────────────────────────────────────────── -->
 
     <text x="12" y="${ROW2 + 12}"
           font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
@@ -268,11 +261,11 @@ function buildBadge({ tokenId, count, tier, agentName, alias, address, btcAddres
           font-family="'SF Mono','Fira Code','Consolas',monospace"
           font-size="7.5" fill="#8899b4">${esc(btcAddress)}</text>
     <g onclick="${uid}cp('${uid}bc','${btcAddress}')" style="cursor:pointer">
-      <rect x="${W - 42}" y="${ROW2 + 3}" width="35" height="10" rx="3"
+      <rect x="${W - 40}" y="${ROW2 + 3}" width="33" height="10" rx="3"
             fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.11)" stroke-width="0.5"/>
-      <text id="${uid}bc" x="${W - 24.5}" y="${ROW2 + 11}"
+      <text id="${uid}bc" x="${W - 23.5}" y="${ROW2 + 11}"
             font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
-            font-size="6.5" fill="rgba(255,255,255,0.4)" text-anchor="middle">copy</text>
+            font-size="6.5" fill="rgba(255,255,255,0.45)" text-anchor="middle">copy</text>
     </g>
     ` : ''}
   </g>
