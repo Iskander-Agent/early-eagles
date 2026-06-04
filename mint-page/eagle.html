@@ -483,6 +483,48 @@ nav {
 .badge-live { background: var(--green-dim); color: var(--green); border: 1px solid rgba(0,255,136,0.25); }
 .badge-planned { background: rgba(255,255,255,0.04); color: var(--text-dim); border: 1px solid var(--border-sub); }
 
+/* ── Provenance Card ── */
+.provenance-card {
+  background: var(--surface2);
+  border: 1px solid var(--border-sub);
+  border-left: 3px solid var(--tier-accent);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+}
+.provenance-header {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 14px;
+}
+.provenance-icon { font-size: 14px; opacity: 0.7; }
+.provenance-title {
+  font-family: 'Rajdhani', sans-serif; font-size: 13px; font-weight: 700;
+  color: var(--text-muted); letter-spacing: 0.08em; text-transform: uppercase;
+  flex: 1;
+}
+.prov-table { display: flex; flex-direction: column; gap: 6px; }
+.prov-row { display: flex; align-items: flex-start; gap: 10px; min-height: 22px; }
+.prov-key {
+  font-size: 11px; color: var(--text-dim); text-transform: uppercase;
+  letter-spacing: 0.06em; width: 80px; flex-shrink: 0; padding-top: 2px;
+}
+.prov-val {
+  font-size: 12px; color: var(--text); font-family: 'Courier New', monospace;
+  flex: 1; word-break: break-all; line-height: 1.5;
+}
+.prov-val.plain { font-family: 'Inter', sans-serif; }
+.prov-val a { color: var(--gold); text-decoration: none; }
+.prov-val a:hover { text-decoration: underline; }
+.provenance-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border-sub); }
+.prov-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: var(--surface); border: 1px solid var(--border-sub);
+  border-radius: 6px; padding: 5px 10px;
+  font-size: 11px; color: var(--text-muted); cursor: pointer;
+  transition: color .2s, border-color .2s; white-space: nowrap;
+  text-decoration: none;
+}
+.prov-btn:hover { color: var(--gold); border-color: var(--border); }
+
 /* ── Share Section ── */
 .share-section {
   position: relative; z-index: 1;
@@ -751,6 +793,13 @@ nav {
         <!-- Nest Join CTA -->
         <div class="reveal" id="nest-join-section">
           <!-- Rendered by JS after owner address is known -->
+        </div>
+
+        <div class="detail-divider"></div>
+
+        <!-- Provenance Certificate -->
+        <div class="reveal" id="provenance-section">
+          <!-- Rendered by JS -->
         </div>
 
       </div><!-- /details-col -->
@@ -1113,6 +1162,87 @@ function escapeHtml(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
+/* ══════════════════════════════════════════════════════════
+   RENDER PROVENANCE CERTIFICATE
+══════════════════════════════════════════════════════════ */
+function renderProvenance(id, props, ownerAddr, mintedAtBlock) {
+  const el = document.getElementById('provenance-section');
+  if (!el) return;
+
+  const tierName   = props.tier_name  || 'Common';
+  const colorName  = props.color_name || '';
+  const agentName  = props.display_name || '';
+  const agentId    = props.agent_id   != null ? `#${props.agent_id}` : '';
+  const btcAddr    = props.btc_address || '';
+  const stxAddr    = ownerAddr || '';
+  const blockNum   = mintedAtBlock ? Number(mintedAtBlock).toLocaleString() : '—';
+  const explorerTx = `https://explorer.hiro.so/txid/${ADMIN_ADDRESS}.${NFT_CONTRACT}?chain=mainnet`;
+  const profileUrl = `${BASE_URL}/eagle/${id}`;
+  const badgeUrl   = stxAddr ? `${BASE_URL}/api/badge/${stxAddr}` : null;
+
+  const abbrev = s => s && s.length > 16 ? s.slice(0, 8) + '…' + s.slice(-6) : s;
+
+  const rows = [
+    { k: 'Token',   v: `Eagle #${id}`, mono: false },
+    { k: 'Tier',    v: tierName + (colorName ? ` · ${colorName}` : ''), mono: false },
+    { k: 'Agent',   v: agentName + (agentId ? `  ${agentId}` : ''), mono: false },
+    ...(mintedAtBlock ? [{ k: 'Block',   v: `<a href="${explorerTx}" target="_blank" rel="noopener">${blockNum} ↗</a>`, mono: true }] : []),
+    ...(stxAddr       ? [{ k: 'STX',     v: `<span title="${stxAddr}">${abbrev(stxAddr)}</span> <button class="prov-btn" style="padding:2px 7px;font-size:10px;" onclick="copyProv('${escapeHtml(stxAddr)}',this)">copy</button>`, mono: true }] : []),
+    ...(btcAddr       ? [{ k: 'BTC',     v: `<span title="${btcAddr}">${abbrev(btcAddr)}</span> <button class="prov-btn" style="padding:2px 7px;font-size:10px;" onclick="copyProv('${escapeHtml(btcAddr)}',this)">copy</button>`, mono: true }] : []),
+    { k: 'Chain',   v: `<a href="${explorerTx}" target="_blank" rel="noopener">Stacks mainnet ↗</a>`, mono: false },
+  ];
+
+  const rowsHtml = rows.map(r =>
+    `<div class="prov-row">
+      <span class="prov-key">${escapeHtml(r.k)}</span>
+      <span class="prov-val${r.mono ? '' : ' plain'}">${r.v}</span>
+    </div>`
+  ).join('');
+
+  const mdBadge = badgeUrl
+    ? `[![Early Eagle #${id}](${badgeUrl})](${profileUrl})`
+    : `[Early Eagle #${id}](${profileUrl})`;
+
+  el.innerHTML = `
+    <div class="provenance-card">
+      <div class="provenance-header">
+        <span class="provenance-icon">📜</span>
+        <span class="provenance-title">Certificate of Origin</span>
+        <span class="utility-badge badge-live">On-Chain</span>
+      </div>
+      <div class="prov-table">${rowsHtml}</div>
+      <div class="provenance-actions">
+        <button class="prov-btn" id="prov-md-btn" onclick="copyProvMd('${escapeHtml(mdBadge)}')">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <span id="prov-md-label">Copy Markdown Badge</span>
+        </button>
+        <a href="${explorerTx}" target="_blank" rel="noopener" class="prov-btn">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          View on Explorer
+        </a>
+        <a href="/traits" class="prov-btn">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+          Trait Explorer
+        </a>
+      </div>
+    </div>`;
+}
+
+function copyProv(text, btn) {
+  navigator.clipboard.writeText(text).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = 'copied!';
+    setTimeout(() => { btn.textContent = orig; }, 1500);
+  }).catch(() => {});
+}
+
+function copyProvMd(md) {
+  navigator.clipboard.writeText(md).then(() => {
+    const lbl = document.getElementById('prov-md-label');
+    if (lbl) { lbl.textContent = 'Copied!'; setTimeout(() => { lbl.textContent = 'Copy Markdown Badge'; }, 1800); }
+  }).catch(() => {});
+}
+
 function copyNestBlock() {
   const pre = document.getElementById('nest-code-pre');
   if (!pre) return;
@@ -1312,6 +1442,10 @@ async function loadEagle(id) {
 
   // ── Nest Join CTA ──
   renderNestJoin(ownerAddr);
+
+  // ── Provenance Certificate ──
+  const mintedAtBlock = (data.attributes || []).find(a => a.trait_type === 'Minted At Block')?.value ?? null;
+  renderProvenance(id, props, ownerAddr, mintedAtBlock);
 
   // ── Meta & Share ──
   updateMeta(id, tierInfo.name, props.color_name || '', agentName);
