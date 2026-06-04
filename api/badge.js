@@ -128,20 +128,22 @@ async function getTokenMeta(id) {
 
 /* ── SVG builder ──────────────────────────────────────────────────────────── */
 
-function buildBadge({ tokenId, count, tier, agentName, address, profileUrl }) {
+function buildBadge({ tokenId, count, tier, agentName, alias, address, profileUrl }) {
   const t = TIERS[tier] ?? TIERS[4];
-  const W = 320, H = 52;
+  const W = 260, H = 42;
   const uid = `ee${tier}`;
 
   const title = count > 1
     ? `EARLY EAGLES ×${count}`
     : `EARLY EAGLE #${tokenId}`;
-  const sub = truncate(agentName || abbrev(address), 26);
+
+  const nameBase = agentName || abbrev(address);
+  const sub = truncate(alias ? `${alias} · ${nameBase}` : nameBase, 30);
 
   // Layout constants
-  const ICON_X = 10, ICON_Y = 12, ICON_S = 28;
-  const TEXT_X = ICON_X + ICON_S + 9;    // 47
-  const PILL_W = 72, PILL_X = W - PILL_W - 10;  // 238
+  const ICON_X = 8, ICON_Y = 9, ICON_S = 22;
+  const TEXT_X = ICON_X + ICON_S + 8;    // 38
+  const PILL_W = 68, PILL_X = W - PILL_W - 8;  // 184
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"
      role="img" aria-label="${esc(title)}${agentName ? ' — ' + esc(agentName) : ''}">
@@ -158,15 +160,15 @@ function buildBadge({ tokenId, count, tier, agentName, address, profileUrl }) {
     <linearGradient id="${uid}sg" x1="0" y1="0" x2="1" y2="0">
       <stop offset="0%"   stop-color="white" stop-opacity="0"/>
       <stop offset="45%"  stop-color="white" stop-opacity="0"/>
-      <stop offset="50%"  stop-color="white" stop-opacity="0.035"/>
+      <stop offset="50%"  stop-color="white" stop-opacity="0.03"/>
       <stop offset="55%"  stop-color="white" stop-opacity="0"/>
       <stop offset="100%" stop-color="white" stop-opacity="0"/>
     </linearGradient>
     <filter id="${uid}gf" x="-400%" y="-100%" width="900%" height="300%">
-      <feGaussianBlur stdDeviation="4" result="b"/>
+      <feGaussianBlur stdDeviation="3.5" result="b"/>
       <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
     </filter>
-    <clipPath id="${uid}cl"><rect width="${W}" height="${H}" rx="7"/></clipPath>
+    <clipPath id="${uid}cl"><rect width="${W}" height="${H}" rx="6"/></clipPath>
   </defs>
 
   <style>
@@ -175,8 +177,8 @@ function buildBadge({ tokenId, count, tier, agentName, address, profileUrl }) {
       100% { transform: translateX(${W * 2}px); }
     }
     @keyframes ${uid}gl {
-      0%, 100% { opacity: 0.4; }
-      50%       { opacity: 0.85; }
+      0%, 100% { opacity: 0.38; }
+      50%       { opacity: 0.8; }
     }
     @media (prefers-reduced-motion: reduce) {
       .${uid}sh, .${uid}gl { animation: none !important; }
@@ -186,8 +188,8 @@ function buildBadge({ tokenId, count, tier, agentName, address, profileUrl }) {
   <g clip-path="url(#${uid}cl)">
     <rect width="${W}" height="${H}" fill="url(#${uid}bg)"/>
     <rect width="${W}" height="${H}" fill="url(#${uid}amb)"/>
-    <rect width="${W}" height="${H}" rx="7" fill="none"
-          stroke="${t.color}" stroke-width="0.6" stroke-opacity="0.22"/>
+    <rect width="${W}" height="${H}" rx="6" fill="none"
+          stroke="${t.color}" stroke-width="0.5" stroke-opacity="0.2"/>
 
     <!-- Left accent bar — slow glow pulse -->
     <rect class="${uid}gl" x="0" y="0" width="3" height="${H}"
@@ -195,34 +197,34 @@ function buildBadge({ tokenId, count, tier, agentName, address, profileUrl }) {
           style="animation:${uid}gl 4s ease-in-out infinite;"/>
 
     <!-- Eagle icon box -->
-    <rect x="${ICON_X}" y="${ICON_Y}" width="${ICON_S}" height="${ICON_S}" rx="6"
+    <rect x="${ICON_X}" y="${ICON_Y}" width="${ICON_S}" height="${ICON_S}" rx="5"
           fill="${t.dim}"/>
-    <text x="${ICON_X + ICON_S / 2}" y="${ICON_Y + ICON_S / 2 + 6}"
-          font-size="16" text-anchor="middle"
+    <text x="${ICON_X + ICON_S / 2}" y="${ICON_Y + ICON_S / 2 + 5}"
+          font-size="13" text-anchor="middle"
           font-family="Apple Color Emoji,Segoe UI Emoji,Noto Color Emoji,serif">🦅</text>
 
     <!-- Title -->
-    <text x="${TEXT_X}" y="27"
+    <text x="${TEXT_X}" y="21"
           font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
-          font-size="11.5" font-weight="700" fill="#edf0f7" letter-spacing="0.2">${esc(title)}</text>
+          font-size="10.5" font-weight="700" fill="#edf0f7" letter-spacing="0.15">${esc(title)}</text>
 
-    <!-- Sub (agent name or address) -->
-    <text x="${TEXT_X}" y="40"
+    <!-- Sub (alias · agent name, or agent name, or address) -->
+    <text x="${TEXT_X}" y="33"
           font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
-          font-size="9.5" fill="#68788f">${esc(sub)}</text>
+          font-size="8.5" fill="#68788f">${esc(sub)}</text>
 
     <!-- Tier pill -->
-    <rect x="${PILL_X}" y="11" width="${PILL_W}" height="16" rx="4"
-          fill="${t.dim}" stroke="${t.color}" stroke-width="0.5" stroke-opacity="0.4"/>
-    <text x="${PILL_X + PILL_W / 2}" y="22.5"
+    <rect x="${PILL_X}" y="9" width="${PILL_W}" height="13" rx="3"
+          fill="${t.dim}" stroke="${t.color}" stroke-width="0.4" stroke-opacity="0.4"/>
+    <text x="${PILL_X + PILL_W / 2}" y="19"
           font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
-          font-size="9" font-weight="700" fill="${t.text}" text-anchor="middle"
-          letter-spacing="0.8">${esc(t.name.toUpperCase())}</text>
+          font-size="8" font-weight="700" fill="${t.text}" text-anchor="middle"
+          letter-spacing="0.7">${esc(t.name.toUpperCase())}</text>
 
     <!-- On-Chain label -->
-    <text x="${PILL_X + PILL_W / 2}" y="38.5"
+    <text x="${PILL_X + PILL_W / 2}" y="34"
           font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
-          font-size="8.5" fill="#00c96a" text-anchor="middle">✓ on-chain</text>
+          font-size="7.5" fill="#00c96a" text-anchor="middle">✓ on-chain</text>
 
     <!-- Shimmer — very faint, slow sweep -->
     <rect class="${uid}sh" x="0" y="0" width="${W}" height="${H}"
@@ -255,6 +257,13 @@ module.exports = async function handler(req, res) {
 
   // Accept address from query param (set by vercel.json rewrite or direct call)
   let address = String((req.query || {}).address || '').trim();
+
+  // Optional alias — shown as "Alias · Agent Name" in the subtitle
+  const alias = String((req.query || {}).alias || '')
+    .trim()
+    .replace(/[^ -~]/g, '')   // strip non-ASCII-printable
+    .replace(/[<>&"\\]/g, '') // strip SVG-unsafe chars
+    .slice(0, 20) || null;
 
   if (!address) {
     res.setHeader('Cache-Control', 'no-store');
@@ -293,7 +302,7 @@ module.exports = async function handler(req, res) {
   }
 
   const profileUrl = `${BASE_URL}/eagle/${primaryId}`;
-  const svg = buildBadge({ tokenId: primaryId, count: tokenIds.length, tier, agentName, address, profileUrl });
+  const svg = buildBadge({ tokenId: primaryId, count: tokenIds.length, tier, agentName, alias, address, profileUrl });
 
   res.setHeader('Cache-Control', 'public, max-age=3600, stale-while-revalidate=600');
   return res.status(200).send(svg);

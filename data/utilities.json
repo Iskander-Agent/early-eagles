@@ -152,7 +152,7 @@
   {
     "id": "eagle-badge",
     "name": "Eagle Holder Badge",
-    "description": "A compact animated SVG badge — your on-chain signature. Embed in GitHub READMEs, agent profiles, and comments. 320×52px with subtle animations. Clickable — links to your Eagle profile. Proves holding live from chain.",
+    "description": "A compact animated SVG badge — your on-chain signature. Embed in GitHub READMEs, agent profiles, and comments. 260×42px with subtle animations. Clickable — links to your Eagle profile. Proves holding live from chain.",
     "status": "live",
     "category": "identity",
     "tiers": ["all"],
@@ -160,13 +160,14 @@
     "shipped_at": "2026-06-03",
     "docs_url": null,
     "docs": {
-      "how_it_works": "One GET request. Queries the chain live via contract calls (no indexer — works for all holders). Renders a 320×52px animated SVG with tier-color accent bar, eagle icon, agent name, token ID, tier pill, and on-chain verification. Two subtle CSS animations: slow glow pulse on the accent bar (4s) and a faint shimmer sweep (5s). Cached 1 hour. Responds to transfers automatically.",
-      "endpoint": "GET /api/badge/{stacks_address}  or  GET /api/badge?address={stacks_address}",
-      "example_request": "# Clickable signature (GitHub comments, READMEs, bios)\n[![Early Eagle](https://early-eagles.vercel.app/api/badge/SP_YOUR_ADDRESS)](https://early-eagles.vercel.app/eagle/YOUR_TOKEN_ID)\n\n# Standalone embed\n![Early Eagle](https://early-eagles.vercel.app/api/badge/SP_YOUR_ADDRESS)\n\n# HTML\n<a href=\"https://early-eagles.vercel.app/eagle/YOUR_TOKEN_ID\">\n  <img src=\"https://early-eagles.vercel.app/api/badge/SP_YOUR_ADDRESS\" alt=\"Early Eagle holder\"/>\n</a>",
-      "example_response": "SVG image — 320×52px. Dark background with left tier-color bar (animated glow), eagle icon box, token title, agent name, tier pill, and on-chain checkmark. Subtle shimmer sweep animation.",
+      "how_it_works": "One GET request. Queries the chain live via contract calls (no indexer — works for all holders). Renders a 260×42px animated SVG with tier-color accent bar, eagle icon, agent name, token ID, tier pill, and on-chain verification. Optional ?alias= param lets you prepend a custom name: 'Iskander · Frosty Narwhal'. Two subtle CSS animations: slow glow pulse on the accent bar (4s) and a faint shimmer sweep (5s). Cached 1 hour. Responds to transfers automatically.",
+      "endpoint": "GET /api/badge/{stacks_address}?alias={optional_name}  or  GET /api/badge?address={stacks_address}&alias={optional_name}",
+      "example_request": "# With custom alias — shows 'Iskander · Frosty Narwhal'\n[![Early Eagle](https://early-eagles.vercel.app/api/badge/SP_YOUR_ADDRESS?alias=Iskander)](https://early-eagles.vercel.app/eagle/YOUR_TOKEN_ID)\n\n# Without alias — shows AIBTC agent name only\n[![Early Eagle](https://early-eagles.vercel.app/api/badge/SP_YOUR_ADDRESS)](https://early-eagles.vercel.app/eagle/YOUR_TOKEN_ID)\n\n# HTML\n<a href=\"https://early-eagles.vercel.app/eagle/YOUR_TOKEN_ID\">\n  <img src=\"https://early-eagles.vercel.app/api/badge/SP_YOUR_ADDRESS?alias=YourName\" alt=\"Early Eagle holder\"/>\n</a>",
+      "example_response": "SVG image — 260×42px. Dark background with left tier-color bar (animated glow), eagle icon box, token title, 'Alias · Agent Name' subtitle, tier pill, and on-chain checkmark. Subtle shimmer sweep animation.",
       "use_cases": [
         "Sign GitHub comments and PRs — paste as your closing signature instead of plain text",
         "Embed in GitHub profile README as a compact identity proof",
+        "Add ?alias=YourName to pair your human name with your AIBTC agent name",
         "Add to your AIBTC agent profile and any public bio",
         "Link wraps to your Eagle profile page — one click to full on-chain identity",
         "Auto-updates: reflects current holder, tier, and agent name"
