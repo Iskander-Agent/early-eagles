@@ -29,22 +29,29 @@ const TIERS = [
 const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET, OPTIONS' };
 
 const { c32address, c32addressDecode } = require('c32check');
-const { sha256 } = require('@noble/hashes/sha256');
-
-const BASE58_ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
-
+// Derive native segwit P2WPKH (bc1q...) from STX address — same hash160, bech32 encoded
 function stxToBtcAddress(stxAddr) {
   try {
     const [, hashHex] = c32addressDecode(stxAddr);
-    const hash = Buffer.from(hashHex, 'hex');
-    const versioned = Buffer.concat([Buffer.from([0x00]), hash]);
-    const checksum = Buffer.from(sha256(sha256(versioned))).slice(0, 4);
-    const full = Buffer.concat([versioned, checksum]);
-    let n = BigInt('0x' + full.toString('hex'));
-    let result = '';
-    while (n > 0n) { result = BASE58_ALPHABET[Number(n % 58n)] + result; n /= 58n; }
-    for (const b of full) { if (b !== 0) break; result = '1' + result; }
-    return result;
+    const hash20 = Buffer.from(hashHex, 'hex');
+    const CHARSET = 'qpzry9x8gf2tvdw0s3jn54khce6mua7l';
+    const GEN = [0x3b6a57b2, 0x26508e6d, 0x1ea119fa, 0x3d4233dd, 0x2a1462b3];
+    function polymod(v) {
+      let chk = 1;
+      for (const x of v) { const b = chk >> 25; chk = ((chk & 0x1ffffff) << 5) ^ x; for (let i = 0; i < 5; i++) if ((b >> i) & 1) chk ^= GEN[i]; }
+      return chk;
+    }
+    function hrpExpand(hrp) { const r = []; for (const c of hrp) r.push(c.charCodeAt(0) >> 5); r.push(0); for (const c of hrp) r.push(c.charCodeAt(0) & 31); return r; }
+    function convertbits(data, from, to) {
+      let acc = 0, bits = 0; const ret = [], maxv = (1 << to) - 1;
+      for (const v of data) { acc = (acc << from) | v; bits += from; while (bits >= to) { bits -= to; ret.push((acc >> bits) & maxv); } }
+      if (bits > 0) ret.push((acc << (to - bits)) & maxv);
+      return ret;
+    }
+    const hrp = 'bc', data = [0, ...convertbits(hash20, 8, 5)];
+    const chk = polymod([...hrpExpand(hrp), ...data, 0, 0, 0, 0, 0, 0]) ^ 1;
+    const enc = data.map(d => CHARSET[d]).join('') + [0,1,2,3,4,5].map(p => CHARSET[(chk >> (5*(5-p))) & 31]).join('');
+    return hrp + '1' + enc;
   } catch { return null; }
 }
 const { fetchCallReadOnlyFunction, cvToValue } = require('@stacks/transactions');
@@ -152,7 +159,7 @@ function buildBadge({ tokenId, count, tier, agentName, alias, address, btcAddres
   // Row A: icon + title (left)  |  tier pill (right)
   // Row B: subtitle · ✓ on-chain (left-to-center)  View Profile → (right)
   // Each row uses the FULL width so neither side feels dense or empty.
-  const W = 340, H = 58;
+  const W = 340, H = 64;
   const uid = `ee${tier}`;
 
   const title = count > 1 ? `EARLY EAGLES ×${count}` : `EARLY EAGLE #${tokenId}`;
@@ -165,20 +172,19 @@ function buildBadge({ tokenId, count, tier, agentName, alias, address, btcAddres
   const PILL_CX = PILL_X + PILL_W / 2;
 
   // Single address row — HDR divider, one row spanning STX + BTC side-by-side
-  const HDR = 40;
-  const ADDR_Y = HDR + 13;  // 53 — address text baseline
+  const HDR = 45;
+  const ADDR_Y = HDR + 14;  // 59 — address text baseline
 
-  // Copy icon helper — two overlapping squares (standard clipboard icon)
-  // ix,iy = top-left of icon bounding box (10×10)
+  // Copy icon helper — two overlapping squares (clipboard), compact 7×7 footprint
   const copyIcon = (ix, iy, confirmId, val) => `
     <g onclick="${uid}cp('${confirmId}','${val}')" style="cursor:pointer">
-      <rect x="${ix}"   y="${iy+3}" width="7" height="7" rx="1.2"
-            fill="#0d1525" stroke="rgba(255,255,255,0.18)" stroke-width="0.7"/>
-      <rect x="${ix+2}" y="${iy}"   width="7" height="7" rx="1.2"
-            fill="#0d1525" stroke="rgba(255,255,255,0.32)" stroke-width="0.7"/>
-      <text id="${confirmId}" x="${ix+5}" y="${iy+8}"
+      <rect x="${ix}"   y="${iy+2}" width="5" height="5" rx="0.8"
+            fill="#0d1525" stroke="rgba(255,255,255,0.18)" stroke-width="0.6"/>
+      <rect x="${ix+2}" y="${iy}"   width="5" height="5" rx="0.8"
+            fill="#0d1525" stroke="rgba(255,255,255,0.32)" stroke-width="0.6"/>
+      <text id="${confirmId}" x="${ix+4.5}" y="${iy+5.5}"
             font-family="-apple-system,BlinkMacSystemFont,sans-serif"
-            font-size="7" font-weight="700" fill="#00c97a" text-anchor="middle"></text>
+            font-size="5.5" font-weight="700" fill="#00c97a" text-anchor="middle"></text>
     </g>`;
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"
@@ -229,16 +235,16 @@ function buildBadge({ tokenId, count, tier, agentName, alias, address, btcAddres
 
     <!-- ── Row B: subtitle · ✓ on-chain  ·  View Profile → (all inline) ─ -->
 
-    <text x="36" y="34"
+    <text x="36" y="37"
           font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
           font-size="8.5" fill="#4a5c78">${esc(sub)}</text>
 
-    <text x="178" y="34"
+    <text x="178" y="37"
           font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
           font-size="7" fill="#00c97a">· ✓ on-chain</text>
 
     <a href="${esc(profileUrl)}" target="_blank">
-      <text x="${W - 8}" y="34"
+      <text x="${W - 8}" y="37"
             font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
             font-size="7" fill="${t.text}" text-anchor="end" opacity="0.8">View Profile →</text>
     </a>
