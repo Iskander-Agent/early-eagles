@@ -239,7 +239,7 @@ function buildBadge({ tokenId, count, tier, agentName, alias, address, btcAddres
           font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
           font-size="8.5" fill="#4a5c78">${esc(sub)}</text>
 
-    <text x="178" y="37"
+    <text x="${W/2}" y="37" text-anchor="middle"
           font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
           font-size="7" fill="#00c97a">· ✓ on-chain</text>
 
@@ -259,16 +259,16 @@ function buildBadge({ tokenId, count, tier, agentName, alias, address, btcAddres
     <text x="30" y="${ADDR_Y}"
           font-family="'SF Mono','Fira Code','Consolas',monospace"
           font-size="9" fill="#8899b4">${esc(abbrev(address))}</text>
-    ${copyIcon(114, HDR + 3, `${uid}sc`, address)}
+    ${copyIcon(114, HDR + 7, `${uid}sc`, address)}
 
     ${btcAddress ? `
-    <text x="134" y="${ADDR_Y}"
+    <text x="219" y="${ADDR_Y}"
           font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
           font-size="7" font-weight="700" letter-spacing="0.6" fill="#f7931a">BTC</text>
-    <text x="152" y="${ADDR_Y}"
+    <text x="237" y="${ADDR_Y}"
           font-family="'SF Mono','Fira Code','Consolas',monospace"
           font-size="9" fill="#8899b4">${esc(abbrev(btcAddress))}</text>
-    ${copyIcon(236, HDR + 3, `${uid}bc`, btcAddress)}
+    ${copyIcon(321, HDR + 7, `${uid}bc`, btcAddress)}
     ` : ''}
   </g>
 </svg>`;
