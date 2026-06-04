@@ -21,7 +21,7 @@ function getKv() {
   try { return require('@vercel/kv').kv; } catch { return null; }
 }
 const KV_KEY     = 'gallery:data';
-const KV_TTL_SEC = 600; // 10 minutes — survive cold start bursts
+const KV_TTL_SEC = 86400; // 24h — data only changes on new mints, not on time
 
 // Mainnet only
 const STACKS_API = 'https://api.hiro.so';
@@ -196,7 +196,9 @@ module.exports = async function handler(req, res) {
     // Update in-memory cache
     _eagleCache = { eagles, totalMinted, builtAt: Date.now() };
 
-    // Persist to KV so cold starts skip the full refetch
+    // Write to KV whenever we fetched new data from Hiro (new mints or first cold-start load).
+    // startFrom=0 + totalMinted=30 on first cold start → condition is true → primes KV.
+    // TTL 24h: data only changes when totalMinted increases, not on time.
     const kv = getKv();
     if (kv && startFrom < totalMinted) {
       kv.set(KV_KEY, { eagles, totalMinted, builtAt: _eagleCache.builtAt }, { ex: KV_TTL_SEC })
