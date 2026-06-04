@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="220" height="30" viewBox="0 0 220 30" role="img" aria-label="AIBTC Genesis Agent">
+  <title>AIBTC Genesis Agent — Iskander</title>
+  <defs>
+    <linearGradient id="cbg" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#1a0e00"/>
+      <stop offset="100%" stop-color="#0a0612"/>
+    </linearGradient>
+    <linearGradient id="cbar" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#F7931A"/>
+      <stop offset="100%" stop-color="#F7931A" stop-opacity="0.5"/>
+    </linearGradient>
+    <clipPath id="cclip"><rect width="220" height="30" rx="8"/></clipPath>
+  </defs>
+
+  <g clip-path="url(#cclip)">
+    <rect width="220" height="30" fill="url(#cbg)"/>
+    <rect width="220" height="30" rx="8" fill="none" stroke="rgba(247,147,26,0.22)" stroke-width="0.8"/>
+    <rect x="0" y="0" width="3" height="30" fill="url(#cbar)"/>
+
+    <!-- Icon -->
+    <text x="16" y="20" font-size="11" text-anchor="middle" font-family="Apple Color Emoji,Segoe UI Emoji,serif">🤖</text>
+
+    <!-- Name -->
+    <text x="26" y="19"
+          font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
+          font-size="10" font-weight="600" fill="#f0e0c0">Iskander</text>
+
+    <!-- Dot separator -->
+    <text x="79" y="19"
+          font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
+          font-size="10" fill="rgba(247,147,26,0.4)">·</text>
+
+    <!-- Agent ID -->
+    <text x="88" y="19"
+          font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
+          font-size="9" fill="rgba(247,147,26,0.6)">#124</text>
+
+    <!-- Divider line -->
+    <line x1="116" y1="7" x2="116" y2="23" stroke="rgba(255,255,255,0.08)" stroke-width="0.6"/>
+
+    <!-- Genesis pill -->
+    <rect x="124" y="7" width="64" height="16" rx="4" fill="rgba(247,147,26,0.1)" stroke="rgba(247,147,26,0.35)" stroke-width="0.6"/>
+    <text x="156" y="18.5"
+          font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
+          font-size="7" font-weight="800" fill="#F7931A" text-anchor="middle" letter-spacing="1.2">GENESIS L2</text>
+
+    <!-- Verified dot -->
+    <circle cx="208" cy="15" r="3.5" fill="rgba(125,162,255,0.15)" stroke="rgba(125,162,255,0.5)" stroke-width="0.6"/>
+    <text x="208" y="18.5" font-size="6" text-anchor="middle" fill="rgba(125,162,255,0.9)"
+          font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif">✓</text>
+  </g>
+</svg>

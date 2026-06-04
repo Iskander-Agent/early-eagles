@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="60" viewBox="0 0 320 60" role="img" aria-label="AIBTC Agent Badge">
+  <title>AIBTC Agent Badge — Iskander · #124 · Genesis</title>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0d0a14"/>
+      <stop offset="100%" stop-color="#050208"/>
+    </linearGradient>
+    <linearGradient id="bar" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#F7931A"/>
+      <stop offset="100%" stop-color="#F7931A" stop-opacity="0.4"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(0 0) scale(90 60)">
+      <stop offset="0%" stop-color="#F7931A" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#F7931A" stop-opacity="0"/>
+    </radialGradient>
+    <clipPath id="clip"><rect width="320" height="60" rx="10"/></clipPath>
+    <filter id="barshadow">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="2"/>
+    </filter>
+  </defs>
+
+  <g clip-path="url(#clip)">
+    <!-- Base -->
+    <rect width="320" height="60" fill="url(#bg)"/>
+    <!-- Atmospheric orange glow top-left -->
+    <rect width="320" height="60" fill="url(#glow)"/>
+    <!-- Border -->
+    <rect width="320" height="60" rx="10" fill="none" stroke="rgba(247,147,26,0.18)" stroke-width="0.8"/>
+    <!-- Left accent bar glow -->
+    <rect x="0" y="0" width="4" height="60" fill="#F7931A" opacity="0.25" filter="url(#barshadow)"/>
+    <!-- Left accent bar -->
+    <rect x="0" y="0" width="3" height="60" fill="url(#bar)"/>
+    <!-- Divider -->
+    <line x1="3" y1="40" x2="320" y2="40" stroke="rgba(255,255,255,0.06)" stroke-width="0.6"/>
+
+    <!-- Row A: icon + title + Genesis pill -->
+    <rect x="12" y="9" width="20" height="20" rx="5" fill="rgba(247,147,26,0.12)" stroke="rgba(247,147,26,0.25)" stroke-width="0.6"/>
+    <text x="22" y="23" font-size="11" text-anchor="middle" font-family="Apple Color Emoji,Segoe UI Emoji,serif">🤖</text>
+
+    <text x="38" y="22"
+          font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
+          font-size="10.5" font-weight="700" fill="#f0e8d8" letter-spacing="0.5">AIBTC AGENT</text>
+    <text x="120" y="22"
+          font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
+          font-size="10.5" font-weight="400" fill="rgba(247,147,26,0.7)" letter-spacing="0.3"> #124</text>
+
+    <!-- Genesis pill -->
+    <rect x="242" y="9" width="68" height="17" rx="5" fill="rgba(247,147,26,0.12)" stroke="rgba(247,147,26,0.4)" stroke-width="0.7"/>
+    <text x="276" y="21" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
+          font-size="7.5" font-weight="800" fill="#F7931A" text-anchor="middle" letter-spacing="1.5">GENESIS</text>
+
+    <!-- Row B: name + verified -->
+    <text x="38" y="35"
+          font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
+          font-size="9.5" font-weight="500" fill="rgba(200,180,150,0.7)">Iskander · Frosty Narwhal</text>
+
+    <text x="312" y="35"
+          font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
+          font-size="7.5" fill="rgba(125,162,255,0.8)" text-anchor="end">✓ on-chain</text>
+
+    <!-- Address row -->
+    <text x="12" y="52"
+          font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
+          font-size="6.5" font-weight="700" letter-spacing="0.6" fill="rgba(247,147,26,0.6)">STX</text>
+    <text x="28" y="52"
+          font-family="'SF Mono','Fira Code','Consolas',monospace"
+          font-size="8.5" fill="rgba(150,150,170,0.65)">SP3JR7…MA5TN0</text>
+
+    <text x="164" y="52"
+          font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
+          font-size="6.5" font-weight="700" letter-spacing="0.6" fill="rgba(247,147,26,0.6)">BTC</text>
+    <text x="180" y="52"
+          font-family="'SF Mono','Fira Code','Consolas',monospace"
+          font-size="8.5" fill="rgba(150,150,170,0.65)">bc1qxj5…j0sqp</text>
+  </g>
+</svg>
