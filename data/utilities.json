@@ -76,14 +76,15 @@
     "shipped_at": "2026-05-27",
     "docs_url": null,
     "docs": {
-      "how_it_works": "Single GET request. Queries the Hiro NFT holdings API for the early-eagles-v2 collection against the given address. Returns a boolean, list of token IDs held, and count.",
+      "how_it_works": "Single GET request. Queries the Hiro NFT holdings API for the early-eagles-v2 collection, then fetches on-chain traits for each held token to resolve the rarity tier. Returns a boolean, list of token IDs, tier details per token, and the caller's highest tier.",
       "endpoint": "GET /api/holder?address={stacks_address}",
       "example_request": "curl \"https://early-eagles.vercel.app/api/holder?address=SP...\"",
-      "example_response": "{\n  \"address\": \"SP...\",\n  \"holds_eagle\": true,\n  \"token_ids\": [7, 42],\n  \"count\": 2,\n  \"verified_at\": \"2026-05-28T12:00:00.000Z\"\n}",
+      "example_response": "{\n  \"address\": \"SP...\",\n  \"holds_eagle\": true,\n  \"token_ids\": [7, 42],\n  \"count\": 2,\n  \"tiers\": [\n    { \"token_id\": 7, \"tier\": 0, \"tier_name\": \"Legendary\" },\n    { \"token_id\": 42, \"tier\": 3, \"tier_name\": \"Uncommon\" }\n  ],\n  \"highest_tier\": 0,\n  \"highest_tier_name\": \"Legendary\",\n  \"verified_at\": \"2026-06-04T12:00:00.000Z\"\n}",
       "use_cases": [
-        "Gate agent-to-agent features by Eagle ownership",
+        "Gate features differently by tier — Legendary unlocks more than Common",
         "Check if a counterparty is a holder before sharing alpha",
-        "Build your own integrations on top of Eagle ownership"
+        "Build tier-weighted governance or reputation systems",
+        "Verify Eagle ownership + tier in a single call"
       ]
     }
   },

@@ -128,6 +128,31 @@ async function handleGenesis(req, res) {
 
 // ── /api/holder handler ───────────────────────────────────────────────────────
 
+const TIER_NAMES = ['Legendary', 'Epic', 'Rare', 'Uncommon', 'Common'];
+const ADMIN_ADDRESS = 'SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2';
+const NFT_CONTRACT  = 'early-eagles-v2';
+
+async function fetchTier(tokenId) {
+  const { hexToCV, cvToJSON } = await import('@stacks/transactions');
+  const tokenIdHex = '0x01' + tokenId.toString(16).padStart(32, '0');
+  const r = await fetch(
+    `${STACKS_API}/v2/contracts/call-read/${ADMIN_ADDRESS}/${NFT_CONTRACT}/get-traits`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sender: ADMIN_ADDRESS, arguments: [tokenIdHex] }),
+      signal: abort(6000),
+    }
+  );
+  if (!r.ok) return null;
+  const data = await r.json();
+  if (!data.okay || data.result === '0x09') return null;
+  const json = cvToJSON(hexToCV(data.result));
+  if (!json?.value?.value) return null;
+  const tier = parseInt(json.value.value.tier?.value ?? '4', 10);
+  return { token_id: tokenId, tier, tier_name: TIER_NAMES[tier] ?? 'Unknown' };
+}
+
 async function handleHolder(req, res) {
   const ip = req.headers['x-forwarded-for'] || 'unknown';
   if (!rateOk(ip + ':holder', 60)) return res.status(429).json({ error: 'Too many requests' });
@@ -150,11 +175,36 @@ async function handleHolder(req, res) {
       .filter(id => id !== null);
 
     res.setHeader('Cache-Control', 's-maxage=30, stale-while-revalidate=60');
+
+    if (token_ids.length === 0) {
+      return res.status(200).json({
+        address,
+        holds_eagle: false,
+        token_ids: [],
+        count: 0,
+        tiers: [],
+        highest_tier: null,
+        highest_tier_name: null,
+        verified_at: new Date().toISOString(),
+      });
+    }
+
+    // Fetch tier for each held token in parallel
+    const tierResults = await Promise.allSettled(token_ids.map(fetchTier));
+    const tiers = tierResults
+      .map(r => (r.status === 'fulfilled' ? r.value : null))
+      .filter(Boolean);
+
+    const highestTier = tiers.reduce((min, t) => (t.tier < min ? t.tier : min), 4);
+
     return res.status(200).json({
       address,
-      holds_eagle: token_ids.length > 0,
+      holds_eagle: true,
       token_ids,
       count: token_ids.length,
+      tiers,
+      highest_tier: highestTier,
+      highest_tier_name: TIER_NAMES[highestTier],
       verified_at: new Date().toISOString(),
     });
   } catch (e) {
