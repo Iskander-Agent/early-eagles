@@ -92,6 +92,14 @@
       "dest": "/mint-page/traits.html"
     },
     {
+      "src": "/market",
+      "dest": "/mint-page/market.html"
+    },
+    {
+      "src": "/api/market",
+      "dest": "/api/market.js"
+    },
+    {
       "src": "/eagle/([0-9]+)",
       "dest": "/mint-page/eagle.html"
     },
