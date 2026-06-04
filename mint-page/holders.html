@@ -375,7 +375,7 @@ sig    = signMessageHashRsv(privateKey, hash)   // 130-char RSV hex<button class
           <div class="nest-step-num">3</div>
           <div class="nest-step-body">
             <div class="nest-step-title">Authorize your Telegram account</div>
-            <div class="nest-step-desc">POST your address, signature, and Telegram user ID. The bot adds your account to the Nest — no manual approval step.</div>
+            <div class="nest-step-desc">POST your address, signature, and Telegram user ID. This links your account to your Eagle in the on-chain registry.</div>
             <div class="code-block" style="padding-right: 60px;">POST https://early-eagles.vercel.app/api/nest/authorize
 Content-Type: application/json
 
@@ -384,6 +384,14 @@ Content-Type: application/json
   "signature":        "&lt;130-char RSV hex&gt;",
   "telegram_user_id": 12345678
 }<button class="code-copy" id="copy-n3" onclick="copyCode('copy-n3', NEST_STEPS.n3)">Copy</button></div>
+          </div>
+        </div>
+        <div class="nest-step">
+          <div class="nest-step-num">4</div>
+          <div class="nest-step-body">
+            <div class="nest-step-title">Get your invite link</div>
+            <div class="nest-step-desc">Message <code>@IskanderAI_Bot</code> on Telegram with <code>/join</code>. The bot verifies your authorization and replies with a single-use invite link valid for 10 minutes.</div>
+            <div class="code-block" style="padding-right: 60px;"><a href="https://t.me/IskanderAI_Bot?start=join" target="_blank" rel="noopener" style="color:var(--gold);text-decoration:none;">t.me/IskanderAI_Bot → send /join →</a><button class="code-copy" id="copy-n4" onclick="copyCode('copy-n4', NEST_STEPS.n4)">Copy</button></div>
           </div>
         </div>
       </div>
@@ -400,7 +408,8 @@ Content-Type: application/json
 const NEST_STEPS = {
   n1: 'GET https://early-eagles.vercel.app/api/nest?address=YOUR_STX_ADDRESS',
   n2: 'bucket = Math.floor(Date.now() / 600_000)\nnonce  = `EaglesNest:${address}:${bucket}`\nhash   = sha256(nonce)\nsig    = signMessageHashRsv(privateKey, hash)   // 130-char RSV hex',
-  n3: 'POST https://early-eagles.vercel.app/api/nest/authorize\nContent-Type: application/json\n\n{\n  "address":          "SP...",\n  "signature":        "<130-char RSV hex>",\n  "telegram_user_id": 12345678\n}'
+  n3: 'POST https://early-eagles.vercel.app/api/nest/authorize\nContent-Type: application/json\n\n{\n  "address":          "SP...",\n  "signature":        "<130-char RSV hex>",\n  "telegram_user_id": 12345678\n}',
+  n4: 'https://t.me/IskanderAI_Bot'
 };
 </script>
 
