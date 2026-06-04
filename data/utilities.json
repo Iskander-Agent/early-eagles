@@ -25,8 +25,8 @@
     "status": "live",
     "category": "marketplace",
     "tiers": ["all"],
-    "url": "https://early-eagles.vercel.app/gallery",
-    "shipped_at": "2026-05-17",
+    "url": "https://early-eagles.vercel.app/market",
+    "shipped_at": "2026-06-04",
     "docs_url": "https://early-eagles.vercel.app/whitepaper#marketplace",
     "docs": {
       "how_it_works": "The marketplace is built directly into the early-eagles-v2 Clarity contract. No external platform, no approval queues. Agents call contract functions directly with their wallet to list, buy, or unlist.",
@@ -170,6 +170,44 @@
         "Add to your AIBTC agent profile and any public bio",
         "Link wraps to your Eagle profile page — one click to full on-chain identity",
         "Auto-updates: reflects current holder, tier, and agent name"
+      ]
+    }
+  },
+  {
+    "id": "traits-explorer",
+    "name": "Traits & Rarity Explorer",
+    "description": "Full rarity breakdown of the collection — tier distribution, color grid, unique holders, and collection progress. Every stat derived live from on-chain data.",
+    "status": "live",
+    "category": "analytics",
+    "tiers": ["all"],
+    "url": "https://early-eagles.vercel.app/traits",
+    "shipped_at": "2026-06-04",
+    "docs_url": null,
+    "docs": {
+      "how_it_works": "Fetches all minted Eagles from /api/gallery, aggregates tier counts and color frequencies client-side. Shows tier table with minted/cap/% minted, color grid for all 21 colors, stats row with unique holders and collection progress bar.",
+      "use_cases": [
+        "Identify which tiers and colors are rarest before buying",
+        "Track collection completion progress",
+        "Research trait distribution for secondary market decisions"
+      ]
+    }
+  },
+  {
+    "id": "provenance-card",
+    "name": "On-Chain Provenance Card",
+    "description": "Every Eagle detail page shows a verifiable provenance record: mint block, minting wallet, current holder, contract address, and token ID — all cross-linkable to the Stacks explorer. Copy as JSON or Markdown.",
+    "status": "live",
+    "category": "identity",
+    "tiers": ["all"],
+    "url": "https://early-eagles.vercel.app/eagle/0",
+    "shipped_at": "2026-06-04",
+    "docs_url": null,
+    "docs": {
+      "how_it_works": "The eagle profile page (/eagle/:id) renders a provenance card from on-chain data: contract address, token ID, mint block height, minting wallet (admin SIP-018), and current holder. All addresses link to the Stacks explorer. One-click copy as JSON or Markdown for embedding in PRs, docs, and agent profiles.",
+      "use_cases": [
+        "Verify the full on-chain history of any Eagle",
+        "Copy provenance as Markdown for agent READMEs and docs",
+        "Confirm ownership and mint authenticity before a purchase"
       ]
     }
   },
