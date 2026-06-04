@@ -148,21 +148,20 @@ async function getTokenMeta(id) {
 
 function buildBadge({ tokenId, count, tier, agentName, alias, address, btcAddress, profileUrl }) {
   const t = TIERS[tier] ?? TIERS[4];
-  // Wide identity card — room for full addresses
-  const W = 380, H = 112;
+  const W = 380, H = 92;
   const uid = `ee${tier}`;
 
   const title = count > 1 ? `EARLY EAGLES ×${count}` : `EARLY EAGLE #${tokenId}`;
   const nameBase = agentName || abbrev(address);
   const sub = truncate(alias ? `${alias} · ${nameBase}` : nameBase, 38);
 
-  // Layout
-  const SEP_X   = 292;                  // vertical separator before tier column
-  const PILL_X  = 300, PILL_W = 68, PILL_H = 17;
-  const PILL_CX = PILL_X + PILL_W / 2;  // 334
-  const ADDR_Y  = 50;                   // address section starts
-  const ROW_H   = 24;                   // height per address row
-  const BTN_Y   = ADDR_Y + ROW_H * 2;  // profile button section = 98
+  // Layout — header ends at y=54, two address rows 19px each → total 92
+  const HDR_H   = 54;
+  const SEP_X   = 292;
+  const PILL_X  = 300, PILL_W = 72, PILL_H = 17;
+  const PILL_CX = PILL_X + PILL_W / 2;  // 336
+  const ROW1_Y  = HDR_H;       // 54 — STX row
+  const ROW2_Y  = HDR_H + 19;  // 73 — BTC row
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"
      role="img" aria-label="${esc(title)}${agentName ? ' — ' + esc(agentName) : ''}">
@@ -179,112 +178,96 @@ function buildBadge({ tokenId, count, tier, agentName, alias, address, btcAddres
     <clipPath id="${uid}cl"><rect width="${W}" height="${H}" rx="10"/></clipPath>
   </defs>
 
-  <!-- Copy script — runs when SVG opened directly; silently ignored in <img> embeds -->
   <script type="text/javascript"><![CDATA[
-    function ${uid}copy(btnId, val) {
-      if (!navigator.clipboard) return;
-      navigator.clipboard.writeText(val).then(function() {
-        var el = document.getElementById(btnId);
-        if (!el) return;
-        el.textContent = '✓ copied';
-        setTimeout(function() { el.textContent = 'copy'; }, 1800);
-      });
-    }
+    function ${uid}cp(id,v){if(!navigator.clipboard)return;navigator.clipboard.writeText(v).then(function(){var e=document.getElementById(id);if(!e)return;e.textContent='✓';setTimeout(function(){e.textContent='copy';},1600);});}
   ]]></script>
 
   <g clip-path="url(#${uid}cl)">
-    <!-- Uniform card background — no zone contrast -->
     <rect width="${W}" height="${H}" fill="url(#${uid}bg)"/>
-
-    <!-- Left accent bar -->
     <rect x="0" y="0" width="4" height="${H}" fill="url(#${uid}bar)"/>
-
-    <!-- Card border -->
     <rect width="${W}" height="${H}" rx="10" fill="none"
           stroke="${t.color}" stroke-width="0.8" stroke-opacity="0.22"/>
 
-    <!-- Section dividers -->
-    <line x1="4" y1="${ADDR_Y}" x2="${W}" y2="${ADDR_Y}"
-          stroke="rgba(255,255,255,0.07)" stroke-width="0.6"/>
-    <line x1="4" y1="${ADDR_Y + ROW_H}" x2="${W - 4}" y2="${ADDR_Y + ROW_H}"
+    <!-- Header / address divider -->
+    <line x1="4" y1="${ROW1_Y}" x2="${W}" y2="${ROW1_Y}"
+          stroke="rgba(255,255,255,0.08)" stroke-width="0.6"/>
+    <!-- STX / BTC row divider -->
+    <line x1="14" y1="${ROW2_Y}" x2="${W - 4}" y2="${ROW2_Y}"
           stroke="rgba(255,255,255,0.04)" stroke-width="0.5"/>
-    <line x1="4" y1="${BTN_Y}" x2="${W}" y2="${BTN_Y}"
-          stroke="rgba(255,255,255,0.07)" stroke-width="0.6"/>
 
-    <!-- ── Header ──────────────────────────────────────────────────────── -->
+    <!-- ── Header: identity ────────────────────────────────────────────── -->
 
-    <rect x="13" y="11" width="28" height="28" rx="6" fill="${t.dim}"/>
-    <text x="27" y="30" font-size="16" text-anchor="middle"
+    <rect x="13" y="10" width="26" height="26" rx="5" fill="${t.dim}"/>
+    <text x="26" y="28" font-size="15" text-anchor="middle"
           font-family="Apple Color Emoji,Segoe UI Emoji,Noto Color Emoji,serif">🦅</text>
 
-    <text x="51" y="26"
+    <text x="49" y="24"
           font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
-          font-size="11.5" font-weight="700" fill="#eef3ff" letter-spacing="0.2">${esc(title)}</text>
-    <text x="51" y="39"
+          font-size="11" font-weight="700" fill="#eef3ff" letter-spacing="0.2">${esc(title)}</text>
+    <text x="49" y="36"
           font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
-          font-size="9" fill="#4a5c78">${esc(sub)}</text>
+          font-size="8.5" fill="#4a5c78">${esc(sub)}</text>
 
-    <!-- Tier column vertical sep -->
-    <line x1="${SEP_X}" y1="10" x2="${SEP_X}" y2="44"
+    <!-- ── Header: tier column ─────────────────────────────────────────── -->
+
+    <line x1="${SEP_X}" y1="9" x2="${SEP_X}" y2="${HDR_H - 4}"
           stroke="rgba(255,255,255,0.08)" stroke-width="0.7"/>
 
     <!-- Tier pill -->
-    <rect x="${PILL_X}" y="12" width="${PILL_W}" height="${PILL_H}" rx="5"
+    <rect x="${PILL_X}" y="10" width="${PILL_W}" height="${PILL_H}" rx="5"
           fill="${t.dim}" stroke="${t.color}" stroke-width="0.6" stroke-opacity="0.5"/>
-    <text x="${PILL_CX}" y="${12 + PILL_H / 2 + 3}"
+    <text x="${PILL_CX}" y="${10 + PILL_H / 2 + 3}"
           font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
           font-size="7.5" font-weight="800" fill="${t.text}" text-anchor="middle"
           letter-spacing="1.1">${esc(t.name.toUpperCase())}</text>
-    <text x="${PILL_CX}" y="40"
+
+    <!-- On-chain -->
+    <text x="${PILL_CX}" y="36"
           font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
           font-size="7.5" fill="#00c97a" text-anchor="middle">✓ on-chain</text>
 
+    <!-- Profile button — lives in header tier column, no extra row needed -->
+    <a href="${esc(profileUrl)}" target="_blank">
+      <rect x="${PILL_X}" y="41" width="${PILL_W}" height="10" rx="3"
+            fill="rgba(255,255,255,0.05)" stroke="${t.color}" stroke-width="0.5" stroke-opacity="0.35"/>
+      <text x="${PILL_CX}" y="49"
+            font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
+            font-size="6.5" fill="${t.text}" text-anchor="middle" letter-spacing="0.2">View Profile →</text>
+    </a>
+
     <!-- ── STX address row ─────────────────────────────────────────────── -->
 
-    <text x="14" y="${ADDR_Y + 15}"
+    <text x="14" y="${ROW1_Y + 13}"
           font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
-          font-size="7" font-weight="700" letter-spacing="0.7" fill="${t.text}">STX</text>
-    <text x="37" y="${ADDR_Y + 15}"
+          font-size="6.5" font-weight="700" letter-spacing="0.7" fill="${t.text}">STX</text>
+    <text x="35" y="${ROW1_Y + 13}"
           font-family="'SF Mono','Fira Code','Consolas',monospace"
-          font-size="8" fill="#8899b4">${esc(address)}</text>
-
-    <!-- STX copy button (interactive when SVG opened directly) -->
-    <g onclick="${uid}copy('${uid}sc','${address}')" style="cursor:pointer">
-      <rect x="${W - 50}" y="${ADDR_Y + 4}" width="42" height="13" rx="3"
-            fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.13)" stroke-width="0.6"/>
-      <text id="${uid}sc" x="${W - 29}" y="${ADDR_Y + 13.5}"
+          font-size="7.5" fill="#8899b4">${esc(address)}</text>
+    <g onclick="${uid}cp('${uid}sc','${address}')" style="cursor:pointer">
+      <rect x="${W - 46}" y="${ROW1_Y + 3}" width="38" height="12" rx="3"
+            fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.12)" stroke-width="0.5"/>
+      <text id="${uid}sc" x="${W - 27}" y="${ROW1_Y + 12}"
             font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
-            font-size="7" fill="rgba(255,255,255,0.4)" text-anchor="middle">copy</text>
+            font-size="6.5" fill="rgba(255,255,255,0.38)" text-anchor="middle">copy</text>
     </g>
 
     <!-- ── BTC address row ─────────────────────────────────────────────── -->
 
-    <text x="14" y="${ADDR_Y + ROW_H + 15}"
+    <text x="14" y="${ROW2_Y + 13}"
           font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
-          font-size="7" font-weight="700" letter-spacing="0.7" fill="#f7931a">BTC</text>
+          font-size="6.5" font-weight="700" letter-spacing="0.7" fill="#f7931a">BTC</text>
     ${btcAddress ? `
-    <text x="37" y="${ADDR_Y + ROW_H + 15}"
+    <text x="35" y="${ROW2_Y + 13}"
           font-family="'SF Mono','Fira Code','Consolas',monospace"
-          font-size="8" fill="#8899b4">${esc(btcAddress)}</text>
-    <!-- BTC copy button -->
-    <g onclick="${uid}copy('${uid}bc','${btcAddress}')" style="cursor:pointer">
-      <rect x="${W - 50}" y="${ADDR_Y + ROW_H + 4}" width="42" height="13" rx="3"
-            fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.13)" stroke-width="0.6"/>
-      <text id="${uid}bc" x="${W - 29}" y="${ADDR_Y + ROW_H + 13.5}"
+          font-size="7.5" fill="#8899b4">${esc(btcAddress)}</text>
+    <g onclick="${uid}cp('${uid}bc','${btcAddress}')" style="cursor:pointer">
+      <rect x="${W - 46}" y="${ROW2_Y + 3}" width="38" height="12" rx="3"
+            fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.12)" stroke-width="0.5"/>
+      <text id="${uid}bc" x="${W - 27}" y="${ROW2_Y + 12}"
             font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
-            font-size="7" fill="rgba(255,255,255,0.4)" text-anchor="middle">copy</text>
+            font-size="6.5" fill="rgba(255,255,255,0.38)" text-anchor="middle">copy</text>
     </g>
     ` : ''}
-
-    <!-- ── Profile button ─────────────────────────────────────────────── -->
-
-    <a href="${esc(profileUrl)}" target="_blank">
-      <rect x="${(W - 160) / 2}" y="${BTN_Y + 4}" width="160" height="18" rx="5"
-            fill="${t.dim}" stroke="${t.color}" stroke-width="0.6" stroke-opacity="0.4"/>
-      <text x="${W / 2}" y="${BTN_Y + 16.5}"
-            font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
-            font-size="8" fill="${t.text}" text-anchor="middle" letter-spacing="0.2">🦅 View Profile →</text>
-    </a>
   </g>
 </svg>`;
 }
