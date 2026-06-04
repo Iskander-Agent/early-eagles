@@ -148,20 +148,27 @@ async function getTokenMeta(id) {
 
 function buildBadge({ tokenId, count, tier, agentName, alias, address, btcAddress, profileUrl }) {
   const t = TIERS[tier] ?? TIERS[4];
-  const W = 380, H = 92;
+  // W=340 fits full STX address (42 chars × ~4.5px) with right margin for copy
+  // H=80: header 48px (2 balanced rows) + 2 address rows 16px each
+  const W = 340, H = 80;
   const uid = `ee${tier}`;
 
   const title = count > 1 ? `EARLY EAGLES ×${count}` : `EARLY EAGLE #${tokenId}`;
   const nameBase = agentName || abbrev(address);
-  const sub = truncate(alias ? `${alias} · ${nameBase}` : nameBase, 38);
+  const sub = truncate(alias ? `${alias} · ${nameBase}` : nameBase, 28);
 
-  // Layout — header ends at y=54, two address rows 19px each → total 92
-  const HDR_H   = 54;
-  const SEP_X   = 292;
-  const PILL_X  = 300, PILL_W = 72, PILL_H = 17;
-  const PILL_CX = PILL_X + PILL_W / 2;  // 336
-  const ROW1_Y  = HDR_H;       // 54 — STX row
-  const ROW2_Y  = HDR_H + 19;  // 73 — BTC row
+  // Two balanced header rows:
+  //   Row A (y=0–26): icon  +  title left  |  tier pill right
+  //   Row B (y=26–48): space + subtitle    |  on-chain · View Profile →
+  // Address rows below the divider at y=48
+  const HDR   = 48;
+  const ROW1  = HDR;       // 48 — STX
+  const ROW2  = HDR + 16;  // 64 — BTC
+
+  // Tier pill right-aligned: 8px from right edge
+  const PILL_W = 74, PILL_H = 16;
+  const PILL_X = W - PILL_W - 8;   // 258
+  const PILL_CX = PILL_X + PILL_W / 2;  // 295
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"
      role="img" aria-label="${esc(title)}${agentName ? ' — ' + esc(agentName) : ''}">
@@ -188,84 +195,84 @@ function buildBadge({ tokenId, count, tier, agentName, alias, address, btcAddres
     <rect width="${W}" height="${H}" rx="10" fill="none"
           stroke="${t.color}" stroke-width="0.8" stroke-opacity="0.22"/>
 
-    <!-- Header / address divider -->
-    <line x1="4" y1="${ROW1_Y}" x2="${W}" y2="${ROW1_Y}"
+    <!-- Header / address section divider -->
+    <line x1="4" y1="${HDR}" x2="${W}" y2="${HDR}"
           stroke="rgba(255,255,255,0.08)" stroke-width="0.6"/>
-    <!-- STX / BTC row divider -->
-    <line x1="14" y1="${ROW2_Y}" x2="${W - 4}" y2="${ROW2_Y}"
+    <!-- STX / BTC divider -->
+    <line x1="12" y1="${ROW2}" x2="${W - 4}" y2="${ROW2}"
           stroke="rgba(255,255,255,0.04)" stroke-width="0.5"/>
 
-    <!-- ── Header: identity ────────────────────────────────────────────── -->
+    <!-- ── Header row A: icon + title  |  tier pill ──────────────────── -->
 
-    <rect x="13" y="10" width="26" height="26" rx="5" fill="${t.dim}"/>
-    <text x="26" y="28" font-size="15" text-anchor="middle"
+    <rect x="12" y="8" width="20" height="20" rx="4" fill="${t.dim}"/>
+    <text x="22" y="23" font-size="12" text-anchor="middle"
           font-family="Apple Color Emoji,Segoe UI Emoji,Noto Color Emoji,serif">🦅</text>
 
-    <text x="49" y="24"
+    <!-- Title — left, vertically centered in row A (y=8–28) -->
+    <text x="38" y="23"
           font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
           font-size="11" font-weight="700" fill="#eef3ff" letter-spacing="0.2">${esc(title)}</text>
-    <text x="49" y="36"
+
+    <!-- Tier pill — right-aligned, row A -->
+    <rect x="${PILL_X}" y="8" width="${PILL_W}" height="${PILL_H}" rx="5"
+          fill="${t.dim}" stroke="${t.color}" stroke-width="0.6" stroke-opacity="0.5"/>
+    <text x="${PILL_CX}" y="${8 + PILL_H / 2 + 3}"
+          font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
+          font-size="7.5" font-weight="800" fill="${t.text}" text-anchor="middle"
+          letter-spacing="1.2">${esc(t.name.toUpperCase())}</text>
+
+    <!-- ── Header row B: subtitle  |  on-chain · profile link ────────── -->
+
+    <!-- Subtitle — left, aligned under title at x=38 -->
+    <text x="38" y="39"
           font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
           font-size="8.5" fill="#4a5c78">${esc(sub)}</text>
 
-    <!-- ── Header: tier column ─────────────────────────────────────────── -->
-
-    <line x1="${SEP_X}" y1="9" x2="${SEP_X}" y2="${HDR_H - 4}"
-          stroke="rgba(255,255,255,0.08)" stroke-width="0.7"/>
-
-    <!-- Tier pill -->
-    <rect x="${PILL_X}" y="10" width="${PILL_W}" height="${PILL_H}" rx="5"
-          fill="${t.dim}" stroke="${t.color}" stroke-width="0.6" stroke-opacity="0.5"/>
-    <text x="${PILL_CX}" y="${10 + PILL_H / 2 + 3}"
-          font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
-          font-size="7.5" font-weight="800" fill="${t.text}" text-anchor="middle"
-          letter-spacing="1.1">${esc(t.name.toUpperCase())}</text>
-
-    <!-- On-chain -->
+    <!-- ✓ on-chain — right, under tier pill -->
     <text x="${PILL_CX}" y="36"
           font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
           font-size="7.5" fill="#00c97a" text-anchor="middle">✓ on-chain</text>
 
-    <!-- Profile button — lives in header tier column, no extra row needed -->
+    <!-- View Profile → — right, row B bottom, inline under on-chain -->
     <a href="${esc(profileUrl)}" target="_blank">
-      <rect x="${PILL_X}" y="41" width="${PILL_W}" height="10" rx="3"
-            fill="rgba(255,255,255,0.05)" stroke="${t.color}" stroke-width="0.5" stroke-opacity="0.35"/>
-      <text x="${PILL_CX}" y="49"
+      <rect x="${PILL_X}" y="40" width="${PILL_W}" height="10" rx="3"
+            fill="rgba(255,255,255,0.04)" stroke="${t.color}" stroke-width="0.5" stroke-opacity="0.3"/>
+      <text x="${PILL_CX}" y="48"
             font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
-            font-size="6.5" fill="${t.text}" text-anchor="middle" letter-spacing="0.2">View Profile →</text>
+            font-size="6.5" fill="${t.text}" text-anchor="middle" opacity="0.85">View Profile →</text>
     </a>
 
     <!-- ── STX address row ─────────────────────────────────────────────── -->
 
-    <text x="14" y="${ROW1_Y + 13}"
+    <text x="12" y="${ROW1 + 12}"
           font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
           font-size="6.5" font-weight="700" letter-spacing="0.7" fill="${t.text}">STX</text>
-    <text x="35" y="${ROW1_Y + 13}"
+    <text x="32" y="${ROW1 + 12}"
           font-family="'SF Mono','Fira Code','Consolas',monospace"
           font-size="7.5" fill="#8899b4">${esc(address)}</text>
     <g onclick="${uid}cp('${uid}sc','${address}')" style="cursor:pointer">
-      <rect x="${W - 46}" y="${ROW1_Y + 3}" width="38" height="12" rx="3"
-            fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.12)" stroke-width="0.5"/>
-      <text id="${uid}sc" x="${W - 27}" y="${ROW1_Y + 12}"
+      <rect x="${W - 42}" y="${ROW1 + 3}" width="35" height="10" rx="3"
+            fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.11)" stroke-width="0.5"/>
+      <text id="${uid}sc" x="${W - 24.5}" y="${ROW1 + 11}"
             font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
-            font-size="6.5" fill="rgba(255,255,255,0.38)" text-anchor="middle">copy</text>
+            font-size="6.5" fill="rgba(255,255,255,0.4)" text-anchor="middle">copy</text>
     </g>
 
     <!-- ── BTC address row ─────────────────────────────────────────────── -->
 
-    <text x="14" y="${ROW2_Y + 13}"
+    <text x="12" y="${ROW2 + 12}"
           font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
           font-size="6.5" font-weight="700" letter-spacing="0.7" fill="#f7931a">BTC</text>
     ${btcAddress ? `
-    <text x="35" y="${ROW2_Y + 13}"
+    <text x="32" y="${ROW2 + 12}"
           font-family="'SF Mono','Fira Code','Consolas',monospace"
           font-size="7.5" fill="#8899b4">${esc(btcAddress)}</text>
     <g onclick="${uid}cp('${uid}bc','${btcAddress}')" style="cursor:pointer">
-      <rect x="${W - 46}" y="${ROW2_Y + 3}" width="38" height="12" rx="3"
-            fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.12)" stroke-width="0.5"/>
-      <text id="${uid}bc" x="${W - 27}" y="${ROW2_Y + 12}"
+      <rect x="${W - 42}" y="${ROW2 + 3}" width="35" height="10" rx="3"
+            fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.11)" stroke-width="0.5"/>
+      <text id="${uid}bc" x="${W - 24.5}" y="${ROW2 + 11}"
             font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
-            font-size="6.5" fill="rgba(255,255,255,0.38)" text-anchor="middle">copy</text>
+            font-size="6.5" fill="rgba(255,255,255,0.4)" text-anchor="middle">copy</text>
     </g>
     ` : ''}
   </g>
