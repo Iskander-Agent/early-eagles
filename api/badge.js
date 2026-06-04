@@ -148,131 +148,131 @@ async function getTokenMeta(id) {
 
 function buildBadge({ tokenId, count, tier, agentName, alias, address, btcAddress, profileUrl }) {
   const t = TIERS[tier] ?? TIERS[4];
-  const W = 260, H = 64;
+  // Card dimensions — wide enough for addresses side-by-side, proportional height
+  const W = 340, H = 76;
   const uid = `ee${tier}`;
 
-  const title = count > 1
-    ? `EARLY EAGLES ×${count}`
-    : `EARLY EAGLE #${tokenId}`;
-
+  const title = count > 1 ? `EARLY EAGLES ×${count}` : `EARLY EAGLE #${tokenId}`;
   const nameBase = agentName || abbrev(address);
-  const sub = truncate(alias ? `${alias} · ${nameBase}` : nameBase, 30);
+  const sub = truncate(alias ? `${alias} · ${nameBase}` : nameBase, 34);
 
-  // Layout constants
-  const ICON_X = 8, ICON_Y = 9, ICON_S = 22;
-  const TEXT_X = ICON_X + ICON_S + 8;    // 38
-  const PILL_W = 68, PILL_X = W - PILL_W - 8;  // 184
+  // Short address for footer strip — first 6 + … + last 4
+  const addrShort = s => s && s.length > 12 ? s.slice(0, 6) + '…' + s.slice(-4) : (s || '');
 
-  const stxDisplay = abbrev(address);
-  const btcDisplay = btcAddress ? abbrev(btcAddress) : null;
+  // Zone boundary
+  const ZONE2_Y = 50;
+  // Vertical separator before tier column
+  const SEP_X   = 266;
+  // Tier pill
+  const PILL_X  = 274, PILL_W = 58, PILL_H = 16;
+  const PILL_CX = PILL_X + PILL_W / 2;  // 303
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"
      role="img" aria-label="${esc(title)}${agentName ? ' — ' + esc(agentName) : ''}">
   <title>${esc(title)}${agentName ? ' — ' + esc(agentName) : ''} · ${esc(t.name)}</title>
   <defs>
+    <!-- Card background: deep navy, very subtle top highlight -->
     <linearGradient id="${uid}bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#0f1623"/>
-      <stop offset="100%" stop-color="#090c12"/>
+      <stop offset="0%"   stop-color="#0e1625"/>
+      <stop offset="100%" stop-color="#080d18"/>
     </linearGradient>
-    <radialGradient id="${uid}amb" cx="0" cy="0.5" r="0.45" fx="0" fy="0.5">
-      <stop offset="0%" stop-color="${t.color}" stop-opacity="0.12"/>
+    <!-- Tier ambient glow radiating from left edge -->
+    <radialGradient id="${uid}amb" cx="0.02" cy="0.45" r="0.6">
+      <stop offset="0%"   stop-color="${t.color}" stop-opacity="0.18"/>
       <stop offset="100%" stop-color="${t.color}" stop-opacity="0"/>
     </radialGradient>
-    <linearGradient id="${uid}sg" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%"   stop-color="white" stop-opacity="0"/>
-      <stop offset="45%"  stop-color="white" stop-opacity="0"/>
-      <stop offset="50%"  stop-color="white" stop-opacity="0.03"/>
-      <stop offset="55%"  stop-color="white" stop-opacity="0"/>
-      <stop offset="100%" stop-color="white" stop-opacity="0"/>
+    <!-- Left accent bar: solid at top, fades at bottom -->
+    <linearGradient id="${uid}bar" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="${t.color}"/>
+      <stop offset="100%" stop-color="${t.color}" stop-opacity="0.45"/>
     </linearGradient>
-    <filter id="${uid}gf" x="-400%" y="-100%" width="900%" height="300%">
-      <feGaussianBlur stdDeviation="3.5" result="b"/>
-      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-    </filter>
-    <clipPath id="${uid}cl"><rect width="${W}" height="${H}" rx="6"/></clipPath>
+    <!-- Footer zone tint -->
+    <linearGradient id="${uid}f2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#050a14"/>
+      <stop offset="100%" stop-color="#04080f"/>
+    </linearGradient>
+    <clipPath id="${uid}cl"><rect width="${W}" height="${H}" rx="8"/></clipPath>
   </defs>
 
-  <style>
-    @keyframes ${uid}sh {
-      0%   { transform: translateX(-${W}px); }
-      100% { transform: translateX(${W * 2}px); }
-    }
-    @keyframes ${uid}gl {
-      0%, 100% { opacity: 0.38; }
-      50%       { opacity: 0.8; }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      .${uid}sh, .${uid}gl { animation: none !important; }
-    }
-  </style>
-
   <g clip-path="url(#${uid}cl)">
+    <!-- Base card -->
     <rect width="${W}" height="${H}" fill="url(#${uid}bg)"/>
+    <!-- Tier ambient glow -->
     <rect width="${W}" height="${H}" fill="url(#${uid}amb)"/>
-    <rect width="${W}" height="${H}" rx="6" fill="none"
-          stroke="${t.color}" stroke-width="0.5" stroke-opacity="0.2"/>
 
-    <!-- Left accent bar — slow glow pulse -->
-    <rect class="${uid}gl" x="0" y="0" width="3" height="${H}"
-          fill="${t.color}" filter="url(#${uid}gf)"
-          style="animation:${uid}gl 4s ease-in-out infinite;"/>
+    <!-- Footer zone — darker tint to separate address strip -->
+    <rect x="4" y="${ZONE2_Y}" width="${W - 4}" height="${H - ZONE2_Y}"
+          fill="url(#${uid}f2)" opacity="0.9"/>
 
-    <!-- Eagle icon box — vertically centered in header zone -->
-    <rect x="${ICON_X}" y="${ICON_Y}" width="${ICON_S}" height="${ICON_S}" rx="5"
-          fill="${t.dim}"/>
-    <text x="${ICON_X + ICON_S / 2}" y="${ICON_Y + ICON_S / 2 + 5}"
-          font-size="13" text-anchor="middle"
+    <!-- Left accent bar -->
+    <rect x="0" y="0" width="4" height="${H}" fill="url(#${uid}bar)"/>
+
+    <!-- Card border — tier color, subtle -->
+    <rect width="${W}" height="${H}" rx="8" fill="none"
+          stroke="${t.color}" stroke-width="0.8" stroke-opacity="0.24"/>
+
+    <!-- Zone divider -->
+    <line x1="4" y1="${ZONE2_Y}" x2="${W}" y2="${ZONE2_Y}"
+          stroke="rgba(255,255,255,0.07)" stroke-width="0.6"/>
+
+    <!-- ── Identity section ────────────────────────────────────────────── -->
+
+    <!-- Eagle icon box -->
+    <rect x="13" y="11" width="28" height="28" rx="6" fill="${t.dim}"/>
+    <text x="27" y="30" font-size="16" text-anchor="middle"
           font-family="Apple Color Emoji,Segoe UI Emoji,Noto Color Emoji,serif">🦅</text>
 
-    <!-- Title -->
-    <text x="${TEXT_X}" y="20"
+    <!-- Title: collection + token number -->
+    <text x="51" y="25"
           font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
-          font-size="10.5" font-weight="700" fill="#edf0f7" letter-spacing="0.15">${esc(title)}</text>
+          font-size="11" font-weight="700" fill="#eef2ff" letter-spacing="0.25">${esc(title)}</text>
 
-    <!-- Sub (alias · agent name, or agent name, or address) -->
-    <text x="${TEXT_X}" y="31"
+    <!-- Subtitle: alias · agent name -->
+    <text x="51" y="38"
           font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
-          font-size="8.5" fill="#68788f">${esc(sub)}</text>
+          font-size="9" fill="#4e607c">${esc(sub)}</text>
 
-    <!-- Separator -->
-    <line x1="${TEXT_X}" y1="37" x2="${PILL_X - 4}" y2="37"
-          stroke="rgba(255,255,255,0.06)" stroke-width="0.5"/>
+    <!-- ── Tier column ─────────────────────────────────────────────────── -->
 
-    <!-- STX address row -->
-    <text x="${TEXT_X}" y="48"
-          font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
-          font-size="7.5" font-weight="700" fill="${t.text}">STX</text>
-    <text x="${TEXT_X + 20}" y="48"
-          font-family="'SF Mono','Fira Code','Consolas',monospace"
-          font-size="7.5" fill="#8a9ab8">${esc(stxDisplay)}</text>
-
-    <!-- BTC address row -->
-    ${btcDisplay ? `
-    <text x="${TEXT_X}" y="58"
-          font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
-          font-size="7.5" font-weight="700" fill="#f7931a">BTC</text>
-    <text x="${TEXT_X + 20}" y="58"
-          font-family="'SF Mono','Fira Code','Consolas',monospace"
-          font-size="7.5" fill="#8a9ab8">${esc(btcDisplay)}</text>
-    ` : ''}
+    <!-- Vertical separator -->
+    <line x1="${SEP_X}" y1="10" x2="${SEP_X}" y2="${ZONE2_Y - 7}"
+          stroke="rgba(255,255,255,0.08)" stroke-width="0.7"/>
 
     <!-- Tier pill -->
-    <rect x="${PILL_X}" y="9" width="${PILL_W}" height="13" rx="3"
-          fill="${t.dim}" stroke="${t.color}" stroke-width="0.4" stroke-opacity="0.4"/>
-    <text x="${PILL_X + PILL_W / 2}" y="19"
+    <rect x="${PILL_X}" y="12" width="${PILL_W}" height="${PILL_H}" rx="5"
+          fill="${t.dim}" stroke="${t.color}" stroke-width="0.6" stroke-opacity="0.5"/>
+    <text x="${PILL_CX}" y="${12 + PILL_H / 2 + 3.2}"
           font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
-          font-size="8" font-weight="700" fill="${t.text}" text-anchor="middle"
-          letter-spacing="0.7">${esc(t.name.toUpperCase())}</text>
+          font-size="7.5" font-weight="800" fill="${t.text}" text-anchor="middle"
+          letter-spacing="1.1">${esc(t.name.toUpperCase())}</text>
 
-    <!-- On-Chain label -->
-    <text x="${PILL_X + PILL_W / 2}" y="31"
+    <!-- On-chain verified -->
+    <text x="${PILL_CX}" y="40"
           font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
-          font-size="7.5" fill="#00c96a" text-anchor="middle">✓ on-chain</text>
+          font-size="7.5" fill="#00c97a" text-anchor="middle" letter-spacing="0.2">✓ on-chain</text>
 
-    <!-- Shimmer — very faint, slow sweep -->
-    <rect class="${uid}sh" x="0" y="0" width="${W}" height="${H}"
-          fill="url(#${uid}sg)"
-          style="animation:${uid}sh 5s 1s linear infinite;"/>
+    <!-- ── Address strip (footer) ──────────────────────────────────────── -->
+
+    <!-- STX label + address -->
+    <text x="48" y="67"
+          font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
+          font-size="7" font-weight="700" letter-spacing="0.6" fill="${t.text}">STX</text>
+    <text x="67" y="67"
+          font-family="'SF Mono','Fira Code','Consolas',monospace"
+          font-size="7.5" fill="#4e6078">${esc(addrShort(address))}</text>
+
+    ${btcAddress ? `
+    <!-- Dot separator -->
+    <circle cx="140" cy="63.5" r="1.6" fill="rgba(255,255,255,0.1)"/>
+
+    <!-- BTC label + address -->
+    <text x="150" y="67"
+          font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
+          font-size="7" font-weight="700" letter-spacing="0.6" fill="#f7931a">BTC</text>
+    <text x="170" y="67"
+          font-family="'SF Mono','Fira Code','Consolas',monospace"
+          font-size="7.5" fill="#4e6078">${esc(addrShort(btcAddress))}</text>
+    ` : ''}
 
     <a href="${esc(profileUrl)}" target="_blank">
       <rect width="${W}" height="${H}" fill="transparent" opacity="0"/>
