@@ -15,13 +15,14 @@
  *   nest:tg:{telegram_id}  → eagle_token_id
  */
 
-const { publicKeyFromSignatureRsv, getAddressFromPublicKey, createMessageSignature, TransactionVersion } = require('@stacks/transactions');
+const { publicKeyFromSignatureRsv, getAddressFromPublicKey, createMessageSignature, TransactionVersion, uintCV, cvToHex, hexToCV, cvToString, ClarityType } = require('@stacks/transactions');
 const { sha256 } = require('@noble/hashes/sha256');
 
 const STACKS_API        = 'https://api.hiro.so';
 const AIBTC_API         = 'https://aibtc.com/api/agents';
 const IDENTITY_REGISTRY = 'SP1NMR7MY0TJ1QA7WQBZ6504KC79PZNTRQH4YGFJD.identity-registry-v2::agent-identity';
 const EAGLE_ASSET       = 'SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2.early-eagles-v2::early-eagles';
+const EAGLE_CONTRACT    = { addr: 'SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2', name: 'early-eagles-v2' };
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -67,14 +68,63 @@ function verifyNonceSignature(address, signature) {
 }
 
 async function getEagleTokenIds(address) {
+  // Primary: Hiro NFT holdings index (fast, cached)
   const url = `${STACKS_API}/extended/v1/tokens/nft/holdings` +
     `?principal=${address}&asset_identifiers=${encodeURIComponent(EAGLE_ASSET)}&limit=50`;
   const r = await fetch(url, { signal: abort(6000) });
   if (!r.ok) throw new Error(`Hiro ${r.status}`);
-  return ((await r.json()).results || [])
+  const hiroIds = ((await r.json()).results || [])
     .map(h => parseInt((h.value?.repr || '').replace(/^u/, ''), 10))
     .filter(id => !isNaN(id))
     .sort((a, b) => a - b);
+  if (hiroIds.length > 0) return hiroIds;
+
+  // Fallback: direct on-chain scan (handles Hiro indexing gaps)
+  console.log(`[nest] Hiro returned 0 for ${address} — scanning on-chain`);
+  try {
+    // Get total supply
+    const supplyRes = await fetch(
+      `${STACKS_API}/v2/contracts/call-read/${EAGLE_CONTRACT.addr}/${EAGLE_CONTRACT.name}/get-last-token-id`,
+      { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sender: EAGLE_CONTRACT.addr, arguments: [] }),
+        signal: abort(6000) }
+    );
+    if (!supplyRes.ok) throw new Error(`get-last-token-id HTTP ${supplyRes.status}`);
+    const supplyData = await supplyRes.json();
+    const supplyCv = hexToCV(supplyData.result);
+    if (supplyCv.type !== ClarityType.ResponseOk || supplyCv.value.type !== ClarityType.UInt) {
+      throw new Error('unexpected get-last-token-id response');
+    }
+    const lastId = Number(supplyCv.value.value);
+
+    // Scan all token IDs in parallel batches of 10
+    const ownedIds = [];
+    for (let i = 1; i <= lastId; i += 10) {
+      const batch = Array.from({ length: Math.min(10, lastId - i + 1) }, (_, j) => i + j);
+      const results = await Promise.all(batch.map(async tokenId => {
+        try {
+          const ownerRes = await fetch(
+            `${STACKS_API}/v2/contracts/call-read/${EAGLE_CONTRACT.addr}/${EAGLE_CONTRACT.name}/get-owner`,
+            { method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ sender: EAGLE_CONTRACT.addr, arguments: [cvToHex(uintCV(tokenId))] }),
+              signal: abort(5000) }
+          );
+          if (!ownerRes.ok) return null;
+          const ownerData = await ownerRes.json();
+          if (!ownerData.okay || !ownerData.result) return null;
+          const cv = hexToCV(ownerData.result);
+          if (cv.type !== ClarityType.ResponseOk) return null;
+          if (cv.value.type !== ClarityType.OptionalSome) return null;
+          return cvToString(cv.value.value) === address ? tokenId : null;
+        } catch { return null; }
+      }));
+      ownedIds.push(...results.filter(id => id !== null));
+    }
+    return ownedIds.sort((a, b) => a - b);
+  } catch (e) {
+    console.error('[nest] on-chain fallback failed:', e.message);
+    return [];
+  }
 }
 
 // Lazy KV loader — only require @vercel/kv when KV env vars are present
