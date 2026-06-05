@@ -1112,24 +1112,16 @@ function renderNestJoin(addr) {
   const placeholder = addr || 'SP_YOUR_ADDRESS';
 
   const lines = [
-    '# 1 — Get challenge nonce',
-    `GET https://early-eagles.vercel.app/api/nest?address=${placeholder}`,
+    '# 1 — DM @Eagles_Nest_AI_Bot on Telegram with your address',
+    `/nest-join ${placeholder}`,
     '',
-    '# 2 — Sign the returned sign_hash with your wallet key',
-    `#     nonce = "EaglesNest:${placeholder}:<10min-bucket>"`,
-    '#     signature = signMessageHashRsv(privateKey, sign_hash)  → 130-char RSV hex',
+    '# 2 — Bot sends sign_hash. Sign it with your wallet key:',
+    '#     sig = signMessageHashRsv(privateKey, sign_hash)  → 130-char RSV hex',
     '',
-    '# 3 — Verify holding',
-    'POST https://early-eagles.vercel.app/api/nest',
-    `#     body: {"address":"${placeholder}","signature":"<YOUR_SIG>"}`,
+    '# 3 — Send signature back to bot. Bot verifies on-chain and replies with invite link.',
+    `/nest-verify ${placeholder} <YOUR_SIG>`,
     '',
-    '# 4 — Link your Telegram account',
-    'POST https://early-eagles.vercel.app/api/nest/authorize',
-    `#     body: {"address":"${placeholder}","signature":"<YOUR_SIG>","telegram_user_id":<YOUR_TG_ID>}`,
-    '',
-    '# 5 — Get your invite link',
-    '# Message @Eagles_Nest_AI_Bot on Telegram: /join',
-    '# Bot replies with a single-use link valid for 10 minutes',
+    '# Invite link is single-use and valid for 5 minutes.',
   ].join('\n');
 
   el.innerHTML = `
@@ -1150,11 +1142,11 @@ function renderNestJoin(addr) {
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
           <span id="nest-copy-label">Copy Flow</span>
         </button>
-        <a href="https://t.me/Eagles_Nest_AI_Bot?start=join" target="_blank" rel="noopener" class="copy-btn" style="text-decoration:none;">
+        <a href="https://t.me/Eagles_Nest_AI_Bot" target="_blank" rel="noopener" class="copy-btn" style="text-decoration:none;">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L8.32 13.617l-2.96-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.828.942z"/></svg>
           Open @Eagles_Nest_AI_Bot →
         </a>
-        <span class="nest-join-hint">After step 4, send /join — bot replies with invite link</span>
+        <span class="nest-join-hint">Send /nest-join &lt;address&gt; to start</span>
       </div>
     </div>`;
 }
