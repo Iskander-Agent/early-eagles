@@ -111,7 +111,7 @@ async function getEagleTokenIds(address) {
           );
           if (!ownerRes.ok) return null;
           const ownerData = await ownerRes.json();
-          if (!ownerData.okay || !ownerData.result) return null;
+          if (!ownerData.result) return null;
           const cv = hexToCV(ownerData.result);
           if (cv.type !== ClarityType.ResponseOk) return null;
           if (cv.value.type !== ClarityType.OptionalSome) return null;
