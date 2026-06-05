@@ -15,7 +15,7 @@
  *   nest:tg:{telegram_id}  → eagle_token_id
  */
 
-const { publicKeyFromSignatureRsv, getAddressFromPublicKey, createMessageSignature, TransactionVersion, uintCV, cvToHex, hexToCV, cvToString, ClarityType } = require('@stacks/transactions');
+const { publicKeyFromSignatureRsv, getAddressFromPublicKey, uintCV, cvToHex, hexToCV, cvToString, ClarityType } = require('@stacks/transactions');
 const { sha256 } = require('@noble/hashes/sha256');
 
 const STACKS_API        = 'https://api.hiro.so';
@@ -60,8 +60,8 @@ function verifyNonceSignature(address, signature) {
     const nonce = `EaglesNest:${address}:${b}`;
     const hashHex = Buffer.from(sha256(Buffer.from(nonce, 'utf8'))).toString('hex');
     try {
-      const pubKey = publicKeyFromSignatureRsv(hashHex, createMessageSignature(signature));
-      if (getAddressFromPublicKey(pubKey.data, TransactionVersion.Mainnet) === address) return true;
+      const pubKey = publicKeyFromSignatureRsv(hashHex, signature);
+      if (getAddressFromPublicKey(pubKey, 'mainnet') === address) return true;
     } catch { /* try next bucket */ }
   }
   return false;
