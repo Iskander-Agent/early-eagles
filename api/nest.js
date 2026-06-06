@@ -128,15 +128,15 @@ async function getEagleTokenIds(address) {
 }
 
 // Notify Ghislo on Telegram so he can manually add the verified holder(s)
-async function notifyNestJoinRequest(address, username, tier, tokenIds, ownerTelegramId) {
+async function notifyNestJoinRequest(address, username, tier, tokenIds, ownerUsername) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   const adminChatId = '676445780'; // Ghislo
   if (!token) return { ok: false, reason: 'bot not configured' };
   const tierTag = tier === 'eagle' ? `🦅 Eagle (token${tokenIds.length > 1 ? 's' : ''} #${tokenIds.join(', #')})` : '⚡ Genesis';
-  const ownerLine = ownerTelegramId ? `\n*Human owner ID:* \`${ownerTelegramId}\`` : '';
-  const addLine = ownerTelegramId
-    ? `Please add *${username}* (agent bot) and user ID \`${ownerTelegramId}\` (human owner) to the Nest group.`
-    : `Please add *${username}* (agent bot) to the Nest group.`;
+  const ownerLine = ownerUsername ? `\n*Human owner:* ${ownerUsername}` : '';
+  const addLine = ownerUsername
+    ? `Please add *${username}* (agent) and *${ownerUsername}* (owner) to the Nest group.`
+    : `Please add *${username}* to the Nest group.`;
   const text = `🦅 *Eagles Nest join request*\n\n*Agent:* ${username}\n*Address:* \`${address}\`\n*Tier:* ${tierTag}${ownerLine}\n\nVerified ✅ — ${addLine}`;
   try {
     const r = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
@@ -290,15 +290,15 @@ module.exports = async function handler(req, res) {
   // ── POST /api/nest — verify signature, return tier ───────────────────────
   if (!rateOk(ip + ':verify', 10)) return res.status(429).json({ authorized: false, reason: 'Too many attempts' });
 
-  const { address: rawAddr, signature, telegram_username, owner_telegram_id } = req.body || {};
+  const { address: rawAddr, signature, telegram_username, owner_telegram_username } = req.body || {};
   if (!rawAddr || !signature) return res.status(400).json({ authorized: false, reason: 'Missing address or signature' });
   if (!telegram_username || typeof telegram_username !== 'string' || telegram_username.trim().length < 2) {
     return res.status(400).json({ authorized: false, reason: 'Missing or invalid telegram_username (e.g. "@ClankBot" or "username")' });
   }
-  // owner_telegram_id is optional — if provided must be numeric
-  if (owner_telegram_id !== undefined && owner_telegram_id !== null && !/^\d+$/.test(String(owner_telegram_id))) {
-    return res.status(400).json({ authorized: false, reason: 'owner_telegram_id must be numeric if provided' });
-  }
+  // owner_telegram_username is optional — if provided normalise to @handle
+  const ownerUsername = owner_telegram_username
+    ? String(owner_telegram_username).trim().replace(/^@*/, '@')
+    : null;
   if (!/^S[PMTN][A-Z0-9]{38,41}$/.test(rawAddr)) return res.status(400).json({ authorized: false, reason: 'Invalid address' });
   if (!/^[0-9a-fA-F]{130}$/.test(signature)) return res.status(400).json({ authorized: false, reason: 'Invalid signature (expect 130-char RSV hex)' });
 
@@ -329,14 +329,13 @@ module.exports = async function handler(req, res) {
   }
 
   const tier = eagle_token_ids.length > 0 ? 'eagle' : 'genesis';
-  const ownerTgId = owner_telegram_id ? String(owner_telegram_id) : null;
   // Notify admin — they will manually add the verified holder(s) to the group
-  const notifyResult = await notifyNestJoinRequest(address, username, tier, eagle_token_ids, ownerTgId);
+  const notifyResult = await notifyNestJoinRequest(address, username, tier, eagle_token_ids, ownerUsername);
   return res.status(200).json({
     authorized: true, tier, address,
     ...(tier === 'eagle' ? { eagle_token_ids } : {}),
     pending_group_add: true,
-    pending_adds: [username, ...(ownerTgId ? [`user_id:${ownerTgId}`] : [])],
+    pending_adds: [username, ...(ownerUsername ? [ownerUsername] : [])],
     message: 'Verification successful. Admin has been notified and will add you to the Eagles Nest group shortly.',
     ...(notifyResult.ok ? {} : { notify_warning: 'Admin notification failed — contact @ghislo directly.' }),
     verified_at: new Date().toISOString(),

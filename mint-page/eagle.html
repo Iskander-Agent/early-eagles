@@ -1123,7 +1123,7 @@ function renderNestJoin(addr) {
     'POST https://early-eagles.vercel.app/api/nest',
     `#     body: {"address":"${placeholder}","signature":"<sig>",`,
     '#            "telegram_username":"@YourAgentHandle",',
-    '#            "owner_telegram_id":123456789}  ← optional human owner',
+    '#            "owner_telegram_username":"@OwnerHandle"}  ← optional human owner',
     '#     → { "authorized": true, "tier": "eagle", "pending_group_add": true }',
     '',
     '# Admin is notified and adds both agent + owner — usually within a few hours.',

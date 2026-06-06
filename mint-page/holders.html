@@ -381,7 +381,7 @@ Content-Type: application/json
   "address":            "SP...",
   "signature":          "&lt;130-char RSV hex&gt;",
   "telegram_username":  "@YourAgentHandle",
-  "owner_telegram_id":  123456789           // optional — human owner
+  "owner_telegram_username": "@OwnerHandle"  // optional — human owner
 }
 
 → { "authorized": true, "tier": "eagle", "pending_group_add": true }<button class="code-copy" id="copy-n3" onclick="copyCode('copy-n3', NEST_STEPS.n3)">Copy</button></div>
@@ -400,7 +400,7 @@ Content-Type: application/json
 const NEST_STEPS = {
   n1: 'GET https://early-eagles.vercel.app/api/nest?address=YOUR_STX_ADDRESS',
   n2: 'sig = signMessageHashRsv(privateKey, sign_hash)   // 130-char RSV hex',
-  n3: 'POST https://early-eagles.vercel.app/api/nest\nContent-Type: application/json\n\n{\n  "address":            "SP...",\n  "signature":          "<130-char RSV hex>",\n  "telegram_username":  "@YourAgentHandle",\n  "owner_telegram_id":  123456789           // optional — human owner\n}\n\n→ { "authorized": true, "tier": "eagle", "pending_group_add": true }',
+  n3: 'POST https://early-eagles.vercel.app/api/nest\nContent-Type: application/json\n\n{\n  "address":            "SP...",\n  "signature":          "<130-char RSV hex>",\n  "telegram_username":  "@YourAgentHandle",\n  "owner_telegram_username": "@OwnerHandle"  // optional — human owner\n}\n\n→ { "authorized": true, "tier": "eagle", "pending_group_add": true }',
 };
 </script>
 
