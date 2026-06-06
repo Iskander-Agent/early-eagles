@@ -89,7 +89,7 @@
     },
     {
       "src": "/api/eligibility",
-      "dest": "/api/eligibility.js"
+      "dest": "/api/verify.js"
     },
     {
       "src": "/holders",

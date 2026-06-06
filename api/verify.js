@@ -212,6 +212,71 @@ async function handleHolder(req, res) {
   }
 }
 
+// ── /api/eligibility handler ─────────────────────────────────────────────────
+
+const EAGLE_ADMIN   = 'SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2';
+const CONTRACT_NAME = 'early-eagles-v2';
+
+async function checkAlreadyMinted(addr) {
+  try {
+    const r = await fetch(
+      `${STACKS_API}/extended/v1/tokens/nft/holdings?principal=${addr}` +
+      `&asset_identifiers=${encodeURIComponent(EAGLE_ADMIN + '.' + CONTRACT_NAME + '::early-eagle')}`,
+      { signal: abort(5000) }
+    );
+    if (!r.ok) return null;
+    return (await r.json()).results?.length > 0;
+  } catch { return null; }
+}
+
+async function handleEligibility(req, res) {
+  const ip = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || 'unknown';
+  if (!rateOk(ip + ':eligibility', 20)) return res.status(429).json({ error: 'Too many requests. Try again in 1 minute.' });
+
+  const rawAddr = (req.query || {}).address;
+  const rawBtc  = (req.query || {}).btc;
+  if (!rawAddr || typeof rawAddr !== 'string') return res.status(400).json({ error: 'Missing ?address= parameter' });
+  if (!/^S[PMTN][A-Z0-9]{38,41}$/.test(rawAddr)) return res.status(400).json({ error: 'Invalid Stacks address format' });
+
+  const address = normalizeAddress(rawAddr);
+  const btcHint = (rawBtc && /^bc1[a-z0-9]{25,87}$/.test(rawBtc)) ? rawBtc : null;
+
+  const [apiRes, hiroRes, minted] = await Promise.allSettled([
+    fetch(`${AIBTC_API}/${address}`, { headers: { 'User-Agent': 'EarlyEagles/2.0' }, signal: abort(5000) }),
+    fetch(`${STACKS_API}/extended/v1/tokens/nft/holdings?principal=${address}&asset_identifiers=${encodeURIComponent(IDENTITY_REGISTRY)}`, { signal: abort(5000) }),
+    checkAlreadyMinted(address),
+  ]);
+
+  const result = { address, eligible: false, reason: null, agent: null, alreadyMinted: minted.status === 'fulfilled' ? minted.value : null };
+
+  if (hiroRes.status === 'rejected' || !hiroRes.value.ok) { result.reason = 'Identity lookup failed — try again shortly'; return res.status(200).json(result); }
+  const hiro = await hiroRes.value.json();
+  const holding = (hiro.results || [])[0];
+  const agentId = holding ? parseInt(holding.value.repr.replace(/^u/, ''), 10) : null;
+  const resolvedAgentId = Number.isFinite(agentId) ? agentId : null;
+
+  let data = null;
+  if (apiRes.status === 'fulfilled' && apiRes.value.ok) {
+    const raw = await apiRes.value.json();
+    if (raw && typeof raw.level === 'number') data = raw;
+  } else if (!btcHint) { result.reason = 'AIBTC lookup failed — try again shortly'; return res.status(200).json(result); }
+
+  if (!data && btcHint) {
+    try { const r = await fetch(`${AIBTC_API}/${btcHint}`, { headers: { 'User-Agent': 'EarlyEagles/2.0' }, signal: abort(5000) }); if (r.ok) { const d = await r.json(); if (d && typeof d.level === 'number') data = d; } } catch { /* ignore */ }
+  }
+  if (!data) { result.reason = 'Agent not found on AIBTC network'; return res.status(200).json(result); }
+
+  const agent = data.agent || {};
+  result.agent = { displayName: agent.displayName || null, bnsName: agent.bnsName || null, btcAddress: agent.btcAddress || null, level: data.level, levelName: data.levelName || 'Unknown' };
+  if (data.level < 2) { result.reason = `Not a Genesis agent (current level: ${data.levelName || data.level})`; return res.status(200).json(result); }
+  if (!resolvedAgentId && resolvedAgentId !== 0) { result.reason = 'No on-chain ERC-8004 identity found'; return res.status(200).json(result); }
+
+  result.agent.agentId = resolvedAgentId;
+  result.eligible = true;
+  if (result.alreadyMinted) result.reason = 'Already minted — each agent can only mint once';
+  return res.status(200).json(result);
+}
+
 // ── Main dispatcher ───────────────────────────────────────────────────────────
 
 module.exports = async function handler(req, res) {
@@ -221,8 +286,9 @@ module.exports = async function handler(req, res) {
 
   const path = (req.url || '').split('?')[0];
 
-  if (path.endsWith('/genesis')) return handleGenesis(req, res);
-  if (path.endsWith('/holder'))  return handleHolder(req, res);
+  if (path.endsWith('/genesis'))     return handleGenesis(req, res);
+  if (path.endsWith('/holder'))      return handleHolder(req, res);
+  if (path.endsWith('/eligibility')) return handleEligibility(req, res);
 
   return res.status(404).json({ error: 'Not found' });
 };
