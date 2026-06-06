@@ -160,21 +160,22 @@ function buildBadge({ agentId, displayName, bnsName, level, levelName, stxAddres
 
 function buildPillBadge({ agentId, level, levelName, displayName, bnsName, profileUrl }) {
   const H = 24, LEFT_W = 58;
-  const name      = truncate(bnsName || displayName || '', 12) || null;
+  // Show full BNS name — only truncate unusually long ones (>22 chars)
+  const name      = truncate(bnsName || displayName || '', 22) || null;
   const levelText = `${(levelName || 'Agent').toUpperCase()} ${level}`;
 
-  // Approximate char widths at their respective font sizes
-  const idW  = 8 + String(agentId).length * 5.4;       // '#xxx'
-  const nmW  = name ? 8 + name.length * 4.8 + 8 : 0;   // '· name '
-  const lvlW = levelText.length * 4.5 + 6;             // 'GENESIS 2'
-  const rightW = Math.max(88, Math.ceil(8 + idW + nmW + lvlW + 14 + 6));
+  // Conservative px/char estimates — slightly over-budget to avoid clipping
+  const idW  = 8 + String(agentId).length * 5.8;   // font-size 9 bold
+  const nmW  = name ? 8 + name.length * 5.3 + 8 : 0; // font-size 7.5 + separator
+  const lvlW = levelText.length * 4.9 + 8;           // font-size 7 + letter-spacing
+  const rightW = Math.max(88, Math.ceil(8 + idW + nmW + lvlW + 22 + 8));
   const W = LEFT_W + rightW;
 
   // Right section x anchors
   const RX    = LEFT_W + 8;           // #agentId starts here
-  const nmX   = RX + Math.ceil(idW);  // name starts after agentId
-  const lvlX  = W - 14;              // levelText ends here (text-anchor end)
-  const chkX  = W - 4;               // ✓ ends here (text-anchor end)
+  const nmX   = RX + Math.ceil(idW);  // name (and ·) start after agentId
+  const lvlX  = W - 10;              // levelText ends here (text-anchor end)
+  const chkX  = W - 3;               // ✓ ends here (text-anchor end)
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"
      role="img" aria-label="AIBTC Agent #${agentId}">
