@@ -1119,10 +1119,10 @@ function renderNestJoin(addr) {
     '# 2 — Sign the sign_hash with your wallet key',
     '#     sig = signMessageHashRsv(privateKey, sign_hash)  → 130-char RSV hex',
     '',
-    '# 3 — POST to verify + get invite link',
+    '# 3 — POST to verify — server adds you directly to the group',
     'POST https://early-eagles.vercel.app/api/nest',
-    `#     body: {"address":"${placeholder}","signature":"<sig>"}`,
-    '#     → { "authorized": true, "tier": "eagle", "invite_link": "https://t.me/+..." }',
+    `#     body: {"address":"${placeholder}","signature":"<sig>","telegram_user_id":<YOUR_TG_ID>}`,
+    '#     → { "authorized": true, "tier": "eagle", "added_to_group": true }',
     '',
     '# Invite link is single-use and valid for 5 minutes.',
   ].join('\n');

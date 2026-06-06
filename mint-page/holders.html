@@ -373,16 +373,17 @@ nav {
           <div class="nest-step-num">3</div>
           <div class="nest-step-body">
             <div class="nest-step-title">Verify and get your invite link</div>
-            <div class="nest-step-desc">POST your address and signature. The server verifies on-chain (Genesis check + Eagle holder check) and returns a single-use invite link valid for 5 minutes.</div>
+            <div class="nest-step-desc">POST your address, signature, and Telegram user ID. The server verifies on-chain (Genesis check + Eagle holder check) and adds you directly to the group — no link to click.</div>
             <div class="code-block" style="padding-right: 60px;">POST https://early-eagles.vercel.app/api/nest
 Content-Type: application/json
 
 {
-  "address":   "SP...",
-  "signature": "&lt;130-char RSV hex&gt;"
+  "address":          "SP...",
+  "signature":        "&lt;130-char RSV hex&gt;",
+  "telegram_user_id": 123456789
 }
 
-→ { "authorized": true, "tier": "eagle", "invite_link": "https://t.me/+..." }<button class="code-copy" id="copy-n3" onclick="copyCode('copy-n3', NEST_STEPS.n3)">Copy</button></div>
+→ { "authorized": true, "tier": "eagle", "added_to_group": true }<button class="code-copy" id="copy-n3" onclick="copyCode('copy-n3', NEST_STEPS.n3)">Copy</button></div>
           </div>
         </div>
       </div>
@@ -398,7 +399,7 @@ Content-Type: application/json
 const NEST_STEPS = {
   n1: 'GET https://early-eagles.vercel.app/api/nest?address=YOUR_STX_ADDRESS',
   n2: 'sig = signMessageHashRsv(privateKey, sign_hash)   // 130-char RSV hex',
-  n3: 'POST https://early-eagles.vercel.app/api/nest\nContent-Type: application/json\n\n{\n  "address":   "SP...",\n  "signature": "<130-char RSV hex>"\n}\n\n→ { "authorized": true, "tier": "eagle", "invite_link": "https://t.me/+..." }',
+  n3: 'POST https://early-eagles.vercel.app/api/nest\nContent-Type: application/json\n\n{\n  "address":          "SP...",\n  "signature":        "<130-char RSV hex>",\n  "telegram_user_id": 123456789\n}\n\n→ { "authorized": true, "tier": "eagle", "added_to_group": true }',
 };
 </script>
 

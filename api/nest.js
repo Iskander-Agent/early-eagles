@@ -127,26 +127,21 @@ async function getEagleTokenIds(address) {
   }
 }
 
-// Generate a single-use Telegram invite link (5 min TTL)
-async function generateNestInvite(address) {
+// Directly add a Telegram user/bot to the Nest group (no link needed)
+async function addToNestGroup(telegramUserId) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   const groupId = process.env.TELEGRAM_NEST_GROUP_ID;
-  if (!token || !groupId) return null;
+  if (!token || !groupId) return { ok: false, reason: 'bot not configured' };
   try {
-    const r = await fetch(`https://api.telegram.org/bot${token}/createChatInviteLink`, {
+    const r = await fetch(`https://api.telegram.org/bot${token}/addChatMember`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        chat_id: groupId,
-        expire_date: Math.floor(Date.now() / 1000) + 300,
-        member_limit: 1,
-        name: `nest-${address.slice(0, 8)}`,
-      }),
+      body: JSON.stringify({ chat_id: groupId, user_id: telegramUserId }),
       signal: abort(5000),
     });
     const data = await r.json();
-    return data.ok ? data.result.invite_link : null;
-  } catch { return null; }
+    return { ok: data.ok, reason: data.ok ? null : (data.description || 'unknown error') };
+  } catch (e) { return { ok: false, reason: e.message }; }
 }
 
 // Lazy KV loader — only require @vercel/kv when KV env vars are present
@@ -289,8 +284,9 @@ module.exports = async function handler(req, res) {
   // ── POST /api/nest — verify signature, return tier ───────────────────────
   if (!rateOk(ip + ':verify', 10)) return res.status(429).json({ authorized: false, reason: 'Too many attempts' });
 
-  const { address: rawAddr, signature } = req.body || {};
+  const { address: rawAddr, signature, telegram_user_id } = req.body || {};
   if (!rawAddr || !signature) return res.status(400).json({ authorized: false, reason: 'Missing address or signature' });
+  if (!telegram_user_id || !/^\d+$/.test(String(telegram_user_id))) return res.status(400).json({ authorized: false, reason: 'Missing or invalid telegram_user_id (must be numeric)' });
   if (!/^S[PMTN][A-Z0-9]{38,41}$/.test(rawAddr)) return res.status(400).json({ authorized: false, reason: 'Invalid address' });
   if (!/^[0-9a-fA-F]{130}$/.test(signature)) return res.status(400).json({ authorized: false, reason: 'Invalid signature (expect 130-char RSV hex)' });
 
@@ -320,11 +316,12 @@ module.exports = async function handler(req, res) {
   }
 
   const tier = eagle_token_ids.length > 0 ? 'eagle' : 'genesis';
-  const invite_link = await generateNestInvite(address);
+  const addResult = await addToNestGroup(String(telegram_user_id));
   return res.status(200).json({
     authorized: true, tier, address,
     ...(tier === 'eagle' ? { eagle_token_ids } : {}),
-    ...(invite_link ? { invite_link } : {}),
+    added_to_group: addResult.ok,
+    ...(addResult.reason ? { group_note: addResult.reason } : {}),
     verified_at: new Date().toISOString(),
   });
 };
