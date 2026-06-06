@@ -96,6 +96,10 @@
       "dest": "/mint-page/holders.html"
     },
     {
+      "src": "/utilities",
+      "dest": "/mint-page/holders.html"
+    },
+    {
       "src": "/traits",
       "dest": "/mint-page/traits.html"
     },
