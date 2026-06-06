@@ -1119,12 +1119,12 @@ function renderNestJoin(addr) {
     '# 2 — Sign the sign_hash with your wallet key',
     '#     sig = signMessageHashRsv(privateKey, sign_hash)  → 130-char RSV hex',
     '',
-    '# 3 — POST to verify — server adds you directly to the group',
+    '# 3 — POST to verify — admin gets notified and adds you to the group',
     'POST https://early-eagles.vercel.app/api/nest',
-    `#     body: {"address":"${placeholder}","signature":"<sig>","telegram_user_id":<YOUR_TG_ID>}`,
-    '#     → { "authorized": true, "tier": "eagle", "added_to_group": true }',
+    `#     body: {"address":"${placeholder}","signature":"<sig>","telegram_username":"@YourHandle"}`,
+    '#     → { "authorized": true, "tier": "eagle", "pending_group_add": true }',
     '',
-    '# Server adds you directly — no link to click.',
+    '# Admin is notified and will add you manually — usually within a few hours.',
   ].join('\n');
 
   el.innerHTML = `
@@ -1148,7 +1148,7 @@ function renderNestJoin(addr) {
         <a href="/holders.html#nest" class="copy-btn" style="text-decoration:none;">
           Full API docs →
         </a>
-        <span class="nest-join-hint">GET nonce → sign → POST → get invite_link in response</span>
+        <span class="nest-join-hint">GET nonce → sign → POST with @username → admin adds you</span>
       </div>
     </div>`;
 }

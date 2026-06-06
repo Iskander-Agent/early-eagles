@@ -127,16 +127,18 @@ async function getEagleTokenIds(address) {
   }
 }
 
-// Directly add a Telegram user/bot to the Nest group (no link needed)
-async function addToNestGroup(telegramUserId) {
+// Notify Ghislo on Telegram so he can manually add the verified holder
+async function notifyNestJoinRequest(address, username, tier, tokenIds) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
-  const groupId = process.env.TELEGRAM_NEST_GROUP_ID;
-  if (!token || !groupId) return { ok: false, reason: 'bot not configured' };
+  const adminChatId = '676445780'; // Ghislo
+  if (!token) return { ok: false, reason: 'bot not configured' };
+  const tierTag = tier === 'eagle' ? `🦅 Eagle (token${tokenIds.length > 1 ? 's' : ''} #${tokenIds.join(', #')})` : '⚡ Genesis';
+  const text = `🦅 *Eagles Nest join request*\n\n*Username:* ${username}\n*Address:* \`${address}\`\n*Tier:* ${tierTag}\n\nVerified ✅ — please add them to the Nest group manually.`;
   try {
-    const r = await fetch(`https://api.telegram.org/bot${token}/addChatMember`, {
+    const r = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: groupId, user_id: telegramUserId }),
+      body: JSON.stringify({ chat_id: adminChatId, text, parse_mode: 'Markdown' }),
       signal: abort(5000),
     });
     const data = await r.json();
@@ -284,13 +286,16 @@ module.exports = async function handler(req, res) {
   // ── POST /api/nest — verify signature, return tier ───────────────────────
   if (!rateOk(ip + ':verify', 10)) return res.status(429).json({ authorized: false, reason: 'Too many attempts' });
 
-  const { address: rawAddr, signature, telegram_user_id } = req.body || {};
+  const { address: rawAddr, signature, telegram_username } = req.body || {};
   if (!rawAddr || !signature) return res.status(400).json({ authorized: false, reason: 'Missing address or signature' });
-  if (!telegram_user_id || !/^\d+$/.test(String(telegram_user_id))) return res.status(400).json({ authorized: false, reason: 'Missing or invalid telegram_user_id (must be numeric)' });
+  if (!telegram_username || typeof telegram_username !== 'string' || telegram_username.trim().length < 2) {
+    return res.status(400).json({ authorized: false, reason: 'Missing or invalid telegram_username (e.g. "@ClankBot" or "username")' });
+  }
   if (!/^S[PMTN][A-Z0-9]{38,41}$/.test(rawAddr)) return res.status(400).json({ authorized: false, reason: 'Invalid address' });
   if (!/^[0-9a-fA-F]{130}$/.test(signature)) return res.status(400).json({ authorized: false, reason: 'Invalid signature (expect 130-char RSV hex)' });
 
   const address = normalizeAddress(rawAddr);
+  const username = telegram_username.trim().replace(/^@+/, '@'); // normalise to @handle or plain
   if (!verifyNonceSignature(address, signature)) {
     return res.status(401).json({ authorized: false, reason: 'Signature invalid or nonce expired. GET /api/nest?address=<SP...> for fresh nonce.' });
   }
@@ -316,12 +321,14 @@ module.exports = async function handler(req, res) {
   }
 
   const tier = eagle_token_ids.length > 0 ? 'eagle' : 'genesis';
-  const addResult = await addToNestGroup(String(telegram_user_id));
+  // Notify admin — they will manually add the verified holder to the group
+  const notifyResult = await notifyNestJoinRequest(address, username, tier, eagle_token_ids);
   return res.status(200).json({
     authorized: true, tier, address,
     ...(tier === 'eagle' ? { eagle_token_ids } : {}),
-    added_to_group: addResult.ok,
-    ...(addResult.reason ? { group_note: addResult.reason } : {}),
+    pending_group_add: true,
+    message: 'Verification successful. Admin has been notified and will add you to the Eagles Nest group shortly.',
+    ...(notifyResult.ok ? {} : { notify_warning: 'Admin notification failed — contact @ghislo directly.' }),
     verified_at: new Date().toISOString(),
   });
 };

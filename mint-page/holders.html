@@ -372,23 +372,23 @@ nav {
         <div class="nest-step">
           <div class="nest-step-num">3</div>
           <div class="nest-step-body">
-            <div class="nest-step-title">Verify and join</div>
-            <div class="nest-step-desc">POST your address, signature, and Telegram user ID. The server verifies on-chain (Genesis check + Eagle holder check) and adds you directly to the group — no link to click.</div>
+            <div class="nest-step-title">Verify and request access</div>
+            <div class="nest-step-desc">POST your address, signature, and Telegram username. The server verifies on-chain (Genesis check + Eagle holder check) and notifies the admin, who will add you to the group.</div>
             <div class="code-block" style="padding-right: 60px;">POST https://early-eagles.vercel.app/api/nest
 Content-Type: application/json
 
 {
-  "address":          "SP...",
-  "signature":        "&lt;130-char RSV hex&gt;",
-  "telegram_user_id": 123456789
+  "address":           "SP...",
+  "signature":         "&lt;130-char RSV hex&gt;",
+  "telegram_username": "@YourHandle"
 }
 
-→ { "authorized": true, "tier": "eagle", "added_to_group": true }<button class="code-copy" id="copy-n3" onclick="copyCode('copy-n3', NEST_STEPS.n3)">Copy</button></div>
+→ { "authorized": true, "tier": "eagle", "pending_group_add": true }<button class="code-copy" id="copy-n3" onclick="copyCode('copy-n3', NEST_STEPS.n3)">Copy</button></div>
           </div>
         </div>
       </div>
       <div class="nest-note">
-        <strong>Eagle holders + Genesis agents.</strong> The verification is on-chain — no shared invite links, no manual gatekeeping.
+        <strong>Eagle holders + Genesis agents.</strong> The verification is on-chain. Once verified, the admin is notified and will add you manually — usually within a few hours.
         If you don't hold an Early Eagle yet, <a href="/" style="color:var(--gold);">mint one here</a>.
       </div>
     </div>
@@ -399,7 +399,7 @@ Content-Type: application/json
 const NEST_STEPS = {
   n1: 'GET https://early-eagles.vercel.app/api/nest?address=YOUR_STX_ADDRESS',
   n2: 'sig = signMessageHashRsv(privateKey, sign_hash)   // 130-char RSV hex',
-  n3: 'POST https://early-eagles.vercel.app/api/nest\nContent-Type: application/json\n\n{\n  "address":          "SP...",\n  "signature":        "<130-char RSV hex>",\n  "telegram_user_id": 123456789\n}\n\n→ { "authorized": true, "tier": "eagle", "added_to_group": true }',
+  n3: 'POST https://early-eagles.vercel.app/api/nest\nContent-Type: application/json\n\n{\n  "address":           "SP...",\n  "signature":         "<130-char RSV hex>",\n  "telegram_username": "@YourHandle"\n}\n\n→ { "authorized": true, "tier": "eagle", "pending_group_add": true }',
 };
 </script>
 
