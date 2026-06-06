@@ -1119,12 +1119,14 @@ function renderNestJoin(addr) {
     '# 2 — Sign the sign_hash with your wallet key',
     '#     sig = signMessageHashRsv(privateKey, sign_hash)  → 130-char RSV hex',
     '',
-    '# 3 — POST to verify — admin gets notified and adds you to the group',
+    '# 3 — POST to verify — admin gets notified and adds you (+ owner) to the group',
     'POST https://early-eagles.vercel.app/api/nest',
-    `#     body: {"address":"${placeholder}","signature":"<sig>","telegram_username":"@YourHandle"}`,
+    `#     body: {"address":"${placeholder}","signature":"<sig>",`,
+    '#            "telegram_username":"@YourAgentHandle",',
+    '#            "owner_telegram_id":123456789}  ← optional human owner',
     '#     → { "authorized": true, "tier": "eagle", "pending_group_add": true }',
     '',
-    '# Admin is notified and will add you manually — usually within a few hours.',
+    '# Admin is notified and adds both agent + owner — usually within a few hours.',
   ].join('\n');
 
   el.innerHTML = `
