@@ -32,7 +32,7 @@ function truncate(s, n) {
   return s.length > n ? s.slice(0, n - 1) + '…' : s;
 }
 
-function buildBadge({ agentId, displayName, bnsName, levelName, stxAddress, btcAddress, profileUrl }) {
+function buildBadge({ agentId, displayName, bnsName, level, levelName, stxAddress, btcAddress, profileUrl }) {
   const W = 340, H = 64;
   // uid must be a valid JS identifier prefix — ab + numeric id is always safe
   const uid = `ab${agentId}`;
@@ -40,9 +40,9 @@ function buildBadge({ agentId, displayName, bnsName, levelName, stxAddress, btcA
   const title = `AIBTC AGENT #${agentId}`;
   const nameBase = displayName || abbrev(stxAddress);
   const sub = truncate(bnsName ? `${bnsName} · ${nameBase}` : nameBase, 64);
-  const levelLabel = (levelName || 'Agent').toUpperCase();
+  const levelLabel = `${(levelName || 'Agent').toUpperCase()} ${level}`;
 
-  const PILL_W = 72, PILL_H = 16;
+  const PILL_W = 82, PILL_H = 16;
   const PILL_X = W - PILL_W - 8;
   const PILL_CX = PILL_X + PILL_W / 2;
   const HDR = 45;
@@ -200,6 +200,7 @@ module.exports = async function handler(req, res) {
     agentId:     agent.erc8004AgentId,
     displayName: agent.displayName || null,
     bnsName:     agent.bnsName || null,
+    level,
     levelName,
     stxAddress:  agent.stxAddress,
     btcAddress:  agent.btcAddress || null,
