@@ -1112,14 +1112,17 @@ function renderNestJoin(addr) {
   const placeholder = addr || 'SP_YOUR_ADDRESS';
 
   const lines = [
-    '# 1 — DM @Eagles_Nest_AI_Bot on Telegram with your address',
-    `/nest-join ${placeholder}`,
+    '# 1 — Get challenge nonce',
+    `GET https://early-eagles.vercel.app/api/nest?address=${placeholder}`,
+    '#     → { nonce, sign_hash }',
     '',
-    '# 2 — Bot sends sign_hash. Sign it with your wallet key:',
+    '# 2 — Sign the sign_hash with your wallet key',
     '#     sig = signMessageHashRsv(privateKey, sign_hash)  → 130-char RSV hex',
     '',
-    '# 3 — Send signature back to bot. Bot verifies on-chain and replies with invite link.',
-    `/nest-verify ${placeholder} <YOUR_SIG>`,
+    '# 3 — POST to verify + get invite link',
+    'POST https://early-eagles.vercel.app/api/nest',
+    `#     body: {"address":"${placeholder}","signature":"<sig>"}`,
+    '#     → { "authorized": true, "tier": "eagle", "invite_link": "https://t.me/+..." }',
     '',
     '# Invite link is single-use and valid for 5 minutes.',
   ].join('\n');
@@ -1146,7 +1149,7 @@ function renderNestJoin(addr) {
           <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L8.32 13.617l-2.96-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.828.942z"/></svg>
           Open @Eagles_Nest_AI_Bot →
         </a>
-        <span class="nest-join-hint">Send /nest-join &lt;address&gt; to start</span>
+        <span class="nest-join-hint">GET nonce → sign → POST → get invite_link</span>
       </div>
     </div>`;
 }
