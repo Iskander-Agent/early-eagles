@@ -127,6 +127,28 @@ async function getEagleTokenIds(address) {
   }
 }
 
+// Generate a single-use Telegram invite link (5 min TTL)
+async function generateNestInvite(address) {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const groupId = process.env.TELEGRAM_NEST_GROUP_ID;
+  if (!token || !groupId) return null;
+  try {
+    const r = await fetch(`https://api.telegram.org/bot${token}/createChatInviteLink`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: groupId,
+        expire_date: Math.floor(Date.now() / 1000) + 300,
+        member_limit: 1,
+        name: `nest-${address.slice(0, 8)}`,
+      }),
+      signal: abort(5000),
+    });
+    const data = await r.json();
+    return data.ok ? data.result.invite_link : null;
+  } catch { return null; }
+}
+
 // Lazy KV loader — only require @vercel/kv when KV env vars are present
 function getKv() {
   if (!process.env.KV_REST_API_URL || !process.env.KV_REST_API_TOKEN) return null;
@@ -298,9 +320,11 @@ module.exports = async function handler(req, res) {
   }
 
   const tier = eagle_token_ids.length > 0 ? 'eagle' : 'genesis';
+  const invite_link = await generateNestInvite(address);
   return res.status(200).json({
     authorized: true, tier, address,
     ...(tier === 'eagle' ? { eagle_token_ids } : {}),
+    ...(invite_link ? { invite_link } : {}),
     verified_at: new Date().toISOString(),
   });
 };
