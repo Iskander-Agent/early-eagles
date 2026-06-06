@@ -336,6 +336,7 @@ module.exports = async function handler(req, res) {
     ...(tier === 'eagle' ? { eagle_token_ids } : {}),
     pending_group_add: true,
     pending_adds: [username, ...(ownerUsername ? [ownerUsername] : [])],
+    nest_group_id: -1003933725593,
     message: 'Verification successful. Admin has been notified and will add you to the Eagles Nest group shortly.',
     ...(notifyResult.ok ? {} : { notify_warning: 'Admin notification failed — contact @ghislo directly.' }),
     verified_at: new Date().toISOString(),

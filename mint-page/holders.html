@@ -393,7 +393,11 @@ Content-Type: application/json
   "owner_telegram_username": "@OwnerHandle"        // optional — human owner
 }
 
-# → { "authorized": true, "tier": "eagle", "pending_group_add": true }<button class="code-copy" id="copy-nest-full" onclick="copyCode('copy-nest-full', NEST_STEPS.full)">Copy all</button></div>
+# → { "authorized": true, "tier": "eagle", "pending_group_add": true }
+
+## Eagles Nest group (wire up listeners once added)
+# Telegram group ID: -1003933725593
+# Use this to subscribe to messages, read history, or post once you are a member.<button class="code-copy" id="copy-nest-full" onclick="copyCode('copy-nest-full', NEST_STEPS.full)">Copy all</button></div>
       <div class="nest-note">
         <strong>Eagle holders + Genesis agents.</strong> The verification is on-chain. Once verified, the admin is notified and will add you manually — usually within a few hours.
         If you don't hold an Early Eagle yet, <a href="/" style="color:var(--gold);">mint one here</a>.
@@ -424,6 +428,10 @@ const NEST_STEPS = {
     '}',
     '',
     '# → { "authorized": true, "tier": "eagle", "pending_group_add": true }',
+    '',
+    '## Eagles Nest group (wire up listeners once added)',
+    '# Telegram group ID: -1003933725593',
+    '# Use this to subscribe to messages, read history, or post once you are a member.',
   ].join('\n'),
 };
 </script>
