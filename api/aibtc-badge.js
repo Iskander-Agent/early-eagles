@@ -154,46 +154,74 @@ function buildBadge({ agentId, displayName, bnsName, level, levelName, stxAddres
 </svg>`;
 }
 
-// ── Pill (compact, 200×24) ────────────────────────────────────────────────────
+// ── Pill (compact, dynamic width) ────────────────────────────────────────────
+// Two-section design: [🤖 AIBTC | #id · name · GENESIS N ✓]
+// Width auto-fits content — no dead space.
 
-function buildPillBadge({ agentId, level, levelName, profileUrl }) {
-  const W = 200, H = 24;
-  const levelLabel = `· ${(levelName || 'Agent').toUpperCase()} ${level}`;
+function buildPillBadge({ agentId, level, levelName, displayName, bnsName, profileUrl }) {
+  const H = 24, LEFT_W = 58;
+  const name      = truncate(bnsName || displayName || '', 12) || null;
+  const levelText = `${(levelName || 'Agent').toUpperCase()} ${level}`;
+
+  // Approximate char widths at their respective font sizes
+  const idW  = 8 + String(agentId).length * 5.4;       // '#xxx'
+  const nmW  = name ? 8 + name.length * 4.8 + 8 : 0;   // '· name '
+  const lvlW = levelText.length * 4.5 + 6;             // 'GENESIS 2'
+  const rightW = Math.max(88, Math.ceil(8 + idW + nmW + lvlW + 14 + 6));
+  const W = LEFT_W + rightW;
+
+  // Right section x anchors
+  const RX    = LEFT_W + 8;           // #agentId starts here
+  const nmX   = RX + Math.ceil(idW);  // name starts after agentId
+  const lvlX  = W - 14;              // levelText ends here (text-anchor end)
+  const chkX  = W - 4;               // ✓ ends here (text-anchor end)
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"
      role="img" aria-label="AIBTC Agent #${agentId}">
-  <title>AIBTC Agent #${agentId} · ${esc(levelName)} ${level}</title>
-  <defs>
-    <radialGradient id="pglow" cx="0%" cy="50%" r="50%">
-      <stop offset="0%"   stop-color="#f7931a" stop-opacity="0.10"/>
-      <stop offset="100%" stop-color="#f7931a" stop-opacity="0"/>
-    </radialGradient>
-    <clipPath id="pcl"><rect width="${W}" height="${H}" rx="12"/></clipPath>
-  </defs>
+  <title>AIBTC Agent #${agentId} · ${esc(levelText)}</title>
+  <defs><clipPath id="pcl"><rect width="${W}" height="${H}" rx="12"/></clipPath></defs>
   <g clip-path="url(#pcl)">
-    <rect width="${W}" height="${H}" rx="12" fill="#0d0514"/>
-    <rect width="${W}" height="${H}" rx="12" fill="url(#pglow)"/>
+    <!-- Left label section -->
+    <rect x="0" y="0" width="${LEFT_W}" height="${H}" fill="#090214"/>
+    <!-- Right value section -->
+    <rect x="${LEFT_W}" y="0" width="${rightW}" height="${H}" fill="#0d0514"/>
+    <!-- Outer border -->
     <rect width="${W}" height="${H}" rx="12" fill="none"
-          stroke="rgba(247,147,26,0.30)" stroke-width="0.8"/>
+          stroke="rgba(247,147,26,0.28)" stroke-width="0.8"/>
+    <!-- Section divider -->
+    <line x1="${LEFT_W}" y1="5" x2="${LEFT_W}" y2="${H - 5}"
+          stroke="rgba(247,147,26,0.20)" stroke-width="0.6"/>
 
-    <!-- icon -->
-    <text x="9" y="16"
+    <!-- Left: 🤖 AIBTC -->
+    <text x="9" y="15.5"
           font-family="Apple Color Emoji,Segoe UI Emoji,Noto Color Emoji,serif"
-          font-size="10" text-anchor="start">🤖</text>
+          font-size="9">🤖</text>
+    <text x="21" y="15.5"
+          font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
+          font-size="7.5" font-weight="700" fill="rgba(255,255,255,0.45)">AIBTC</text>
 
-    <!-- agent id -->
-    <text x="22" y="15.5"
+    <!-- Right: #agentId -->
+    <text x="${RX}" y="15.5"
           font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
           font-size="9" font-weight="800" fill="#f7931a">#${esc(String(agentId))}</text>
 
-    <!-- level label (right cluster, left-of-checkmark) -->
-    <text x="158" y="15.5"
+    ${name ? `
+    <!-- Right: name -->
+    <text x="${nmX}" y="15.5"
           font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
-          font-size="7.5" fill="#8ba4c4" text-anchor="end">${esc(levelLabel)}</text>
+          font-size="7.5" fill="rgba(255,255,255,0.25)">·</text>
+    <text x="${nmX + 8}" y="15.5"
+          font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
+          font-size="7.5" fill="#8ba4c4">${esc(name)}</text>
+    ` : ''}
 
-    <!-- verified checkmark -->
+    <!-- Right: level · ✓ (right-aligned, never collide with left content) -->
+    <text x="${lvlX}" y="15.5"
+          font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
+          font-size="7" font-weight="700" fill="#f7931a" text-anchor="end"
+          letter-spacing="0.5">${esc(levelText)}</text>
     <a href="${esc(profileUrl)}" target="_blank">
-      <text x="192" y="15.5"
+      <text x="${chkX}" y="15.5"
             font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
             font-size="7.5" fill="rgba(125,162,255,0.85)" text-anchor="end">✓</text>
     </a>
@@ -419,7 +447,11 @@ module.exports = async function handler(req, res) {
 
   let svg;
   if (style === 'pill') {
-    svg = buildPillBadge(shared);
+    svg = buildPillBadge({
+      ...shared,
+      displayName: agent.displayName || null,
+      bnsName:     agent.bnsName || null,
+    });
   } else if (style === 'card') {
     svg = buildCapCard({
       ...shared,
