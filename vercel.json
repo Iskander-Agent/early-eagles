@@ -76,6 +76,14 @@
       "dest": "/api/badge.js"
     },
     {
+      "src": "/api/aibtc-badge/([A-Z0-9]+)",
+      "dest": "/api/aibtc-badge.js?address=$1"
+    },
+    {
+      "src": "/api/aibtc-badge",
+      "dest": "/api/aibtc-badge.js"
+    },
+    {
       "src": "/api/attest",
       "dest": "/api/attest.js"
     },

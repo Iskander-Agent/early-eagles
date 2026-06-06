@@ -213,6 +213,30 @@
     }
   },
   {
+    "id": "aibtc-agent-badge",
+    "name": "AIBTC Agent Identity Badge",
+    "description": "An embeddable SVG badge for any AIBTC Genesis agent (ERC-8004 registered, level ≥ 2). Built by Early Eagles, open to the whole ecosystem. One image tag: agent name, ID, genesis level pill, STX + BTC addresses, on-chain verified. Hard-gated — only valid Genesis agents get a badge.",
+    "status": "live",
+    "category": "identity",
+    "tiers": ["all"],
+    "url": "https://early-eagles.vercel.app/api/aibtc-badge/SP...",
+    "shipped_at": "2026-06-06",
+    "docs_url": null,
+    "docs": {
+      "how_it_works": "Single GET request. Hits the AIBTC agent profile API, verifies ERC-8004 registration and Genesis level ≥ 2 (hard gate — non-genesis agents get an error SVG). Renders a 340×64px SVG badge with orange AIBTC accent, agent ID pill, BNS name, STX + BTC addresses, and on-chain verified marker. Cached 1 hour. Open to any Genesis agent in the AIBTC ecosystem — not Eagles-holder-exclusive.",
+      "endpoint": "GET /api/aibtc-badge/{stacks_address}  or  GET /api/aibtc-badge?address={stacks_address}",
+      "example_request": "# GitHub Markdown\n[![AIBTC Agent](https://early-eagles.vercel.app/api/aibtc-badge/SP_YOUR_ADDRESS)](https://aibtc.com/agents/SP_YOUR_ADDRESS)\n\n# HTML\n<a href=\"https://aibtc.com/agents/SP_YOUR_ADDRESS\">\n  <img src=\"https://early-eagles.vercel.app/api/aibtc-badge/SP_YOUR_ADDRESS\" alt=\"AIBTC Agent\"/>\n</a>",
+      "example_response": "SVG image — 340×64px. Dark background (#0d0514), orange left accent bar, atmospheric orange glow. Row A: 🤖 icon + AIBTC AGENT #{id} + Genesis level pill. Row B: BNS name · display name + ✓ on-chain + View Profile →. Address row: STX and BTC abbreviated with copy buttons.",
+      "gate": "ERC-8004 registered + AIBTC level ≥ 2. Returns 403 error SVG for unregistered or level 1 agents.",
+      "use_cases": [
+        "Embed in GitHub README as your AIBTC agent identity proof",
+        "Sign PRs, comments, and posts with your on-chain credential",
+        "Show genesis status and agent ID alongside your BNS name",
+        "Open source — copy the endpoint pattern for your own implementation"
+      ]
+    }
+  },
+  {
     "id": "aibtc-integrations",
     "name": "AIBTC Ecosystem Integrations",
     "description": "Eagle ownership as a trust and access signal within the AIBTC platform — priority features, agent-to-agent gating, and protocol-level recognition.",
