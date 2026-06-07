@@ -461,6 +461,18 @@ nav {
 }
 .utility-row:hover { border-color: var(--border); background: rgba(255,255,255,0.02); }
 .utility-row.planned { opacity: 0.5; }
+.utility-row.has-preview { flex-direction: column; gap: 10px; }
+.utility-row-header { display: flex; align-items: flex-start; gap: 12px; width: 100%; }
+.utility-preview {
+  display: flex; flex-direction: column; gap: 6px;
+  padding: 10px 12px; background: rgba(0,0,0,0.18);
+  border: 1px solid var(--border-sub); border-radius: 6px;
+}
+.utility-preview-label {
+  font-family: 'Rajdhani', sans-serif; font-size: 10px; font-weight: 700;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim);
+}
+.utility-preview img { max-width: 100%; height: auto; border-radius: 4px; display: block; }
 .utility-icon {
   width: 28px; height: 28px; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
@@ -880,6 +892,8 @@ const UTILITIES = [
   { name: 'Holder Verification API', desc: 'Machine-readable endpoint: does this address hold an Eagle? For agent-to-agent trust gating.', icon: '🔍', live: true },
   { name: 'Eagles Nest', desc: 'Gated Telegram group for Genesis agents and Eagle holders. Cryptographic proof required — no passwords.', icon: '🦅', live: true },
   { name: 'Eagle Attestation API', desc: 'Sign any message with on-chain proof of Eagle holding. Tamper-evident endorsements for agents.', icon: '📜', live: true },
+  { name: 'Eagle Holder Badge', desc: 'Compact animated SVG badge for GitHub READMEs, profiles, and comments. 260×42px. Tier-colored with eagle icon.', icon: '🏅', live: true, badgeApi: '/api/badge/' },
+  { name: 'AIBTC Agent Identity Badge', desc: 'SVG identity badge for Genesis agents. 340×64px with agent ID, level, BNS name, STX+BTC addresses. Genesis level 2+ only.', icon: '🤖', live: true, badgeApi: '/api/aibtc-badge/' },
   { name: 'AIBTC Ecosystem Integration', desc: 'Priority features and protocol-level recognition within the AIBTC platform — in development.', icon: '🔒', live: false },
 ];
 
@@ -1259,10 +1273,19 @@ function renderUtilities() {
   const list = document.getElementById('utilities-list');
   list.innerHTML = '';
   UTILITIES.forEach((u, i) => {
+    const hasBadgePreview = u.badgeApi && ownerAddr;
     const row = document.createElement('div');
-    row.className = `utility-row${u.live ? '' : ' planned'} reveal`;
+    row.className = `utility-row${u.live ? '' : ' planned'}${hasBadgePreview ? ' has-preview' : ''} reveal`;
     row.style.transitionDelay = `${i * 60}ms`;
-    row.innerHTML = `
+
+    const previewHtml = hasBadgePreview
+      ? `<div class="utility-preview">
+          <div class="utility-preview-label">This holder's badge</div>
+          <img src="${u.badgeApi}${ownerAddr}" alt="${u.name}" loading="lazy">
+        </div>`
+      : '';
+
+    const headerContent = `
       <div class="utility-icon">${u.live ? '✓' : u.icon}</div>
       <div class="utility-text">
         <div class="utility-name">${u.name}</div>
@@ -1270,6 +1293,11 @@ function renderUtilities() {
       </div>
       <span class="utility-badge ${u.live ? 'badge-live' : 'badge-planned'}">${u.live ? 'Live' : 'Soon'}</span>
     `;
+
+    row.innerHTML = hasBadgePreview
+      ? `<div class="utility-row-header">${headerContent}</div>${previewHtml}`
+      : headerContent;
+
     list.appendChild(row);
   });
   // Re-observe new elements

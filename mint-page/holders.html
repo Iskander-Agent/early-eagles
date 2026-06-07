@@ -131,6 +131,18 @@ nav {
 .card-link:hover { color: var(--gold-light); }
 .card-link::after { content: '→'; }
 
+/* Badge preview */
+.card-preview {
+  display: flex; flex-direction: column; gap: 6px;
+  padding: 10px 12px; background: rgba(0,0,0,0.18);
+  border: 1px solid var(--border-sub); border-radius: 6px;
+}
+.card-preview-label {
+  font-family: 'Rajdhani', sans-serif; font-size: 10px; font-weight: 700;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim);
+}
+.card-preview img { max-width: 100%; height: auto; border-radius: 4px; display: block; }
+
 /* Card footer row */
 .card-footer {
   display: flex; align-items: center; justify-content: space-between;
@@ -526,6 +538,8 @@ function renderDocs(docs, id) {
     </div>`;
 }
 
+const BADGE_DEMO_ADDR = 'SP3JR7JXFT7ZM9JKSQPBQG1HPT0D365MA5TN0P12E';
+
 function renderCard(u) {
   const hasDocs = u.docs && Object.keys(u.docs).some(k => u.docs[k]);
   const hasEagleTier = u.tiers && u.tiers.includes('eagle');
@@ -551,6 +565,14 @@ function renderCard(u) {
       ? `<span class="badge badge-eagle-only">🦅 Eagle Holder Perks</span>`
       : '';
 
+  const badgeApiMap = { 'eagle-badge': '/api/badge/', 'aibtc-agent-badge': '/api/aibtc-badge/' };
+  const preview = badgeApiMap[u.id]
+    ? `<div class="card-preview">
+        <div class="card-preview-label">Preview — Iskander #0 · Legendary</div>
+        <img src="${badgeApiMap[u.id]}${BADGE_DEMO_ADDR}" alt="${esc(u.name)} preview" loading="lazy">
+      </div>`
+    : '';
+
   return `
     <div class="card${hasDocs ? ' has-docs' : ''}" id="card-${u.id}">
       <div class="card-top">
@@ -562,6 +584,7 @@ function renderCard(u) {
         ${eagleBadge}
       </div>
       <p class="card-description">${esc(u.description)}</p>
+      ${preview}
       ${footer}
       ${renderDocs(u.docs, u.id)}
     </div>`;
