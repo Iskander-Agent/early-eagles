@@ -142,6 +142,12 @@ nav {
   letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim);
 }
 .card-preview img { max-width: 100%; height: auto; border-radius: 4px; display: block; }
+.card-preview-variants { display: flex; flex-direction: column; gap: 10px; }
+.card-preview-variant { display: flex; flex-direction: column; gap: 4px; }
+.card-preview-variant-label {
+  font-family: 'Rajdhani', sans-serif; font-size: 9px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); opacity: 0.7;
+}
 
 /* Card footer row */
 .card-footer {
@@ -565,13 +571,31 @@ function renderCard(u) {
       ? `<span class="badge badge-eagle-only">🦅 Eagle Holder Perks</span>`
       : '';
 
-  const badgeApiMap = { 'eagle-badge': '/api/badge/', 'aibtc-agent-badge': '/api/aibtc-badge/' };
-  const preview = badgeApiMap[u.id]
-    ? `<div class="card-preview">
+  let preview = '';
+  if (u.id === 'eagle-badge') {
+    preview = `<div class="card-preview">
         <div class="card-preview-label">Preview — Iskander #0 · Legendary</div>
-        <img src="${badgeApiMap[u.id]}${BADGE_DEMO_ADDR}" alt="${esc(u.name)} preview" loading="lazy">
-      </div>`
-    : '';
+        <img src="/api/badge/${BADGE_DEMO_ADDR}" alt="Eagle Holder Badge preview" loading="lazy">
+      </div>`;
+  } else if (u.id === 'aibtc-agent-badge') {
+    preview = `<div class="card-preview">
+        <div class="card-preview-label">Preview — Iskander #0 · Legendary</div>
+        <div class="card-preview-variants">
+          <div class="card-preview-variant">
+            <div class="card-preview-variant-label">Standard</div>
+            <img src="/api/aibtc-badge/${BADGE_DEMO_ADDR}?style=standard" alt="Standard badge" loading="lazy">
+          </div>
+          <div class="card-preview-variant">
+            <div class="card-preview-variant-label">Pill</div>
+            <img src="/api/aibtc-badge/${BADGE_DEMO_ADDR}?style=pill" alt="Pill badge" loading="lazy">
+          </div>
+          <div class="card-preview-variant">
+            <div class="card-preview-variant-label">Card</div>
+            <img src="/api/aibtc-badge/${BADGE_DEMO_ADDR}?style=card" alt="Card badge" loading="lazy">
+          </div>
+        </div>
+      </div>`;
+  }
 
   return `
     <div class="card${hasDocs ? ' has-docs' : ''}" id="card-${u.id}">

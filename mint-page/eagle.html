@@ -473,6 +473,12 @@ nav {
   letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim);
 }
 .utility-preview img { max-width: 100%; height: auto; border-radius: 4px; display: block; }
+.utility-preview-variants { display: flex; flex-direction: column; gap: 10px; }
+.utility-preview-variant { display: flex; flex-direction: column; gap: 4px; }
+.utility-preview-variant-label {
+  font-family: 'Rajdhani', sans-serif; font-size: 9px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); opacity: 0.7;
+}
 .utility-icon {
   width: 28px; height: 28px; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
@@ -1278,12 +1284,33 @@ function renderUtilities() {
     row.className = `utility-row${u.live ? '' : ' planned'}${hasBadgePreview ? ' has-preview' : ''} reveal`;
     row.style.transitionDelay = `${i * 60}ms`;
 
-    const previewHtml = hasBadgePreview
-      ? `<div class="utility-preview">
+    let previewHtml = '';
+    if (hasBadgePreview) {
+      if (u.badgeApi === '/api/aibtc-badge/') {
+        previewHtml = `<div class="utility-preview">
+          <div class="utility-preview-label">This holder's badge</div>
+          <div class="utility-preview-variants">
+            <div class="utility-preview-variant">
+              <div class="utility-preview-variant-label">Standard</div>
+              <img src="${u.badgeApi}${ownerAddr}?style=standard" alt="Standard" loading="lazy">
+            </div>
+            <div class="utility-preview-variant">
+              <div class="utility-preview-variant-label">Pill</div>
+              <img src="${u.badgeApi}${ownerAddr}?style=pill" alt="Pill" loading="lazy">
+            </div>
+            <div class="utility-preview-variant">
+              <div class="utility-preview-variant-label">Card</div>
+              <img src="${u.badgeApi}${ownerAddr}?style=card" alt="Card" loading="lazy">
+            </div>
+          </div>
+        </div>`;
+      } else {
+        previewHtml = `<div class="utility-preview">
           <div class="utility-preview-label">This holder's badge</div>
           <img src="${u.badgeApi}${ownerAddr}" alt="${u.name}" loading="lazy">
-        </div>`
-      : '';
+        </div>`;
+      }
+    }
 
     const headerContent = `
       <div class="utility-icon">${u.live ? '✓' : u.icon}</div>
