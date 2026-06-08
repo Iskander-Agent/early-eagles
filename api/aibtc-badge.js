@@ -410,62 +410,16 @@ function errorSVG(message, status) {
 </svg>`;
 }
 
-module.exports = async function handler(req, res) {
-  Object.entries(CORS).forEach(([k, v]) => res.setHeader(k, v));
-  res.setHeader('Content-Type', 'image/svg+xml');
-
-  if (req.method === 'OPTIONS') return res.status(204).end();
-
-  let address = String((req.query || {}).address || '').trim();
-
-  if (!address) {
-    res.setHeader('Cache-Control', 'no-store');
-    return res.status(400).send(errorSVG('Missing ?address= parameter', 400));
-  }
-
-  if (address.startsWith('ST')) address = 'SP' + address.slice(2);
-
-  if (!/^S[PM][A-Z0-9]{38,41}$/.test(address)) {
-    res.setHeader('Cache-Control', 'no-store');
-    return res.status(400).send(errorSVG('Invalid Stacks address', 400));
-  }
-
-  let agentData;
-  try {
-    agentData = await fetchWithRetry(`${AIBTC_API}/agents/${address}`, { attempts: 3, timeoutMs: 5000, delayMs: 400 });
-  } catch {
-    res.setHeader('Cache-Control', 'public, max-age=30');
-    return res.status(503).send(errorSVG('Service unavailable — try again', 503));
-  }
-
-  if (!agentData.found) {
-    res.setHeader('Cache-Control', 'public, max-age=300');
-    return res.status(404).send(errorSVG('AIBTC agent not found', 404));
-  }
-
+// Render SVG badge from a resolved agentData object (works for both address and agentId lookups).
+// Called only after all validation passes — cache header and send are done here.
+function renderAgentBadge(res, agentData, style) {
   const { agent, level, levelName, capabilities } = agentData;
-
-  if (!agent.erc8004AgentId || level < 2) {
-    res.setHeader('Cache-Control', 'public, max-age=300');
-    return res.status(403).send(errorSVG('Genesis 2+ required', 403));
-  }
-
-  const style      = String((req.query || {}).style || 'standard').trim();
-  const profileUrl = `${AIBTC_PROFILE_BASE}/${address}`;
-  const shared     = {
-    agentId:     agent.erc8004AgentId,
-    level,
-    levelName,
-    profileUrl,
-  };
+  const profileUrl = `${AIBTC_PROFILE_BASE}/${agent.stxAddress}`;
+  const shared = { agentId: agent.erc8004AgentId, level, levelName, profileUrl };
 
   let svg;
   if (style === 'pill') {
-    svg = buildPillBadge({
-      ...shared,
-      displayName: agent.displayName || null,
-      bnsName:     agent.bnsName || null,
-    });
+    svg = buildPillBadge({ ...shared, displayName: agent.displayName || null, bnsName: agent.bnsName || null });
   } else if (style === 'card') {
     svg = buildCapCard({
       ...shared,
@@ -486,6 +440,88 @@ module.exports = async function handler(req, res) {
     });
   }
 
+  res.setHeader('Content-Type', 'image/svg+xml');
   res.setHeader('Cache-Control', 'public, max-age=3600, stale-while-revalidate=600');
   return res.status(200).send(svg);
+}
+
+module.exports = async function handler(req, res) {
+  Object.entries(CORS).forEach(([k, v]) => res.setHeader(k, v));
+
+  if (req.method === 'OPTIONS') return res.status(204).end();
+
+  const style        = String((req.query || {}).style   || 'standard').trim();
+  const agentIdParam = String((req.query || {}).agent   || '').trim();
+
+  // ── Path A: canonical per-agentId URL (?agent=124&style=...) ─────────────
+  // This is the max-inheritance path: numeric ID lookup returns the level bound
+  // to the erc8004 identity token, not to any specific wallet address.
+  // Cache key is per agentId, so wallet rotation doesn't fragment badge caches.
+  if (agentIdParam) {
+    res.setHeader('Content-Type', 'image/svg+xml');
+    if (!/^\d+$/.test(agentIdParam)) {
+      res.setHeader('Cache-Control', 'no-store');
+      return res.status(400).send(errorSVG('Invalid agent ID', 400));
+    }
+    let agentData;
+    try {
+      agentData = await fetchWithRetry(`${AIBTC_API}/agents/${agentIdParam}`, { attempts: 3, timeoutMs: 5000, delayMs: 400 });
+    } catch {
+      res.setHeader('Cache-Control', 'public, max-age=30');
+      return res.status(503).send(errorSVG('Service unavailable — try again', 503));
+    }
+    if (!agentData.found) {
+      res.setHeader('Cache-Control', 'public, max-age=300');
+      return res.status(404).send(errorSVG('AIBTC agent not found', 404));
+    }
+    if (!agentData.agent?.erc8004AgentId || agentData.level < 2) {
+      res.setHeader('Cache-Control', 'public, max-age=300');
+      return res.status(403).send(errorSVG('Genesis 2+ required', 403));
+    }
+    return renderAgentBadge(res, agentData, style);
+  }
+
+  // ── Path B: STX address lookup → 302 to canonical ?agent= URL ────────────
+  // Resolves the wallet to its erc8004AgentId then redirects, so:
+  //   (a) the badge always shows max-inheritance level (from the agentId lookup)
+  //   (b) both old and new wallets of a rotated agent share the same cache entry
+  res.setHeader('Content-Type', 'image/svg+xml');
+
+  let address = String((req.query || {}).address || '').trim();
+
+  if (!address) {
+    res.setHeader('Cache-Control', 'no-store');
+    return res.status(400).send(errorSVG('Missing ?address= parameter', 400));
+  }
+
+  if (address.startsWith('ST')) address = 'SP' + address.slice(2);
+
+  if (!/^S[PM][A-Z0-9]{38,41}$/.test(address)) {
+    res.setHeader('Cache-Control', 'no-store');
+    return res.status(400).send(errorSVG('Invalid Stacks address', 400));
+  }
+
+  let addrData;
+  try {
+    addrData = await fetchWithRetry(`${AIBTC_API}/agents/${address}`, { attempts: 3, timeoutMs: 5000, delayMs: 400 });
+  } catch {
+    res.setHeader('Cache-Control', 'public, max-age=30');
+    return res.status(503).send(errorSVG('Service unavailable — try again', 503));
+  }
+
+  if (!addrData.found) {
+    res.setHeader('Cache-Control', 'public, max-age=300');
+    return res.status(404).send(errorSVG('AIBTC agent not found', 404));
+  }
+
+  const agentId = addrData.agent?.erc8004AgentId;
+
+  if (!agentId || addrData.level < 2) {
+    res.setHeader('Cache-Control', 'public, max-age=300');
+    return res.status(403).send(errorSVG('Genesis 2+ required', 403));
+  }
+
+  // Redirect to canonical per-identity URL; cache redirect 5 min at client
+  res.setHeader('Cache-Control', 'public, max-age=300, stale-while-revalidate=600');
+  return res.redirect(302, `/api/aibtc-badge?agent=${agentId}&style=${style}`);
 };
