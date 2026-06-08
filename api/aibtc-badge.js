@@ -18,6 +18,21 @@ const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods
 
 function abort(ms) { const c = new AbortController(); setTimeout(() => c.abort(), ms); return c.signal; }
 
+async function fetchWithRetry(url, { attempts = 3, timeoutMs = 5000, delayMs = 400 } = {}) {
+  let lastErr;
+  for (let i = 0; i < attempts; i++) {
+    if (i > 0) await new Promise(r => setTimeout(r, delayMs * i));
+    try {
+      const r = await fetch(url, { signal: abort(timeoutMs) });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      return await r.json();
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+  throw lastErr;
+}
+
 function esc(s) {
   return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
@@ -417,9 +432,7 @@ module.exports = async function handler(req, res) {
 
   let agentData;
   try {
-    const r = await fetch(`${AIBTC_API}/agents/${address}`, { signal: abort(8000) });
-    if (!r.ok) throw new Error(`AIBTC API → ${r.status}`);
-    agentData = await r.json();
+    agentData = await fetchWithRetry(`${AIBTC_API}/agents/${address}`, { attempts: 3, timeoutMs: 5000, delayMs: 400 });
   } catch {
     res.setHeader('Cache-Control', 'public, max-age=30');
     return res.status(503).send(errorSVG('Service unavailable — try again', 503));
