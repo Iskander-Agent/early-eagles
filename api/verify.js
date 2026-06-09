@@ -277,6 +277,83 @@ async function handleEligibility(req, res) {
   return res.status(200).json(result);
 }
 
+// ── /api/recent-mints handler ─────────────────────────────────────────────────
+
+const COLOR_NAMES = [
+  'Azure', 'Sapphire', 'Amethyst', 'Fuchsia', 'Crimson', 'Scarlet', 'Ember',
+  'Amber', 'Chartreuse', 'Jade', 'Forest', 'Teal',
+  'Gold', 'Pearl', 'Negative', 'Thermal', 'X-Ray', 'Aurora', 'Psychedelic', 'Bitcoin', 'Shadow',
+];
+
+async function fetchRecentTraits(tokenId) {
+  const { hexToCV, cvToJSON } = await import('@stacks/transactions');
+  const tokenIdHex = '0x01' + tokenId.toString(16).padStart(32, '0');
+  const r = await fetch(
+    `${STACKS_API}/v2/contracts/call-read/${ADMIN_ADDRESS}/${NFT_CONTRACT}/get-traits`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sender: ADMIN_ADDRESS, arguments: [tokenIdHex] }),
+      signal: abort(6000),
+    }
+  );
+  if (!r.ok) return null;
+  const data = await r.json();
+  if (!data.okay || data.result === '0x09') return null;
+  const json = cvToJSON(hexToCV(data.result));
+  if (!json?.value?.value) return null;
+  const t = json.value.value;
+  const tier    = parseInt(t.tier?.value ?? '4', 10);
+  const colorId = parseInt(t['color-id']?.value ?? '0', 10);
+  return {
+    token_id:    tokenId,
+    display_name: t['display-name']?.value ?? `Eagle #${tokenId}`,
+    tier,
+    tier_name:   TIER_NAMES[tier]    ?? 'Common',
+    color_id:    colorId,
+    color_name:  COLOR_NAMES[colorId] ?? 'Unknown',
+    minted_at:   parseInt(t['minted-at']?.value ?? '0', 10),
+  };
+}
+
+async function handleRecentMints(req, res) {
+  res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=120');
+
+  const count = Math.min(Math.max(parseInt(req.query.count) || 3, 1), 10);
+
+  try {
+    const { hexToCV, cvToJSON } = await import('@stacks/transactions');
+
+    const lastRes = await fetch(
+      `${STACKS_API}/v2/contracts/call-read/${ADMIN_ADDRESS}/${NFT_CONTRACT}/get-last-token-id`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sender: ADMIN_ADDRESS, arguments: [] }),
+        signal: abort(6000),
+      }
+    );
+    if (!lastRes.ok) return res.status(502).json({ error: 'contract read failed' });
+    const lastData = await lastRes.json();
+    if (!lastData.okay) return res.status(502).json({ error: 'contract read failed' });
+
+    const lastCv = cvToJSON(hexToCV(lastData.result));
+    // get-last-token-id returns (ok uint); cvToJSON shape: { value: { value: '30' } }
+    const lastId = parseInt(lastCv?.value?.value ?? '-1', 10);
+    if (isNaN(lastId) || lastId < 0) return res.status(200).json({ recent: [], total_minted: 0 });
+
+    const ids = [];
+    for (let i = lastId; i >= 0 && ids.length < count; i--) ids.push(i);
+
+    const settled = await Promise.allSettled(ids.map(fetchRecentTraits));
+    const recent  = settled.map(r => r.status === 'fulfilled' ? r.value : null).filter(Boolean);
+
+    return res.status(200).json({ recent, last_id: lastId, total_minted: lastId + 1 });
+  } catch (e) {
+    return res.status(500).json({ error: 'failed to fetch recent mints', detail: e.message });
+  }
+}
+
 // ── Main dispatcher ───────────────────────────────────────────────────────────
 
 module.exports = async function handler(req, res) {
@@ -286,9 +363,10 @@ module.exports = async function handler(req, res) {
 
   const path = (req.url || '').split('?')[0];
 
-  if (path.endsWith('/genesis'))     return handleGenesis(req, res);
-  if (path.endsWith('/holder'))      return handleHolder(req, res);
-  if (path.endsWith('/eligibility')) return handleEligibility(req, res);
+  if (path.endsWith('/genesis'))      return handleGenesis(req, res);
+  if (path.endsWith('/holder'))       return handleHolder(req, res);
+  if (path.endsWith('/eligibility'))  return handleEligibility(req, res);
+  if (path.endsWith('/recent-mints')) return handleRecentMints(req, res);
 
   return res.status(404).json({ error: 'Not found' });
 };

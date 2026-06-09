@@ -60,6 +60,10 @@
       "dest": "/api/verify.js"
     },
     {
+      "src": "/api/recent-mints",
+      "dest": "/api/verify.js"
+    },
+    {
       "src": "/api/nest/(authorize|check|members)",
       "dest": "/api/nest.js"
     },

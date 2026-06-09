@@ -141,6 +141,40 @@ nav {
   font-family: 'Rajdhani', sans-serif; font-size: 10px; font-weight: 700;
   letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim);
 }
+/* Recent Eagles strip */
+.recent-eagles { max-width: 900px; margin: 20px auto 0; padding: 0 24px; }
+.recent-eagles-header {
+  display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 10px;
+}
+.recent-eagles-title {
+  font-family: 'Rajdhani', sans-serif; font-size: 12px; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-muted);
+}
+.recent-eagles-meta { font-size: 11px; color: var(--text-dim); letter-spacing: 0.06em; }
+.recent-eagles-strip { display: flex; gap: 10px; flex-wrap: wrap; }
+.recent-eagle-pill {
+  display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px;
+  border-radius: 999px; background: var(--surface2); border: 1px solid var(--border-sub);
+  color: var(--text); text-decoration: none; font-size: 13px;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.recent-eagle-pill:hover { border-color: var(--gold); background: var(--gold-dim); }
+.recent-eagle-id {
+  font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--gold); font-weight: 600;
+}
+.recent-eagle-name { font-weight: 500; }
+.recent-eagle-tier {
+  font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text-muted); padding: 2px 6px; border-radius: 4px;
+  background: rgba(255,255,255,0.04);
+}
+.recent-eagle-tier.t-Legendary { color: #ffd166; background: rgba(255,209,102,0.10); }
+.recent-eagle-tier.t-Epic      { color: #c084fc; background: rgba(192,132,252,0.10); }
+.recent-eagle-tier.t-Rare      { color: #60a5fa; background: rgba(96,165,250,0.10); }
+.recent-eagle-tier.t-Uncommon  { color: #34d399; background: rgba(52,211,153,0.10); }
+.recent-eagle-tier.t-Common    { color: #94a3b8; background: rgba(148,163,184,0.10); }
+.recent-eagles-empty, .recent-eagles-error { font-size: 12px; color: var(--text-dim); }
+
 .card-preview img { max-width: 100%; height: auto; border-radius: 4px; display: block; }
 .card-preview-variants { display: flex; flex-direction: column; gap: 10px; }
 .card-preview-variant { display: flex; flex-direction: column; gap: 4px; }
@@ -350,6 +384,14 @@ nav {
     <div class="hero-stat"><div class="value" id="stat-building">—</div><div class="label">Building</div></div>
     <div class="hero-stat"><div class="value" id="stat-planned">—</div><div class="label">Planned</div></div>
   </div>
+</div>
+
+<div class="recent-eagles" id="recent-eagles">
+  <div class="recent-eagles-header">
+    <span class="recent-eagles-title">Latest Eagles</span>
+    <span class="recent-eagles-meta" id="recent-eagles-meta"></span>
+  </div>
+  <div class="recent-eagles-strip" id="recent-eagles-strip"></div>
 </div>
 
 <div class="container" id="main-content">
@@ -681,6 +723,35 @@ async function load() {
 }
 
 load();
+</script>
+
+<script>
+(async function loadRecentEagles() {
+  const strip = document.getElementById('recent-eagles-strip');
+  const meta  = document.getElementById('recent-eagles-meta');
+  if (!strip) return;
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  try {
+    const r = await fetch('/api/recent-mints?count=3');
+    if (!r.ok) throw new Error('http ' + r.status);
+    const data = await r.json();
+    if (!data.recent || !data.recent.length) {
+      strip.innerHTML = '<span class="recent-eagles-empty">No mints yet.</span>';
+      return;
+    }
+    if (meta) meta.textContent = data.total_minted + '/420 minted';
+    strip.innerHTML = data.recent.map(e => `
+      <a class="recent-eagle-pill" href="/eagle/${e.token_id}">
+        <span class="recent-eagle-id">#${e.token_id}</span>
+        <span class="recent-eagle-name">${esc(e.display_name)}</span>
+        <span class="recent-eagle-tier t-${esc(e.tier_name)}">${esc(e.tier_name)}</span>
+      </a>`).join('');
+  } catch {
+    strip.innerHTML = '<span class="recent-eagles-error">Couldn\'t load recent mints.</span>';
+  }
+})();
 </script>
 </body>
 </html>
