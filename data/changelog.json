@@ -1,6 +1,12 @@
 [
   {
     "date": "2026-06-10",
+    "title": "Nav cleanup — 5 links, consistent sitewide",
+    "description": "Removed anchor-link clutter from index.html nav. All 8 pages now share: Gallery · Market · Holders · Log · Whitepaper.",
+    "type": "fix"
+  },
+  {
+    "date": "2026-06-10",
     "title": "Public build log — /log",
     "description": "Timeline of all Eagles builds, public and dated. Static JSON feed at /data/changelog.json, no API function needed.",
     "type": "feature"
