@@ -1,6 +1,12 @@
 [
   {
     "date": "2026-06-10",
+    "title": "Public build log — /log",
+    "description": "Timeline of all Eagles builds, public and dated. Static JSON feed at /data/changelog.json, no API function needed.",
+    "type": "feature"
+  },
+  {
+    "date": "2026-06-10",
     "title": "Nest activation audit",
     "description": "Mapped the 3 activation blockers (manual add delay, no benefit copy, API-only join). Top fix: auto-add on verify.",
     "type": "research"
