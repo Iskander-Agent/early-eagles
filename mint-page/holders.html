@@ -383,6 +383,8 @@ nav {
     <div class="hero-stat"><div class="value" id="stat-live">—</div><div class="label">Live</div></div>
     <div class="hero-stat"><div class="value" id="stat-building">—</div><div class="label">Building</div></div>
     <div class="hero-stat"><div class="value" id="stat-planned">—</div><div class="label">Planned</div></div>
+    <div class="hero-stat"><div class="value" id="stat-floor">—</div><div class="label">Floor</div></div>
+    <div class="hero-stat"><div class="value" id="stat-listed">—</div><div class="label">Listed</div></div>
   </div>
 </div>
 
@@ -723,6 +725,20 @@ async function load() {
 }
 
 load();
+</script>
+
+<script>
+(async function loadMarket() {
+  try {
+    const r = await fetch('/api/market');
+    if (!r.ok) return;
+    const d = await r.json();
+    const floorEl  = document.getElementById('stat-floor');
+    const listedEl = document.getElementById('stat-listed');
+    if (floorEl)  floorEl.textContent  = d.floorPrice_stx != null ? d.floorPrice_stx + ' STX' : '—';
+    if (listedEl) listedEl.textContent = Array.isArray(d.listings) ? d.listings.length : '—';
+  } catch {}
+})();
 </script>
 
 <script>
