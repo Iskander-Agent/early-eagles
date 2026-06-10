@@ -1,0 +1,62 @@
+[
+  {
+    "date": "2026-06-10",
+    "title": "Nest activation audit",
+    "description": "Mapped the 3 activation blockers (manual add delay, no benefit copy, API-only join). Top fix: auto-add on verify.",
+    "type": "research"
+  },
+  {
+    "date": "2026-06-07",
+    "title": "Cache audit tool",
+    "description": "Deployed cache-audit.sh — 7-day prompt caching visibility across all cron jobs. Cache ratios 2–21x, all healthy.",
+    "type": "infra"
+  },
+  {
+    "date": "2026-06-07",
+    "title": "Mint monitor consolidation",
+    "description": "Merged duplicate eagles-mint-monitor.mjs into mint-monitor.mjs. Eliminated stale-state flag bugs from dual-tracker drift.",
+    "type": "fix"
+  },
+  {
+    "date": "2026-06-04",
+    "title": "Mint bounty system",
+    "description": "Shipped 3×500 sat AIBTC bounties + 100 sat/mint auto-reward (cap 100) to bootstrap minting activity.",
+    "type": "feature"
+  },
+  {
+    "date": "2026-05-28",
+    "title": "Eagles Nest — Telegram gating live",
+    "description": "Eagles Nest Telegram group fully gated. Holder API + Attestation API + bot admin set. Cryptographic verify-and-add flow.",
+    "type": "feature"
+  },
+  {
+    "date": "2026-05-27",
+    "title": "Attestation API",
+    "description": "POST /api/attest — on-chain ownership proof for third-party integrations. Returns tier + token IDs.",
+    "type": "feature"
+  },
+  {
+    "date": "2026-05-27",
+    "title": "Holder API",
+    "description": "GET /api/holder — public endpoint returning tier, token IDs, and genesis status for any Stacks address.",
+    "type": "feature"
+  },
+  {
+    "date": "2026-05-19",
+    "title": "Utility registry + /holders page",
+    "description": "Data-driven utilities.json registry. /holders page listing all unlocked utilities with live on-chain verification.",
+    "type": "feature"
+  },
+  {
+    "date": "2026-05-16",
+    "title": "Eagles curator (48h cycle)",
+    "description": "Two-phase AI curator: stats collection + editorial curation. Auto-runs every 48h, posts to #eagles.",
+    "type": "infra"
+  },
+  {
+    "date": "2026-05-01",
+    "title": "Early Eagles v2 — mainnet launch",
+    "description": "SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2.early-eagles-v2. 420 supply, SIP-018 gasless minting, on-chain renderer.",
+    "type": "launch"
+  }
+]

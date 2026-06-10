@@ -116,6 +116,14 @@
       "dest": "/api/market.js"
     },
     {
+      "src": "/api/changelog",
+      "dest": "/api/changelog.js"
+    },
+    {
+      "src": "/log",
+      "dest": "/mint-page/log.html"
+    },
+    {
       "src": "/eagle/([0-9]+)",
       "dest": "/mint-page/eagle.html"
     },
