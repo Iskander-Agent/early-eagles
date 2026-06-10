@@ -164,7 +164,7 @@ function formatDate(iso) {
 async function loadLog() {
   const el = document.getElementById('timeline');
   try {
-    const res = await fetch('/api/changelog');
+    const res = await fetch('/data/changelog.json');
     if (!res.ok) throw new Error(res.status);
     const entries = await res.json();
     if (!entries.length) { el.innerHTML = '<div class="empty">Nothing yet.</div>'; return; }

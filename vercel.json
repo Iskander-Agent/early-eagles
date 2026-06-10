@@ -12,6 +12,10 @@
     {
       "src": "public/scripts/**",
       "use": "@vercel/static"
+    },
+    {
+      "src": "data/**",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
@@ -114,10 +118,6 @@
     {
       "src": "/api/market",
       "dest": "/api/market.js"
-    },
-    {
-      "src": "/api/changelog",
-      "dest": "/api/changelog.js"
     },
     {
       "src": "/log",
