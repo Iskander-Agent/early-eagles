@@ -124,6 +124,10 @@
       "dest": "/mint-page/log.html"
     },
     {
+      "src": "/data/changelog.json",
+      "dest": "/data/changelog.json"
+    },
+    {
       "src": "/eagle/([0-9]+)",
       "dest": "/mint-page/eagle.html"
     },
