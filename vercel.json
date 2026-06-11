@@ -96,6 +96,10 @@
       "dest": "/api/attest.js"
     },
     {
+      "src": "/api/check",
+      "dest": "/api/verify.js"
+    },
+    {
       "src": "/api/eligibility",
       "dest": "/api/verify.js"
     },
