@@ -107,7 +107,7 @@ async function callRead(fn, args = [], retries = 3) {
 }
 
 // In-memory cache (warm Vercel invocations)
-let _cache = { listings: [], totalMinted: 0, builtAt: 0 };
+let _cache = { listings: [], totalMinted: 0, tierStats: null, builtAt: 0 };
 const CACHE_TTL = 30_000; // 30s — match CDN header
 
 module.exports = async function handler(req, res) {
@@ -134,6 +134,17 @@ module.exports = async function handler(req, res) {
     });
     const stats = cvToValue(statsCV);
     const totalMinted = parseInt(stats['total-minted']?.value ?? stats['total-minted'], 10) || 0;
+
+    // Extract per-tier remaining (same call, no extra invocation)
+    const parseStat = (key) => parseInt(stats[key]?.value ?? stats[key] ?? '0', 10) || 0;
+    const TIER_CAPS = { legendary: 7, epic: 63, rare: 84, uncommon: 140, common: 126 };
+    const tierStats = {
+      legendary: { remaining: parseStat('legendary-remaining'), cap: TIER_CAPS.legendary },
+      epic:      { remaining: parseStat('epic-remaining'),      cap: TIER_CAPS.epic },
+      rare:      { remaining: parseStat('rare-remaining'),      cap: TIER_CAPS.rare },
+      uncommon:  { remaining: parseStat('uncommon-remaining'),  cap: TIER_CAPS.uncommon },
+      common:    { remaining: parseStat('common-remaining'),    cap: TIER_CAPS.common },
+    };
 
     // 2. Fan-out get-listing calls (batches of 8 with small delay)
     const ids = Array.from({ length: totalMinted }, (_, i) => i);
@@ -190,11 +201,12 @@ module.exports = async function handler(req, res) {
     const floorPrice_ustx = finalListings.length > 0 ? finalListings[0].price_ustx : null;
     const floorPrice_stx  = floorPrice_ustx ? Number(floorPrice_ustx) / 1_000_000 : null;
 
-    _cache = { listings: finalListings, totalMinted, floorPrice_ustx, floorPrice_stx, builtAt: Date.now() };
+    _cache = { listings: finalListings, totalMinted, tierStats, floorPrice_ustx, floorPrice_stx, builtAt: Date.now() };
 
     return res.status(200).json({
       listings: finalListings,
       totalMinted,
+      tierStats,
       floorPrice_ustx,
       floorPrice_stx,
       builtAt: new Date().toISOString(),

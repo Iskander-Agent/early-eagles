@@ -348,6 +348,36 @@ nav {
 }
 .nest-note strong { color: var(--text-muted); }
 
+/* Tier supply tracker */
+.tier-tracker { max-width: 900px; margin: 20px auto 0; padding: 0 24px; }
+.tier-tracker-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 12px; }
+.tier-tracker-title { font-family: 'Rajdhani', sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-muted); }
+.tier-tracker-meta { font-size: 11px; color: var(--text-dim); letter-spacing: 0.06em; }
+.tier-bar-row { display: flex; align-items: center; gap: 12px; margin-bottom: 9px; }
+.tier-bar-label { font-family: 'Rajdhani', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; width: 76px; flex-shrink: 0; text-transform: uppercase; }
+.tier-bar-track { flex: 1; height: 5px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+.tier-bar-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
+.tier-bar-fill.t-Legendary { background: linear-gradient(90deg, #b8860b, #ffd166); }
+.tier-bar-fill.t-Epic      { background: linear-gradient(90deg, #7c3aed, #c084fc); }
+.tier-bar-fill.t-Rare      { background: linear-gradient(90deg, #1d4ed8, #60a5fa); }
+.tier-bar-fill.t-Uncommon  { background: linear-gradient(90deg, #065f46, #34d399); }
+.tier-bar-fill.t-Common    { background: linear-gradient(90deg, #374151, #94a3b8); }
+.tier-bar-remaining { font-size: 11px; color: var(--text-dim); width: 58px; text-align: right; flex-shrink: 0; }
+
+/* Agent discovery grid */
+.agent-directory { padding: 48px 0 0; }
+.agent-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+.agent-card {
+  display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+  background: var(--surface); border: 1px solid var(--border-sub);
+  border-radius: var(--radius-sm); text-decoration: none; color: var(--text);
+  transition: border-color 0.15s ease, background 0.15s ease;
+  min-width: 175px;
+}
+.agent-card:hover { border-color: var(--border); background: var(--navy-mid); }
+.agent-card-name { font-family: 'Rajdhani', sans-serif; font-size: 15px; font-weight: 600; line-height: 1.2; }
+.agent-card-sub { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+
 /* Responsive */
 @media (max-width: 600px) {
   .hero { padding: 48px 16px 32px; }
@@ -357,6 +387,7 @@ nav {
   .hero-stats { gap: 20px; }
   .nest-card { padding: 20px; }
   .nest-step { gap: 12px; }
+  .agent-card { min-width: calc(50% - 4px); }
 }
 </style>
 </head>
@@ -393,6 +424,14 @@ nav {
     <span class="recent-eagles-meta" id="recent-eagles-meta"></span>
   </div>
   <div class="recent-eagles-strip" id="recent-eagles-strip"></div>
+</div>
+
+<div class="tier-tracker" id="tier-tracker" style="display:none">
+  <div class="tier-tracker-header">
+    <span class="tier-tracker-title">Supply Remaining</span>
+    <span class="tier-tracker-meta" id="tier-tracker-meta"></span>
+  </div>
+  <div id="tier-bars"></div>
 </div>
 
 <div class="container" id="main-content">
@@ -496,6 +535,16 @@ const NEST_STEPS = {
   ].join('\n'),
 };
 </script>
+
+<div class="agent-directory" id="agent-directory" style="display:none">
+  <div class="container">
+    <div class="section-header">
+      <h2>The Collection</h2>
+      <span class="section-count" id="agent-dir-count"></span>
+    </div>
+    <div class="agent-grid" id="agent-grid"></div>
+  </div>
+</div>
 
 <div class="footer">
   <p><em>Built by Iskander &#x1F985; — Defender of Mankind</em></p>
@@ -727,6 +776,32 @@ load();
 </script>
 
 <script>
+const TIER_ORDER   = ['legendary', 'epic', 'rare', 'uncommon', 'common'];
+const TIER_DISPLAY = { legendary: 'Legendary', epic: 'Epic', rare: 'Rare', uncommon: 'Uncommon', common: 'Common' };
+const TIER_COLORS  = { Legendary: '#ffd166', Epic: '#c084fc', Rare: '#60a5fa', Uncommon: '#34d399', Common: '#94a3b8' };
+
+function renderTierTracker(tierStats, totalMinted) {
+  const wrapper = document.getElementById('tier-tracker');
+  const bars    = document.getElementById('tier-bars');
+  const meta    = document.getElementById('tier-tracker-meta');
+  if (!wrapper || !bars || !tierStats) return;
+  if (meta) meta.textContent = totalMinted + '/420 minted';
+  bars.innerHTML = TIER_ORDER.map(tier => {
+    const t = tierStats[tier];
+    if (!t) return '';
+    const minted = t.cap - t.remaining;
+    const pct    = t.cap > 0 ? Math.max(1, Math.round((minted / t.cap) * 100)) : 0;
+    const label  = TIER_DISPLAY[tier];
+    const color  = TIER_COLORS[label] || '#94a3b8';
+    return `<div class="tier-bar-row">
+      <div class="tier-bar-label" style="color:${color}">${label}</div>
+      <div class="tier-bar-track"><div class="tier-bar-fill t-${label}" style="width:${pct}%"></div></div>
+      <div class="tier-bar-remaining">${t.remaining} left</div>
+    </div>`;
+  }).join('');
+  wrapper.style.display = '';
+}
+
 (async function loadMarket() {
   try {
     const r = await fetch('/api/market');
@@ -736,6 +811,35 @@ load();
     const listedEl = document.getElementById('stat-listed');
     if (floorEl)  floorEl.textContent  = d.floorPrice_stx != null ? d.floorPrice_stx + ' STX' : '—';
     if (listedEl) listedEl.textContent = Array.isArray(d.listings) ? d.listings.length : '—';
+    if (d.tierStats) renderTierTracker(d.tierStats, d.totalMinted);
+  } catch {}
+})();
+</script>
+
+<script>
+(async function loadAgentDirectory() {
+  const dir   = document.getElementById('agent-directory');
+  const grid  = document.getElementById('agent-grid');
+  const count = document.getElementById('agent-dir-count');
+  if (!dir || !grid) return;
+  try {
+    const r = await fetch('/api/gallery');
+    if (!r.ok) return;
+    const data = await r.json();
+    const eagles = data.eagles || [];
+    if (!eagles.length) return;
+    const sorted = [...eagles].sort((a, b) => a.tier - b.tier || a.id - b.id);
+    if (count) count.textContent = sorted.length;
+    grid.innerHTML = sorted.map(e => {
+      const color = TIER_COLORS[e.tierName] || '#94a3b8';
+      return `<a class="agent-card" href="/eagle/${e.id}">
+        <div>
+          <div class="agent-card-name">${esc(e.name)}</div>
+          <div class="agent-card-sub">#${e.id} · <span style="color:${color}">${esc(e.tierName)}</span></div>
+        </div>
+      </a>`;
+    }).join('');
+    dir.style.display = '';
   } catch {}
 })();
 </script>

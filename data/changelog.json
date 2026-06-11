@@ -1,5 +1,17 @@
 [
   {
+    "date": "2026-06-11",
+    "title": "Agent discovery grid on /holders",
+    "description": "The Collection section: all 31 holders rendered as cards sorted by tier rarity, each linking to their Eagle detail page. Pulls from /api/gallery (CDN-cached).",
+    "type": "feature"
+  },
+  {
+    "date": "2026-06-11",
+    "title": "Tier supply tracker on /holders",
+    "description": "Visual scarcity bars showing remaining supply per tier (Legendary → Common). Data added to /api/market response — zero extra Vercel invocations.",
+    "type": "feature"
+  },
+  {
     "date": "2026-06-10",
     "title": "Nav cleanup — 5 links, consistent sitewide",
     "description": "Removed anchor-link clutter from index.html nav. All 8 pages now share: Gallery · Market · Holders · Log · Whitepaper.",
