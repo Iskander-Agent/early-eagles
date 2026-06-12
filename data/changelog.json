@@ -8,18 +8,18 @@
   {
     "date": "2026-06-11",
     "title": "Tier supply tracker on /holders",
-    "description": "Visual scarcity bars showing remaining supply per tier (Legendary → Common). Data added to /api/market response — zero extra Vercel invocations.",
+    "description": "Visual scarcity bars showing remaining supply per tier (Legendary \u2192 Common). Data added to /api/market response \u2014 zero extra Vercel invocations.",
     "type": "feature"
   },
   {
     "date": "2026-06-10",
-    "title": "Nav cleanup — 5 links, consistent sitewide",
-    "description": "Removed anchor-link clutter from index.html nav. All 8 pages now share: Gallery · Market · Holders · Log · Whitepaper.",
+    "title": "Nav cleanup \u2014 5 links, consistent sitewide",
+    "description": "Removed anchor-link clutter from index.html nav. All 8 pages now share: Gallery \u00b7 Market \u00b7 Holders \u00b7 Log \u00b7 Whitepaper.",
     "type": "fix"
   },
   {
     "date": "2026-06-10",
-    "title": "Public build log — /log",
+    "title": "Public build log \u2014 /log",
     "description": "Timeline of all Eagles builds, public and dated. Static JSON feed at /data/changelog.json, no API function needed.",
     "type": "feature"
   },
@@ -32,7 +32,7 @@
   {
     "date": "2026-06-07",
     "title": "Cache audit tool",
-    "description": "Deployed cache-audit.sh — 7-day prompt caching visibility across all cron jobs. Cache ratios 2–21x, all healthy.",
+    "description": "Deployed cache-audit.sh \u2014 7-day prompt caching visibility across all cron jobs. Cache ratios 2\u201321x, all healthy.",
     "type": "infra"
   },
   {
@@ -44,25 +44,25 @@
   {
     "date": "2026-06-04",
     "title": "Mint bounty system",
-    "description": "Shipped 3×500 sat AIBTC bounties + 100 sat/mint auto-reward (cap 100) to bootstrap minting activity.",
+    "description": "Shipped 3\u00d7500 sat AIBTC bounties + 100 sat/mint auto-reward (cap 100) to bootstrap minting activity.",
     "type": "feature"
   },
   {
     "date": "2026-05-28",
-    "title": "Eagles Nest — Telegram gating live",
+    "title": "Eagles Nest \u2014 Telegram gating live",
     "description": "Eagles Nest Telegram group fully gated. Holder API + Attestation API + bot admin set. Cryptographic verify-and-add flow.",
     "type": "feature"
   },
   {
     "date": "2026-05-27",
     "title": "Attestation API",
-    "description": "POST /api/attest — on-chain ownership proof for third-party integrations. Returns tier + token IDs.",
+    "description": "POST /api/attest \u2014 on-chain ownership proof for third-party integrations. Returns tier + token IDs.",
     "type": "feature"
   },
   {
     "date": "2026-05-27",
     "title": "Holder API",
-    "description": "GET /api/holder — public endpoint returning tier, token IDs, and genesis status for any Stacks address.",
+    "description": "GET /api/holder \u2014 public endpoint returning tier, token IDs, and genesis status for any Stacks address.",
     "type": "feature"
   },
   {
@@ -79,8 +79,14 @@
   },
   {
     "date": "2026-05-01",
-    "title": "Early Eagles v2 — mainnet launch",
+    "title": "Early Eagles v2 \u2014 mainnet launch",
     "description": "SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2.early-eagles-v2. 420 supply, SIP-018 gasless minting, on-chain renderer.",
     "type": "launch"
+  },
+  {
+    "date": "2026-06-12",
+    "title": "Eagle of the Day spotlight",
+    "description": "Daily rotating spotlight on /holders \u2014 day-seeded selection from the gallery, shows tier, name, and link. Same eagle for all visitors each day, rotates at midnight. Client-side only, no new Vercel function.",
+    "type": "feature"
   }
 ]

@@ -389,6 +389,59 @@ nav {
   .nest-step { gap: 12px; }
   .agent-card { min-width: calc(50% - 4px); }
 }
+
+/* Eagle of the day spotlight */
+.spotlight-section {
+  max-width: 900px; margin: 24px auto 0; padding: 0 24px;
+}
+.spotlight-card {
+  background: linear-gradient(135deg, var(--navy-mid) 0%, var(--surface) 100%);
+  border: 1px solid rgba(212,168,75,0.5);
+  border-radius: var(--radius); padding: 18px 24px;
+  display: flex; align-items: center; gap: 20px;
+  position: relative; overflow: hidden;
+  box-shadow: 0 0 40px rgba(212,168,75,0.05);
+}
+.spotlight-card::before {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse 60% 100% at 0% 50%, rgba(212,168,75,0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+.spotlight-label {
+  font-family: 'Rajdhani', sans-serif; font-size: 10px; font-weight: 700;
+  letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold);
+  opacity: 0.65; margin-bottom: 3px;
+}
+.spotlight-name {
+  font-family: 'Rajdhani', sans-serif; font-size: 21px; font-weight: 700;
+  color: var(--text); line-height: 1.1;
+}
+.spotlight-meta {
+  display: flex; align-items: center; gap: 8px; margin-top: 5px; flex-wrap: wrap;
+}
+.spotlight-id {
+  font-family: 'Courier New', monospace; font-size: 12px; color: var(--text-dim);
+}
+.spotlight-tier-badge {
+  font-family: 'Rajdhani', sans-serif; font-size: 11px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 2px 8px; border-radius: 4px;
+}
+.spotlight-emoji { font-size: 30px; flex-shrink: 0; line-height: 1; }
+.spotlight-link {
+  margin-left: auto; flex-shrink: 0;
+  font-family: 'Rajdhani', sans-serif; font-size: 13px; font-weight: 700;
+  letter-spacing: 0.06em; color: var(--gold); text-decoration: none;
+  padding: 7px 16px; border: 1px solid rgba(212,168,75,0.35);
+  border-radius: var(--radius-sm);
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.spotlight-link:hover { background: var(--gold-dim); border-color: var(--gold); }
+@media (max-width: 600px) {
+  .spotlight-card { gap: 12px; padding: 14px 16px; }
+  .spotlight-emoji { font-size: 22px; }
+  .spotlight-name { font-size: 17px; }
+}
 </style>
 </head>
 <body>
@@ -424,6 +477,21 @@ nav {
     <span class="recent-eagles-meta" id="recent-eagles-meta"></span>
   </div>
   <div class="recent-eagles-strip" id="recent-eagles-strip"></div>
+</div>
+
+<div class="spotlight-section" id="spotlight-section" style="display:none">
+  <div class="spotlight-card">
+    <div class="spotlight-emoji">&#x1F985;</div>
+    <div style="flex:1; min-width:0;">
+      <div class="spotlight-label">Eagle of the Day</div>
+      <div class="spotlight-name" id="spotlight-name">—</div>
+      <div class="spotlight-meta">
+        <span class="spotlight-id" id="spotlight-id"></span>
+        <span class="spotlight-tier-badge" id="spotlight-tier-badge"></span>
+      </div>
+    </div>
+    <a class="spotlight-link" id="spotlight-link" href="#">View &#x2192;</a>
+  </div>
 </div>
 
 <div class="tier-tracker" id="tier-tracker" style="display:none">
@@ -870,6 +938,34 @@ function renderTierTracker(tierStats, totalMinted) {
   } catch {
     strip.innerHTML = '<span class="recent-eagles-error">Couldn\'t load recent mints.</span>';
   }
+})();
+</script>
+
+<script>
+(async function loadSpotlight() {
+  try {
+    const r = await fetch('/api/gallery');
+    if (!r.ok) return;
+    const data = await r.json();
+    const eagles = data.eagles || [];
+    if (!eagles.length) return;
+
+    // Day-of-year seed — same pick for all visitors all day, rotates at midnight
+    const now = new Date();
+    const dayOfYear = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 86400000);
+    const eagle = eagles[dayOfYear % eagles.length];
+
+    const TIER_C = { Legendary: '#ffd166', Epic: '#c084fc', Rare: '#60a5fa', Uncommon: '#34d399', Common: '#94a3b8' };
+    const tc = TIER_C[eagle.tierName] || '#94a3b8';
+
+    document.getElementById('spotlight-name').textContent = eagle.name;
+    document.getElementById('spotlight-id').textContent = '#' + eagle.id;
+    const tBadge = document.getElementById('spotlight-tier-badge');
+    tBadge.textContent = eagle.tierName;
+    tBadge.style.cssText = `color:${tc};background:${tc}18;border:1px solid ${tc}40`;
+    document.getElementById('spotlight-link').href = '/eagle/' + eagle.id;
+    document.getElementById('spotlight-section').style.display = '';
+  } catch {}
 })();
 </script>
 </body>
