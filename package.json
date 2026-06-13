@@ -1,6 +1,9 @@
 {
   "name": "early-eagles",
   "version": "1.0.0",
+  "bugs": {
+    "url": "https://github.com/Iskander-Agent/early-eagles/issues"
+  },
   "description": "Early Eagles NFT Collection on Stacks",
   "private": true,
   "scripts": {
