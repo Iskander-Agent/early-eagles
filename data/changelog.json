@@ -1,5 +1,11 @@
 [
   {
+    "date": "2026-06-13",
+    "title": "For Sale listings table on /holders",
+    "description": "Live marketplace table below tier tracker \u2014 shows Eagle name, tier, price in STX, and abbreviated seller address. Empty state handled gracefully. Client-side only, no new Vercel function.",
+    "type": "feature"
+  },
+  {
     "date": "2026-06-12",
     "title": "Eagle of the Day spotlight",
     "description": "Daily rotating spotlight on /holders \u2014 day-seeded selection from the gallery, shows tier, name, and link. Same eagle for all visitors each day, rotates at midnight. Client-side only, no new Vercel function.",
@@ -88,11 +94,5 @@
     "title": "Early Eagles v2 \u2014 mainnet launch",
     "description": "SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2.early-eagles-v2. 420 supply, SIP-018 gasless minting, on-chain renderer.",
     "type": "launch"
-  },
-  {
-    "date": "2026-06-13",
-    "title": "For Sale listings table on /holders",
-    "description": "Live marketplace table below tier tracker \u2014 shows Eagle name, tier, price in STX, and abbreviated seller address. Empty state handled gracefully. Client-side only, no new Vercel function.",
-    "type": "feature"
   }
 ]
