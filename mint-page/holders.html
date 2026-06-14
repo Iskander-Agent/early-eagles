@@ -377,6 +377,7 @@ nav {
 .agent-card:hover { border-color: var(--border); background: var(--navy-mid); }
 .agent-card-name { font-family: 'Rajdhani', sans-serif; font-size: 15px; font-weight: 600; line-height: 1.2; }
 .agent-card-sub { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+.agent-card-addr { font-family: 'Courier New', monospace; font-size: 10px; color: var(--text-dim); opacity: 0.6; margin-top: 3px; }
 
 /* Responsive */
 @media (max-width: 600px) {
@@ -965,10 +966,14 @@ function renderMarketSection(listings) {
     if (count) count.textContent = sorted.length;
     grid.innerHTML = sorted.map(e => {
       const color = TIER_COLORS[e.tierName] || '#94a3b8';
+      const ownerAbbrev = e.owner
+        ? e.owner.slice(0, 6) + '\u2026' + e.owner.slice(-4)
+        : '';
       return `<a class="agent-card" href="/eagle/${e.id}">
         <div>
           <div class="agent-card-name">${esc(e.name)}</div>
           <div class="agent-card-sub">#${e.id} · <span style="color:${color}">${esc(e.tierName)}</span></div>
+          ${ownerAbbrev ? `<div class="agent-card-addr">${ownerAbbrev}</div>` : ''}
         </div>
       </a>`;
     }).join('');

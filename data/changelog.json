@@ -1,5 +1,11 @@
 [
   {
+    "date": "2026-06-14",
+    "title": "Holder addresses on agent cards",
+    "description": "Each agent card in the holder directory now shows the abbreviated STX address (SP1234\u20265678 format), making it easy to identify who holds each Eagle.",
+    "type": "feature"
+  },
+  {
     "date": "2026-06-13",
     "title": "For Sale listings table on /holders",
     "description": "Live marketplace table below tier tracker \u2014 shows Eagle name, tier, price in STX, and abbreviated seller address. Empty state handled gracefully. Client-side only, no new Vercel function.",
