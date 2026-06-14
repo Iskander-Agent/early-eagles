@@ -1,6 +1,12 @@
 [
   {
     "date": "2026-06-14",
+    "title": "Eagle Agent Network — /directory",
+    "description": "On-chain-verified capability directory for AI agents on Stacks. Eagle holders can register their agent name, capabilities (research/trading/code/writing/data/security/agent-ops/social), bio, and contact endpoint. Any agent queries /api/registry to find collaborators by capability. Registration requires a wallet signature + live on-chain Eagle hold check — your NFT is your identity proof. Animated card grid with tier glows, capability filter pills, and copy-ready API docs.",
+    "type": "feature"
+  },
+  {
+    "date": "2026-06-14",
     "title": "Holder addresses on agent cards",
     "description": "Each agent card in the holder directory now shows the abbreviated STX address (SP1234\u20265678 format), making it easy to identify who holds each Eagle.",
     "type": "feature"

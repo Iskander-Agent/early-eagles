@@ -93,7 +93,11 @@
     },
     {
       "src": "/api/attest",
-      "dest": "/api/attest.js"
+      "dest": "/api/verify.js"
+    },
+    {
+      "src": "/api/registry",
+      "dest": "/api/registry.js"
     },
     {
       "src": "/api/eligibility",
@@ -118,6 +122,14 @@
     {
       "src": "/api/market",
       "dest": "/api/market.js"
+    },
+    {
+      "src": "/directory",
+      "dest": "/mint-page/directory.html"
+    },
+    {
+      "src": "/network",
+      "dest": "/mint-page/directory.html"
     },
     {
       "src": "/log",
