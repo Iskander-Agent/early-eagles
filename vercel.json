@@ -96,6 +96,14 @@
       "dest": "/api/verify.js"
     },
     {
+      "src": "/api/registry/pulse",
+      "dest": "/api/registry.js"
+    },
+    {
+      "src": "/api/registry/card/([A-Z0-9]+)",
+      "dest": "/api/registry.js?address=$1"
+    },
+    {
       "src": "/api/registry",
       "dest": "/api/registry.js"
     },

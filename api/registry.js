@@ -1,45 +1,70 @@
 /**
- * Early Eagles — Eagle Agent Registry
+ * Early Eagles — Eagle Agent Registry (Bitcoin-native A2A protocol)
  *
  * The first on-chain-verified capability directory for AI agents on Stacks.
- * Your Eagle NFT is your identity proof — no separate registry, no trust issues.
- * Only Eagle holders can write. Anyone can read.
+ * Open to: (a) Early Eagle NFT holders, (b) AIBTC Genesis agents (Level ≥ 2 + ERC-8004).
+ * Eagle holders are ranked first in all searches and carry a verified tier badge.
  *
- * GET  /api/registry                   → all registered agents
- * GET  /api/registry?cap=trading       → filter by capability
- * GET  /api/registry?address=SP...     → single agent card
- * POST /api/registry                   → register / update profile
+ * GET  /api/registry                        → list all registered agents
+ * GET  /api/registry?cap=trading            → filter by capability
+ * GET  /api/registry?address=SP...          → single agent card
+ * GET  /api/registry?eagle=true             → Eagle holders only
+ * GET  /api/registry?active=true            → active in last 24 h
+ * GET  /api/registry/card/{address}         → A2A Agent Card (interoperable JSON)
+ * POST /api/registry                        → register / update profile
+ * POST /api/registry/pulse                  → liveness heartbeat (update last_seen)
  *
- * POST body:
+ * POST /api/registry body:
  *   {
- *     address:      "SP...",            // Stacks mainnet address
- *     name:         "Iskander",         // display name, max 40 chars
- *     capabilities: ["research","code"], // array, max 5, from ALLOWED_CAPS
- *     contact:      "https://...",      // optional contact URL, max 200 chars
- *     bio:          "...",              // optional bio, max 160 chars
- *     signature:    "<130-char hex>"    // RSV sig of sha256("EaglesNest:<address>:<bucket>")
+ *     address:      "SP...",
+ *     name:         "Iskander",             // max 40 chars
+ *     capabilities: ["research","code"],    // max 5, from ALLOWED_CAPS
+ *     contact:      "https://...",          // optional, max 200 chars
+ *     bio:          "...",                  // optional, max 160 chars
+ *     pricing:      "free" | "100 sats/call", // optional, max 40 chars
+ *     signature:    "<130-char RSV hex>"    // sha256("EaglesNest:<address>:<bucket>")
  *   }
  *
+ * POST /api/registry/pulse body: { address, signature }
+ *
  * Signature scheme (same as /api/attest + /api/nest):
- *   bucket    = Math.floor(Date.now() / 600_000)     // 10-min window
+ *   bucket    = Math.floor(Date.now() / 600_000)
  *   nonce     = `EaglesNest:${address}:${bucket}`
- *   sign_hash = sha256(nonce)                        // 32-byte hex
+ *   sign_hash = sha256(nonce)
  *   signature = signMessageHashRsv(privateKey, sign_hash)  // 130-char RSV hex
  */
 
 const { publicKeyFromSignatureRsv, getAddressFromPublicKey, createMessageSignature, TransactionVersion } = require('@stacks/transactions');
 const { sha256 } = require('@noble/hashes/sha256');
 
-const STACKS_API = 'https://api.hiro.so';
-const EAGLE_ASSET = 'SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2.early-eagles-v2::early-eagles';
-const ADMIN_ADDRESS = 'SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2';
-const NFT_CONTRACT = 'early-eagles-v2';
-const KV_KEY = 'eagle-registry:v1';
-const TIER_NAMES = ['Legendary', 'Epic', 'Rare', 'Uncommon', 'Common'];
+const STACKS_API        = 'https://api.hiro.so';
+const AIBTC_API         = 'https://aibtc.com/api/agents';
+const EAGLE_ASSET       = 'SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2.early-eagles-v2::early-eagles';
+const IDENTITY_REGISTRY = 'SP1NMR7MY0TJ1QA7WQBZ6504KC79PZNTRQH4YGFJD.identity-registry-v2::agent-identity';
+const ADMIN_ADDRESS     = 'SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2';
+const NFT_CONTRACT      = 'early-eagles-v2';
+const KV_KEY            = 'eagle-registry:v2';   // v2 — new schema
+const TIER_NAMES        = ['Legendary', 'Epic', 'Rare', 'Uncommon', 'Common'];
 
 const ALLOWED_CAPS = new Set([
   'research', 'trading', 'code', 'writing', 'data', 'security', 'agent-ops', 'social',
 ]);
+
+const SKILL_LABELS = {
+  research: 'Research & Analysis', trading: 'Trading & DeFi', code: 'Code & Development',
+  writing: 'Writing & Content', data: 'Data & Analytics', security: 'Security & Audits',
+  'agent-ops': 'Agent Coordination', social: 'Community & Social',
+};
+const SKILL_DESCRIPTIONS = {
+  research:    'Information gathering, web search, and synthesis',
+  trading:     'On-chain token swaps, DeFi protocols, and market analysis',
+  code:        'Writing, reviewing, and debugging code across languages',
+  writing:     'Content creation, blog posts, and social media management',
+  data:        'Data processing, analytics, and structured output generation',
+  security:    'Security audits, vulnerability scanning, and threat analysis',
+  'agent-ops': 'Coordinating, orchestrating, and routing between multiple agents',
+  social:      'Community management, engagement, and relationship building',
+};
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -84,7 +109,7 @@ function verifyNonceSignature(address, signature) {
   return false;
 }
 
-// ── On-chain Eagle lookup ─────────────────────────────────────────────────────
+// ── Eagle hold + tier lookup ──────────────────────────────────────────────────
 async function fetchEagleHoldings(address) {
   const url = `${STACKS_API}/extended/v1/tokens/nft/holdings?principal=${address}&asset_identifiers=${encodeURIComponent(EAGLE_ASSET)}&limit=50`;
   const r = await fetch(url, { signal: abort(6000) });
@@ -111,26 +136,95 @@ async function fetchTier(tokenId) {
   return { token_id: tokenId, tier, tier_name: TIER_NAMES[tier] ?? 'Common' };
 }
 
-// ── Registry read/write ───────────────────────────────────────────────────────
+// ── AIBTC Genesis check ───────────────────────────────────────────────────────
+async function fetchAibtcGenesis(address) {
+  const [aibtcRes, hiroRes] = await Promise.allSettled([
+    fetch(`${AIBTC_API}/${address}`, { headers: { 'User-Agent': 'EarlyEagles/2.0' }, signal: abort(5000) }),
+    fetch(`${STACKS_API}/extended/v1/tokens/nft/holdings?principal=${address}&asset_identifiers=${encodeURIComponent(IDENTITY_REGISTRY)}`, { signal: abort(5000) }),
+  ]);
+
+  let level = null, levelName = null, agentId = null, displayName = null, bnsName = null;
+
+  if (aibtcRes.status === 'fulfilled' && aibtcRes.value.ok) {
+    const d = await aibtcRes.value.json();
+    if (d && typeof d.level === 'number') {
+      level = d.level;
+      levelName = d.levelName || null;
+      const agent = d.agent || d;
+      displayName = agent.displayName || d.displayName || null;
+      bnsName = agent.bnsName || d.bnsName || null;
+    }
+  }
+
+  if (hiroRes.status === 'fulfilled' && hiroRes.value.ok) {
+    const hiro = await hiroRes.value.json();
+    const holding = (hiro.results || [])[0];
+    if (holding) {
+      const id = parseInt((holding.value?.repr || '').replace(/^u/, ''), 10);
+      if (!isNaN(id)) agentId = id;
+    }
+  }
+
+  return {
+    is_genesis: typeof level === 'number' && level >= 2 && agentId !== null,
+    level,
+    level_name: levelName,
+    aibtc_agent_id: agentId,
+    display_name: displayName,
+    bns_name: bnsName,
+  };
+}
+
+// ── Registry KV ───────────────────────────────────────────────────────────────
 async function readRegistry(kv) {
   if (!kv) return {};
   try { return (await kv.get(KV_KEY)) || {}; } catch { return {}; }
 }
-
 async function writeRegistry(kv, data) {
   if (!kv) return;
   await kv.set(KV_KEY, data);
 }
 
-// ── GET handler ───────────────────────────────────────────────────────────────
+// ── Liveness helper ───────────────────────────────────────────────────────────
+function livenessStatus(last_seen) {
+  if (!last_seen) return 'unknown';
+  const age = Date.now() - new Date(last_seen);
+  if (age < 86_400_000)   return 'active';    // < 24 h
+  if (age < 604_800_000)  return 'recent';    // < 7 d
+  return 'offline';
+}
+
+// ── Sort agents: Eagles first (by tier), then AIBTC (by level), then date ────
+function sortAgents(agents) {
+  return [...agents].sort((a, b) => {
+    const aEagle = a.eagle === true;
+    const bEagle = b.eagle === true;
+    if (aEagle !== bEagle) return aEagle ? -1 : 1;          // Eagles first
+
+    if (aEagle && bEagle) {
+      const tierDiff = (a.tier_rank ?? 4) - (b.tier_rank ?? 4); // lower = rarer = first
+      if (tierDiff !== 0) return tierDiff;
+    } else {
+      const levelDiff = (b.aibtc_level ?? 0) - (a.aibtc_level ?? 0); // higher level first
+      if (levelDiff !== 0) return levelDiff;
+    }
+
+    // Tiebreak: most recently active first
+    const at = new Date(a.last_seen || a.registered_at);
+    const bt = new Date(b.last_seen || b.registered_at);
+    return bt - at;
+  });
+}
+
+// ── GET /api/registry ─────────────────────────────────────────────────────────
 async function handleGet(req, res) {
   const ip = req.headers['x-forwarded-for'] || 'unknown';
   if (!rateOk(ip + ':reg-get', 60)) return res.status(429).json({ error: 'Rate limit exceeded' });
 
-  const { address: rawAddr, cap } = req.query || {};
+  const { address: rawAddr, cap, eagle: eagleFilter, active: activeFilter } = req.query || {};
   const kv = getKv();
   const registry = await readRegistry(kv);
-  let agents = Object.values(registry);
+  const all = Object.values(registry);
 
   // Single agent lookup
   if (rawAddr) {
@@ -139,34 +233,40 @@ async function handleGet(req, res) {
     const agent = registry[addr];
     if (!agent) return res.status(404).json({ error: 'Agent not registered' });
     res.setHeader('Cache-Control', 's-maxage=30, stale-while-revalidate=60');
-    return res.status(200).json(agent);
+    return res.status(200).json({ ...agent, liveness: livenessStatus(agent.last_seen) });
   }
 
-  // Capability filter
+  let agents = all;
+
+  // Filters
   if (cap) {
     const c = cap.toLowerCase();
-    agents = agents.filter(a => a.capabilities && a.capabilities.includes(c));
+    agents = agents.filter(a => (a.capabilities || []).includes(c));
+  }
+  if (eagleFilter === 'true') {
+    agents = agents.filter(a => a.eagle === true);
+  }
+  if (activeFilter === 'true') {
+    const cutoff = Date.now() - 86_400_000;
+    agents = agents.filter(a => a.last_seen && new Date(a.last_seen) > cutoff);
   }
 
-  // Sort: tier (ascending = rarer first), then registered_at ascending
-  agents.sort((a, b) => {
-    const tierDiff = (a.tier_rank ?? 4) - (b.tier_rank ?? 4);
-    if (tierDiff !== 0) return tierDiff;
-    return new Date(a.registered_at) - new Date(b.registered_at);
-  });
+  agents = sortAgents(agents).map(a => ({ ...a, liveness: livenessStatus(a.last_seen) }));
 
-  // Aggregate capability counts
+  // Stats
   const capCounts = {};
-  for (const a of Object.values(registry)) {
-    for (const c of (a.capabilities || [])) {
-      capCounts[c] = (capCounts[c] || 0) + 1;
-    }
-  }
+  for (const a of all) for (const c of (a.capabilities || [])) capCounts[c] = (capCounts[c] || 0) + 1;
+
+  const eagleCount  = all.filter(a => a.eagle).length;
+  const activeCount = all.filter(a => livenessStatus(a.last_seen) === 'active').length;
 
   res.setHeader('Cache-Control', 's-maxage=30, stale-while-revalidate=60');
   return res.status(200).json({
     total: agents.length,
-    registered: Object.keys(registry).length,
+    registered: all.length,
+    eagle_count: eagleCount,
+    aibtc_count: all.length - eagleCount,
+    active_count: activeCount,
     agents,
     cap_counts: capCounts,
     allowed_caps: [...ALLOWED_CAPS],
@@ -174,78 +274,188 @@ async function handleGet(req, res) {
   });
 }
 
-// ── POST handler ──────────────────────────────────────────────────────────────
+// ── GET /api/registry/card/{address}  (A2A Agent Card) ───────────────────────
+async function handleAgentCard(req, res) {
+  const ip = req.headers['x-forwarded-for'] || 'unknown';
+  if (!rateOk(ip + ':card', 60)) return res.status(429).json({ error: 'Rate limit exceeded' });
+
+  const match = (req.url || '').match(/\/card\/([A-Z0-9]+)/i);
+  const rawAddr = match ? match[1] : (req.query || {}).address;
+  if (!rawAddr) return res.status(400).json({ error: 'Missing address — use /api/registry/card/{address}' });
+  if (!/^S[PMTN][A-Z0-9]{38,41}$/.test(rawAddr)) return res.status(400).json({ error: 'Invalid address' });
+
+  const address = rawAddr.startsWith('ST') ? 'SP' + rawAddr.slice(2) : rawAddr;
+  const kv = getKv();
+  const registry = await readRegistry(kv);
+  const agent = registry[address];
+  if (!agent) return res.status(404).json({ error: 'Agent not registered' });
+
+  const skills = (agent.capabilities || []).map(cap => ({
+    id: cap,
+    name: SKILL_LABELS[cap] || cap,
+    description: SKILL_DESCRIPTIONS[cap] || null,
+    tags: ['stacks', 'bitcoin', 'early-eagles', cap],
+  }));
+
+  // A2A Agent Card v0.2 + custom extensions
+  const card = {
+    name: agent.name,
+    description: agent.bio || null,
+    url: agent.contact || null,
+    version: '1.0',
+    skills,
+    capabilities: {
+      streaming: false,
+      pushNotifications: false,
+      stateTransitionHistory: false,
+    },
+    defaultInputModes: ['text/plain'],
+    defaultOutputModes: ['text/plain'],
+    // Stacks / Eagles extensions (x- prefix per A2A spec)
+    'x-stacks-address':    agent.address,
+    'x-eagle-holder':      agent.eagle === true,
+    'x-eagle-token':       agent.primary_token_id ?? null,
+    'x-eagle-tier':        agent.tier_name || null,
+    'x-eagle-tier-rank':   agent.tier_rank ?? null,
+    'x-aibtc-agent-id':    agent.aibtc_agent_id || null,
+    'x-aibtc-level':       agent.aibtc_level || null,
+    'x-aibtc-level-name':  agent.aibtc_level_name || null,
+    'x-bns-name':          agent.bns_name || null,
+    'x-pricing':           agent.pricing || null,
+    'x-liveness':          livenessStatus(agent.last_seen),
+    'x-last-seen':         agent.last_seen || null,
+    'x-registered-at':     agent.registered_at,
+    'x-registry':          'early-eagles',
+    'x-registry-url':      'https://early-eagles.vercel.app/directory',
+    'x-card-url':          `https://early-eagles.vercel.app/api/registry/card/${agent.address}`,
+  };
+
+  res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=120');
+  res.setHeader('Content-Type', 'application/json');
+  return res.status(200).json(card);
+}
+
+// ── POST /api/registry/pulse  (liveness heartbeat) ───────────────────────────
+async function handlePulse(req, res) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'POST required' });
+  const ip = req.headers['x-forwarded-for'] || 'unknown';
+  if (!rateOk(ip + ':pulse', 30, 3_600_000)) return res.status(429).json({ error: 'Rate limit exceeded' });
+
+  const body = req.body || {};
+  const { address: rawAddr, signature } = body;
+  if (!rawAddr || !signature) return res.status(400).json({ error: 'Missing address or signature' });
+  if (!/^S[PMTN][A-Z0-9]{38,41}$/.test(rawAddr)) return res.status(400).json({ error: 'Invalid address' });
+  if (!/^[0-9a-fA-F]{130}$/.test(signature)) return res.status(400).json({ error: 'Invalid signature' });
+
+  const address = rawAddr.startsWith('ST') ? 'SP' + rawAddr.slice(2) : rawAddr;
+  if (!verifyNonceSignature(address, signature)) {
+    return res.status(401).json({ error: 'Signature invalid or nonce expired' });
+  }
+
+  const kv = getKv();
+  const registry = await readRegistry(kv);
+  if (!registry[address]) {
+    return res.status(404).json({ error: 'Agent not registered. Register first via POST /api/registry.' });
+  }
+
+  registry[address].last_seen = new Date().toISOString();
+  await writeRegistry(kv, registry);
+  return res.status(200).json({ ok: true, last_seen: registry[address].last_seen });
+}
+
+// ── POST /api/registry  (register / update) ───────────────────────────────────
 async function handlePost(req, res) {
   const ip = req.headers['x-forwarded-for'] || 'unknown';
-  // 5 registrations per hour per IP — prevents abuse, allows re-registration
   if (!rateOk(ip + ':reg-post', 5, 3_600_000)) return res.status(429).json({ error: 'Rate limit exceeded. Try again in an hour.' });
 
   const body = req.body || {};
-  const { address: rawAddr, name, capabilities, contact, bio, signature } = body;
+  const { address: rawAddr, name, capabilities, contact, bio, pricing, signature } = body;
 
-  // Validation
   if (!rawAddr || !name || !capabilities || !signature) {
     return res.status(400).json({ error: 'Missing required fields: address, name, capabilities, signature' });
   }
   if (!/^S[PMTN][A-Z0-9]{38,41}$/.test(rawAddr)) return res.status(400).json({ error: 'Invalid Stacks address' });
-  if (!/^[0-9a-fA-F]{130}$/.test(signature)) return res.status(400).json({ error: 'Invalid signature format (must be 130-char RSV hex)' });
-  if (typeof name !== 'string' || name.trim().length === 0 || name.length > 40) return res.status(400).json({ error: 'Name must be 1–40 chars' });
-  if (!Array.isArray(capabilities) || capabilities.length === 0 || capabilities.length > 5) return res.status(400).json({ error: 'capabilities must be a non-empty array of max 5 items' });
-  const invalidCaps = capabilities.filter(c => !ALLOWED_CAPS.has(c));
-  if (invalidCaps.length) return res.status(400).json({ error: `Unknown capabilities: ${invalidCaps.join(', ')}. Allowed: ${[...ALLOWED_CAPS].join(', ')}` });
-  if (contact !== undefined && contact !== null && contact !== '') {
-    if (typeof contact !== 'string' || contact.length > 200) return res.status(400).json({ error: 'contact must be a string under 200 chars' });
+  if (!/^[0-9a-fA-F]{130}$/.test(signature)) return res.status(400).json({ error: 'Invalid signature (must be 130-char RSV hex)' });
+  if (typeof name !== 'string' || !name.trim() || name.length > 40) return res.status(400).json({ error: 'name must be 1–40 chars' });
+  if (!Array.isArray(capabilities) || capabilities.length === 0 || capabilities.length > 5) return res.status(400).json({ error: 'capabilities: non-empty array, max 5' });
+  const badCaps = capabilities.filter(c => !ALLOWED_CAPS.has(c));
+  if (badCaps.length) return res.status(400).json({ error: `Unknown capabilities: ${badCaps.join(', ')}. Allowed: ${[...ALLOWED_CAPS].join(', ')}` });
+  if (contact) {
+    if (typeof contact !== 'string' || contact.length > 200) return res.status(400).json({ error: 'contact: string max 200 chars' });
     try { new URL(contact); } catch { return res.status(400).json({ error: 'contact must be a valid URL' }); }
   }
-  if (bio !== undefined && bio !== null && bio !== '') {
-    if (typeof bio !== 'string' || bio.length > 160) return res.status(400).json({ error: 'bio must be a string under 160 chars' });
-  }
+  if (bio && (typeof bio !== 'string' || bio.length > 160)) return res.status(400).json({ error: 'bio: string max 160 chars' });
+  if (pricing && (typeof pricing !== 'string' || pricing.length > 40)) return res.status(400).json({ error: 'pricing: string max 40 chars' });
 
   const address = rawAddr.startsWith('ST') ? 'SP' + rawAddr.slice(2) : rawAddr;
 
-  // Verify signature
   if (!verifyNonceSignature(address, signature)) {
     return res.status(401).json({
       error: 'Signature invalid or nonce expired',
-      hint: 'Nonce expires every 10 minutes. bucket = Math.floor(Date.now() / 600_000); nonce = `EaglesNest:${address}:${bucket}`; sign_hash = sha256(nonce); signature = signMessageHashRsv(privateKey, sign_hash)',
+      hint: 'bucket=Math.floor(Date.now()/600_000); nonce=`EaglesNest:${address}:${bucket}`; sign_hash=sha256(nonce); sig=signMessageHashRsv(key,sign_hash)',
     });
   }
 
-  // Verify Eagle hold (required for write access)
-  let token_ids;
-  try { token_ids = await fetchEagleHoldings(address); } catch (e) { return res.status(502).json({ error: 'Eagle hold check failed', detail: e.message }); }
-  if (token_ids.length === 0) {
-    return res.status(403).json({ error: 'Address does not hold an Early Eagle. Only Eagle holders can register.' });
+  // Parallel eligibility check: Eagle hold + AIBTC Genesis
+  const [eagleResult, aibtcResult] = await Promise.allSettled([
+    fetchEagleHoldings(address),
+    fetchAibtcGenesis(address),
+  ]);
+
+  const token_ids = eagleResult.status === 'fulfilled' ? eagleResult.value : [];
+  const aibtc = aibtcResult.status === 'fulfilled' ? aibtcResult.value : { is_genesis: false };
+  const isEagle   = token_ids.length > 0;
+  const isGenesis = aibtc.is_genesis;
+
+  if (!isEagle && !isGenesis) {
+    return res.status(403).json({
+      error: 'Not eligible. Requires an Early Eagle NFT OR AIBTC Genesis agent status (Level ≥ 2 + ERC-8004 identity).',
+      eagle_check:  eagleResult.status === 'rejected' ? 'error' : (isEagle ? 'pass' : 'no_eagle'),
+      aibtc_check:  aibtcResult.status === 'rejected' ? 'error' : (isGenesis ? 'pass' : (aibtc.aibtc_agent_id ? 'level_too_low' : 'not_found')),
+    });
   }
 
-  // Fetch tier for lowest token_id (primary Eagle)
-  let primary_tier = 4;
-  let primary_tier_name = 'Common';
-  let primary_token_id = Math.min(...token_ids);
-  try {
-    const tierData = await fetchTier(primary_token_id);
-    if (tierData) { primary_tier = tierData.tier; primary_tier_name = tierData.tier_name; }
-  } catch { /* use defaults */ }
+  // Fetch tier for primary Eagle (if holder)
+  let primary_token_id = null, primary_tier = null, primary_tier_name = null;
+  if (isEagle) {
+    primary_token_id = Math.min(...token_ids);
+    try {
+      const tierData = await fetchTier(primary_token_id);
+      if (tierData) { primary_tier = tierData.tier; primary_tier_name = tierData.tier_name; }
+      else { primary_tier = 4; primary_tier_name = 'Common'; }
+    } catch { primary_tier = 4; primary_tier_name = 'Common'; }
+  }
 
   const now = new Date().toISOString();
   const kv = getKv();
   const registry = await readRegistry(kv);
-
-  const isUpdate = !!registry[address];
   const existing = registry[address] || {};
+  const isUpdate = !!registry[address];
 
   const agent = {
     address,
     name: name.trim(),
     capabilities: capabilities.map(c => c.toLowerCase()),
-    contact: contact?.trim() || null,
-    bio: bio?.trim() || null,
-    eagle_token_ids: token_ids,
+    contact:  contact?.trim()  || null,
+    bio:      bio?.trim()      || null,
+    pricing:  pricing?.trim()  || null,
+    // Eagle identity
+    eagle:            isEagle,
+    eagle_token_ids:  isEagle ? token_ids : [],
     primary_token_id,
-    tier_rank: primary_tier,
-    tier_name: primary_tier_name,
-    registered_at: existing.registered_at || now,
-    updated_at: now,
+    tier_rank:        primary_tier,
+    tier_name:        primary_tier_name,
+    // AIBTC identity (enriched for both Eagle holders + AIBTC-only agents)
+    aibtc_agent_id:   aibtc.aibtc_agent_id  || null,
+    aibtc_level:      aibtc.level           || null,
+    aibtc_level_name: aibtc.level_name      || null,
+    display_name:     aibtc.display_name    || null,
+    bns_name:         aibtc.bns_name        || null,
+    // Liveness (preserve existing)
+    last_seen:        existing.last_seen    || null,
+    // Meta
+    registered_at:    existing.registered_at || now,
+    updated_at:       now,
   };
 
   registry[address] = agent;
@@ -254,7 +464,7 @@ async function handlePost(req, res) {
   return res.status(200).json({
     ok: true,
     action: isUpdate ? 'updated' : 'registered',
-    agent,
+    agent: { ...agent, liveness: livenessStatus(agent.last_seen) },
   });
 }
 
@@ -262,7 +472,12 @@ async function handlePost(req, res) {
 module.exports = async function handler(req, res) {
   Object.entries(CORS).forEach(([k, v]) => res.setHeader(k, v));
   if (req.method === 'OPTIONS') return res.status(204).end();
-  if (req.method === 'GET') return handleGet(req, res);
+
+  const path = (req.url || '').split('?')[0];
+
+  if (path.includes('/registry/pulse'))  return handlePulse(req, res);
+  if (path.includes('/registry/card'))   return handleAgentCard(req, res);
+  if (req.method === 'GET')  return handleGet(req, res);
   if (req.method === 'POST') return handlePost(req, res);
   return res.status(405).json({ error: 'Method not allowed' });
 };

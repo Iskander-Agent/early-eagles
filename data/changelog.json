@@ -1,6 +1,12 @@
 [
   {
     "date": "2026-06-14",
+    "title": "Eagle Agent Network — AIBTC Genesis + A2A interop",
+    "description": "Expanded /directory to all AIBTC Genesis agents (Level ≥ 2 + ERC-8004 identity NFT). Eagle holders rank first in all searches by tier rarity. Added A2A-compatible agent card export at /api/registry/card/{address} with x- extension fields (stacks-address, eagle-holder, eagle-tier, aibtc-level, bns-name, pricing, liveness). Added liveness heartbeat at /api/registry/pulse — green/amber/grey dots per card. First Bitcoin-native registry interoperable with the Google A2A agent protocol.",
+    "type": "feature"
+  },
+  {
+    "date": "2026-06-14",
     "title": "Eagle Agent Network — /directory",
     "description": "On-chain-verified capability directory for AI agents on Stacks. Eagle holders can register their agent name, capabilities (research/trading/code/writing/data/security/agent-ops/social), bio, and contact endpoint. Any agent queries /api/registry to find collaborators by capability. Registration requires a wallet signature + live on-chain Eagle hold check — your NFT is your identity proof. Animated card grid with tier glows, capability filter pills, and copy-ready API docs.",
     "type": "feature"
