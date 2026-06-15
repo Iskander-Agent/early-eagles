@@ -44,6 +44,8 @@ const IDENTITY_REGISTRY = 'SP1NMR7MY0TJ1QA7WQBZ6504KC79PZNTRQH4YGFJD.identity-re
 const ADMIN_ADDRESS     = 'SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2';
 const NFT_CONTRACT      = 'early-eagles-v2';
 const KV_KEY            = 'eagle-registry:v2';   // v2 — new schema
+const TASKS_KV_KEY      = 'eagle-tasks:v1';
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
 const TIER_NAMES        = ['Legendary', 'Epic', 'Rare', 'Uncommon', 'Common'];
 
 const ALLOWED_CAPS = new Set([
@@ -183,6 +185,15 @@ async function readRegistry(kv) {
 async function writeRegistry(kv, data) {
   if (!kv) return;
   await kv.set(KV_KEY, data);
+}
+
+async function readTasks(kv) {
+  if (!kv) return {};
+  try { return (await kv.get(TASKS_KV_KEY)) || {}; } catch { return {}; }
+}
+async function writeTasks(kv, data) {
+  if (!kv) return;
+  await kv.set(TASKS_KV_KEY, data);
 }
 
 // ── Liveness helper ───────────────────────────────────────────────────────────
@@ -468,6 +479,73 @@ async function handlePost(req, res) {
   });
 }
 
+// ── GET /api/tasks ─────────────────────────────────────────────────────────────
+async function handleTasksGet(req, res) {
+  const ip = req.headers['x-forwarded-for'] || 'unknown';
+  if (!rateOk(ip + ':tasks-get', 60)) return res.status(429).json({ error: 'Rate limit exceeded' });
+  const { status: sf, creator, claimer } = req.query || {};
+  const kv = getKv();
+  let tasks = Object.values(await readTasks(kv));
+  const norm = a => (a && a.startsWith('ST') ? 'SP' + a.slice(2) : a);
+  if (sf)      tasks = tasks.filter(t => t.status === sf);
+  if (creator) tasks = tasks.filter(t => t.creator === norm(creator));
+  if (claimer) tasks = tasks.filter(t => t.claimer === norm(claimer));
+  tasks.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  res.setHeader('Cache-Control', 's-maxage=10, stale-while-revalidate=30');
+  return res.status(200).json({ total: tasks.length, tasks });
+}
+
+// ── POST /api/tasks/create ────────────────────────────────────────────────────
+async function handleTasksCreate(req, res) {
+  const ip = req.headers['x-forwarded-for'] || 'unknown';
+  if (!rateOk(ip + ':tasks-create', 5, 3_600_000)) return res.status(429).json({ error: 'Rate limit: 5 tasks/hour per IP' });
+  const { address: rawAddr, title, description, reward, signature } = req.body || {};
+  if (!rawAddr || !title || !signature) return res.status(400).json({ error: 'Missing: address, title, signature' });
+  if (!/^S[PMTN][A-Z0-9]{38,41}$/.test(rawAddr)) return res.status(400).json({ error: 'Invalid Stacks address' });
+  if (!/^[0-9a-fA-F]{130}$/.test(signature)) return res.status(400).json({ error: 'Invalid signature (130-char RSV hex)' });
+  if (typeof title !== 'string' || !title.trim() || title.length > 120) return res.status(400).json({ error: 'title: 1–120 chars' });
+  if (description && (typeof description !== 'string' || description.length > 500)) return res.status(400).json({ error: 'description: max 500 chars' });
+  if (reward && (typeof reward !== 'string' || reward.length > 60)) return res.status(400).json({ error: 'reward: max 60 chars' });
+  const address = rawAddr.startsWith('ST') ? 'SP' + rawAddr.slice(2) : rawAddr;
+  if (!verifyNonceSignature(address, signature)) return res.status(401).json({ error: 'Signature invalid or nonce expired' });
+  let tokens;
+  try { tokens = await fetchEagleHoldings(address); } catch { return res.status(502).json({ error: 'Eagle check failed — retry' }); }
+  if (!tokens.length) return res.status(403).json({ error: 'Early Eagle NFT required to post tasks' });
+  const kv = getKv();
+  const tasks = await readTasks(kv);
+  const id = uid();
+  tasks[id] = { id, title: title.trim(), description: description?.trim() || null, reward: reward?.trim() || null,
+    creator: address, status: 'open', claimer: null, created_at: new Date().toISOString(), claimed_at: null };
+  await writeTasks(kv, tasks);
+  return res.status(201).json({ ok: true, task: tasks[id] });
+}
+
+// ── POST /api/tasks/claim ─────────────────────────────────────────────────────
+async function handleTasksClaim(req, res) {
+  const ip = req.headers['x-forwarded-for'] || 'unknown';
+  if (!rateOk(ip + ':tasks-claim', 10, 3_600_000)) return res.status(429).json({ error: 'Rate limit: 10 claims/hour per IP' });
+  const { address: rawAddr, task_id, signature } = req.body || {};
+  if (!rawAddr || !task_id || !signature) return res.status(400).json({ error: 'Missing: address, task_id, signature' });
+  if (!/^S[PMTN][A-Z0-9]{38,41}$/.test(rawAddr)) return res.status(400).json({ error: 'Invalid Stacks address' });
+  if (!/^[0-9a-fA-F]{130}$/.test(signature)) return res.status(400).json({ error: 'Invalid signature (130-char RSV hex)' });
+  const address = rawAddr.startsWith('ST') ? 'SP' + rawAddr.slice(2) : rawAddr;
+  if (!verifyNonceSignature(address, signature)) return res.status(401).json({ error: 'Signature invalid or nonce expired' });
+  let tokens;
+  try { tokens = await fetchEagleHoldings(address); } catch { return res.status(502).json({ error: 'Eagle check failed — retry' }); }
+  if (!tokens.length) return res.status(403).json({ error: 'Early Eagle NFT required to claim tasks' });
+  const kv = getKv();
+  const tasks = await readTasks(kv);
+  const task = tasks[task_id];
+  if (!task) return res.status(404).json({ error: 'Task not found' });
+  if (task.status !== 'open') return res.status(409).json({ error: `Task is already ${task.status}` });
+  if (task.creator === address) return res.status(400).json({ error: 'Cannot claim your own task' });
+  task.status = 'claimed';
+  task.claimer = address;
+  task.claimed_at = new Date().toISOString();
+  await writeTasks(kv, tasks);
+  return res.status(200).json({ ok: true, task });
+}
+
 // ── Main dispatcher ───────────────────────────────────────────────────────────
 module.exports = async function handler(req, res) {
   Object.entries(CORS).forEach(([k, v]) => res.setHeader(k, v));
@@ -477,6 +555,9 @@ module.exports = async function handler(req, res) {
 
   if (path.includes('/registry/pulse'))  return handlePulse(req, res);
   if (path.includes('/registry/card'))   return handleAgentCard(req, res);
+  if (path.includes('/tasks/create') && req.method === 'POST') return handleTasksCreate(req, res);
+  if (path.includes('/tasks/claim')  && req.method === 'POST') return handleTasksClaim(req, res);
+  if (path.includes('/tasks'))           return handleTasksGet(req, res);
   if (req.method === 'GET')  return handleGet(req, res);
   if (req.method === 'POST') return handlePost(req, res);
   return res.status(405).json({ error: 'Method not allowed' });

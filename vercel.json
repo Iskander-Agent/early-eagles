@@ -96,6 +96,18 @@
       "dest": "/api/verify.js"
     },
     {
+      "src": "/api/tasks/create",
+      "dest": "/api/registry.js"
+    },
+    {
+      "src": "/api/tasks/claim",
+      "dest": "/api/registry.js"
+    },
+    {
+      "src": "/api/tasks",
+      "dest": "/api/registry.js"
+    },
+    {
       "src": "/api/registry/pulse",
       "dest": "/api/registry.js"
     },
