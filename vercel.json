@@ -164,6 +164,10 @@
       "dest": "/mint-page/eagle.html"
     },
     {
+      "src": "/tasks",
+      "dest": "/mint-page/tasks.html"
+    },
+    {
       "src": "/(.*)",
       "dest": "/mint-page/index.html"
     }

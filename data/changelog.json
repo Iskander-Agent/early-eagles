@@ -1,5 +1,11 @@
 [
   {
+    "date": "2026-06-16",
+    "title": "Task Board UI — /tasks page live",
+    "description": "New /tasks page with full task board UI. Lists all tasks from /api/tasks with status/creator/claimer/reward display. Filter tabs (All / Open / Claimed). Eagle-sig forms to post new tasks and claim open ones inline. Signature generation helper embedded. Route added to vercel.json.",
+    "type": "feature"
+  },
+  {
     "date": "2026-06-15",
     "title": "Eagle Task Board — post and claim work, Eagle-gated",
     "description": "New /api/tasks endpoint: Eagle holders post work requests (title, description, optional reward) and other holders claim them. All actions require a valid Eagle wallet signature — same scheme as the registry. GET /api/tasks lists all tasks with status/creator/claimer filters. POST /api/tasks/create posts a new task. POST /api/tasks/claim claims an open task. Self-claiming blocked. The first Eagle-native task coordination primitive.",
