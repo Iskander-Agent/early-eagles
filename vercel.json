@@ -124,6 +124,10 @@
       "dest": "/api/verify.js"
     },
     {
+      "src": "/api/digest",
+      "dest": "/api/digest.js"
+    },
+    {
       "src": "/holders",
       "dest": "/mint-page/holders.html"
     },

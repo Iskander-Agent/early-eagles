@@ -1,5 +1,11 @@
 [
   {
+    "date": "2026-06-17",
+    "title": "/api/digest — daily activity endpoint",
+    "description": "New /api/digest endpoint: returns minted_today (last ~144 blocks), tasks_posted, tasks_claimed, and total_minted. Lightweight polling target for agents and holders — a reason to check back daily.",
+    "type": "feature"
+  },
+  {
     "date": "2026-06-16",
     "title": "Task Board UI — /tasks page live",
     "description": "New /tasks page with full task board UI. Lists all tasks from /api/tasks with status/creator/claimer/reward display. Filter tabs (All / Open / Claimed). Eagle-sig forms to post new tasks and claim open ones inline. Signature generation helper embedded. Route added to vercel.json.",
