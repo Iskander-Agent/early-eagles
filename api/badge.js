@@ -57,7 +57,22 @@ function stxToBtcAddress(stxAddr) {
 const { fetchCallReadOnlyFunction, cvToValue } = require('@stacks/transactions');
 const { STACKS_MAINNET } = require('@stacks/network');
 
+const AIBTC_API = 'https://aibtc.com/api/agents';
+
 function abort(ms) { const c = new AbortController(); setTimeout(() => c.abort(), ms); return c.signal; }
+
+// Fetch AIBTC agent level for address — returns e.g. "Genesis 2", or null on any failure
+async function getAgentLevel(address) {
+  try {
+    const r = await fetch(`${AIBTC_API}/${address}`, { signal: abort(4000) });
+    if (!r.ok) return null;
+    const data = await r.json();
+    const name = data?.levelName || data?.trust?.levelName;
+    const num  = data?.level     ?? data?.trust?.level;
+    if (!name) return null;
+    return num != null ? `${name} ${num}` : name;
+  } catch { return null; }
+}
 
 // Decode (response (optional (principal))) hex → full SP address or null
 function decodeOwnerFull(hexResult) {
@@ -153,7 +168,7 @@ async function getTokenMeta(id) {
 
 /* ── SVG builder ──────────────────────────────────────────────────────────── */
 
-function buildBadge({ tokenId, count, tier, agentName, alias, address, btcAddress, profileUrl }) {
+function buildBadge({ tokenId, count, tier, agentName, alias, address, btcAddress, profileUrl, agentLevel }) {
   const t = TIERS[tier] ?? TIERS[4];
   // Full-width two-row header — no vertical column split.
   // Row A: icon + title (left)  |  tier pill (right)
@@ -231,7 +246,7 @@ function buildBadge({ tokenId, count, tier, agentName, alias, address, btcAddres
     <text x="${PILL_CX}" y="${7 + PILL_H / 2 + 3}"
           font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
           font-size="7.5" font-weight="800" fill="${t.text}" text-anchor="middle"
-          letter-spacing="1.2">${esc(t.name.toUpperCase())}</text>
+          letter-spacing="1.2">${esc((agentLevel || t.name).toUpperCase())}</text>
 
     <!-- ── Row B: name (left)  |  ✓ · View Profile → (right cluster) ─── -->
 
@@ -334,10 +349,13 @@ module.exports = async function handler(req, res) {
     return res.status(404).send(errorSVG('No Early Eagles held', 404));
   }
 
-  // Fetch metadata for the first (lowest id) token
+  // Fetch metadata + AIBTC level in parallel
   const primaryId = tokenIds[0];
   let tier = 4, agentName = null;
-  const meta = await getTokenMeta(primaryId);
+  const [meta, agentLevel] = await Promise.all([
+    getTokenMeta(primaryId),
+    getAgentLevel(address),   // null on any error → falls back to tier name in SVG
+  ]);
   if (meta?.properties) {
     tier = meta.properties.tier ?? 4;
     agentName = meta.properties.display_name || null;
@@ -345,7 +363,7 @@ module.exports = async function handler(req, res) {
 
   const btcAddress = btcOverride || stxToBtcAddress(address);
   const profileUrl = `${BASE_URL}/eagle/${primaryId}`;
-  const svg = buildBadge({ tokenId: primaryId, count: tokenIds.length, tier, agentName, alias, address, btcAddress, profileUrl });
+  const svg = buildBadge({ tokenId: primaryId, count: tokenIds.length, tier, agentName, alias, address, btcAddress, profileUrl, agentLevel });
 
   res.setHeader('Cache-Control', 'public, max-age=3600, stale-while-revalidate=600');
   return res.status(200).send(svg);

@@ -1,6 +1,12 @@
 [
   {
     "date": "2026-06-18",
+    "title": "Badge — AIBTC level pill",
+    "description": "Badge pill now shows AIBTC agent level (e.g. 'GENESIS 2') fetched live from aibtc.com/api/agents. Color stays tier-derived. Falls back to rarity name on API failure.",
+    "type": "feature"
+  },
+  {
+    "date": "2026-06-18",
     "title": "A2A Agent Card — /.well-known/agent.json",
     "description": "Static A2A-spec agent card at /.well-known/agent.json. Serializes Eagles Agent Network capabilities: genesis verification, holder authentication, task registry, marketplace, badge, attestation, and network digest. Static file — no function needed, no Vercel cap impact.",
     "type": "feature"
