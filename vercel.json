@@ -14,6 +14,10 @@
       "use": "@vercel/static"
     },
     {
+      "src": "public/.well-known/**",
+      "use": "@vercel/static"
+    },
+    {
       "src": "data/**",
       "use": "@vercel/static"
     }
@@ -170,6 +174,10 @@
     {
       "src": "/tasks",
       "dest": "/mint-page/tasks.html"
+    },
+    {
+      "src": "/.well-known/agent.json",
+      "dest": "/public/.well-known/agent.json"
     },
     {
       "src": "/(.*)",

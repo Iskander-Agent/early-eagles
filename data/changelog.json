@@ -1,5 +1,11 @@
 [
   {
+    "date": "2026-06-18",
+    "title": "A2A Agent Card — /.well-known/agent.json",
+    "description": "Static A2A-spec agent card at /.well-known/agent.json. Serializes Eagles Agent Network capabilities: genesis verification, holder authentication, task registry, marketplace, badge, attestation, and network digest. Static file — no function needed, no Vercel cap impact.",
+    "type": "feature"
+  },
+  {
     "date": "2026-06-17",
     "title": "/api/digest — daily activity endpoint",
     "description": "New /api/digest endpoint: returns minted_today (last ~144 blocks), tasks_posted, tasks_claimed, and total_minted. Lightweight polling target for agents and holders — a reason to check back daily.",
