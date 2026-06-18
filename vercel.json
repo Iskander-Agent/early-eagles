@@ -29,7 +29,7 @@
     },
     {
       "src": "/api/shuffle",
-      "dest": "/api/utilities.js"
+      "dest": "/api/verify.js"
     },
     {
       "src": "/api/mint",
@@ -57,7 +57,7 @@
     },
     {
       "src": "/api/utilities",
-      "dest": "/api/utilities.js"
+      "dest": "/api/verify.js"
     },
     {
       "src": "/api/genesis",
@@ -129,7 +129,7 @@
     },
     {
       "src": "/api/digest",
-      "dest": "/api/digest.js"
+      "dest": "/api/gallery.js"
     },
     {
       "src": "/holders",

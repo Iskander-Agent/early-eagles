@@ -441,6 +441,47 @@ async function handleAttest(req, res) {
   });
 }
 
+// ── /api/utilities + /api/shuffle (merged from utilities.js) ─────────────────
+
+const _fs   = require('fs');
+const _path = require('path');
+
+function handleShuffle(req, res) {
+  res.setHeader('Cache-Control', 'public, max-age=3600');
+  return res.status(200).json({
+    total: 420, method: 'random-at-mint',
+    note: 'Tier and color are randomly drawn from remaining pool at mint time using crypto.randomInt.',
+    distribution: {
+      legendary: { count: 10,  colors: 10, note: '10 unique 1-of-1 colors' },
+      epic:      { count: 60,  colors: 14, note: '8 hue x6 + 6 FX x2' },
+      rare:      { count: 80,  colors: 14, note: '8 hue x9 + Pearl(2) Shadow(2) Neg(1) Thm(1) XR(1) IR(1)' },
+      uncommon:  { count: 150, colors: 12, note: '12-13 of each color' },
+      common:    { count: 120, colors: 12, note: '10 of each color' },
+    },
+  });
+}
+
+function handleUtilities(req, res) {
+  let utilities;
+  try {
+    utilities = JSON.parse(_fs.readFileSync(_path.join(__dirname, '..', 'data', 'utilities.json'), 'utf8'));
+  } catch (err) {
+    return res.status(500).json({ error: 'Could not load utilities data' });
+  }
+  const { status } = req.query;
+  const filtered  = status ? utilities.filter(u => u.status === status) : utilities;
+  const live      = utilities.filter(u => u.status === 'live');
+  const building  = utilities.filter(u => u.status === 'building');
+  const planned   = utilities.filter(u => u.status === 'planned');
+  const agentSummary = live.length > 0
+    ? `Holding an Early Eagle currently unlocks: ${live.map(u => u.name).join(', ')}. Coming soon: ${building.map(u => u.name).join(', ')}.`
+    : 'Utility integrations are in progress. Check back soon.';
+  res.setHeader('Cache-Control', 's-maxage=120, stale-while-revalidate=300');
+  return res.status(200).json({ total: utilities.length,
+    counts: { live: live.length, building: building.length, planned: planned.length },
+    agent_summary: agentSummary, utilities: filtered });
+}
+
 // ── Main dispatcher ───────────────────────────────────────────────────────────
 
 module.exports = async function handler(req, res) {
@@ -458,6 +499,8 @@ module.exports = async function handler(req, res) {
   if (path.endsWith('/holder'))       return handleHolder(req, res);
   if (path.endsWith('/eligibility'))  return handleEligibility(req, res);
   if (path.endsWith('/recent-mints')) return handleRecentMints(req, res);
+  if (path.endsWith('/utilities'))    return handleUtilities(req, res);
+  if (path.endsWith('/shuffle'))      return handleShuffle(req, res);
 
   return res.status(404).json({ error: 'Not found' });
 };

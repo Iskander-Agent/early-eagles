@@ -1,11 +1,10 @@
 /**
- * Early Eagles — GET /api/gallery
+ * Early Eagles — GET /api/gallery  +  GET /api/digest  (merged to stay under Vercel 12-fn limit)
  *
- * Returns pre-built gallery data: renderer segments + all eagle data.
- * Vercel edge-caches this for 60s so users get instant gallery loads.
- * Server-side fetches from Hiro API — no rate limit issues for clients.
+ * /api/gallery  — Returns pre-built gallery data: renderer segments + all eagle data.
+ * /api/digest   — Last-24h activity summary: new mints + task board movement.
  *
- * Caching layers:
+ * Caching layers (gallery):
  *  1. Vercel edge cache — 60s fresh, 5min stale-while-revalidate
  *  2. KV persistent cache — survives cold starts; TTL 10min
  *  3. In-memory cache — fastest path for warm instances
@@ -109,10 +108,108 @@ function decodeOwner(hexResult) {
 let _segCache = null;
 let _eagleCache = { eagles: [], totalMinted: 0, builtAt: 0 };
 
+// ── /api/digest handler (merged from digest.js) ───────────────────────────────
+
+const TASKS_KEY      = 'eagle-tasks:v1';
+const BLOCKS_PER_DAY = 144; // ~1 block/10min × 144 ≈ 24h
+
+function abortDigest(ms) {
+  const c = new AbortController(); setTimeout(() => c.abort(), ms); return c.signal;
+}
+
+async function fetchBlockHeight() {
+  const r = await fetch(`${STACKS_API}/v2/info`, { signal: abortDigest(5000) });
+  if (!r.ok) throw new Error(`Hiro /v2/info ${r.status}`);
+  const d = await r.json();
+  return d.stacks_tip_height ?? d.burn_block_height ?? null;
+}
+
+async function fetchLastTokenId() {
+  const { hexToCV, cvToJSON } = await import('@stacks/transactions');
+  const r = await fetch(
+    `${STACKS_API}/v2/contracts/call-read/${ADMIN_ADDRESS}/${NFT_CONTRACT}/get-last-token-id`,
+    { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sender: ADMIN_ADDRESS, arguments: [] }), signal: abortDigest(6000) }
+  );
+  if (!r.ok) throw new Error(`contract read ${r.status}`);
+  const d = await r.json();
+  if (!d.okay) throw new Error('contract read failed');
+  const cv = cvToJSON(hexToCV(d.result));
+  const lastId = parseInt(cv?.value?.value ?? '-1', 10);
+  return { lastId: isNaN(lastId) || lastId < 0 ? -1 : lastId,
+           totalMinted: isNaN(lastId) || lastId < 0 ? 0 : lastId + 1 };
+}
+
+async function fetchMintedAtBlock(tokenId) {
+  const { hexToCV, cvToJSON } = await import('@stacks/transactions');
+  const arg = '0x01' + tokenId.toString(16).padStart(32, '0');
+  const r = await fetch(
+    `${STACKS_API}/v2/contracts/call-read/${ADMIN_ADDRESS}/${NFT_CONTRACT}/get-traits`,
+    { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sender: ADMIN_ADDRESS, arguments: [arg] }), signal: abortDigest(6000) }
+  );
+  if (!r.ok) return null;
+  const d = await r.json();
+  if (!d.okay || d.result === '0x09') return null;
+  const cv = cvToJSON(hexToCV(d.result));
+  const raw = cv?.value?.value?.['minted-at']?.value;
+  return raw ? parseInt(raw, 10) : null;
+}
+
+async function countRecentMints(lastId, blockThreshold) {
+  if (lastId < 0) return 0;
+  let count = 0;
+  for (let i = lastId; i >= 0; i -= 5) {
+    const batch = [];
+    for (let j = i; j >= 0 && j > i - 5; j--) batch.push(j);
+    const results = await Promise.all(batch.map(fetchMintedAtBlock));
+    let hitOld = false;
+    for (const mintedAt of results) {
+      if (mintedAt === null) continue;
+      mintedAt >= blockThreshold ? count++ : (hitOld = true);
+    }
+    if (hitOld && results.every(v => v === null || v < blockThreshold)) break;
+  }
+  return count;
+}
+
+async function handleDigest(req, res) {
+  res.setHeader('Cache-Control', 'public, s-maxage=120, stale-while-revalidate=300');
+  try {
+    const [supplyResult, heightResult] = await Promise.allSettled([
+      fetchLastTokenId(), fetchBlockHeight(),
+    ]);
+    const { lastId, totalMinted } = supplyResult.status === 'fulfilled'
+      ? supplyResult.value : { lastId: -1, totalMinted: 0 };
+    const currentHeight = heightResult.status === 'fulfilled' ? heightResult.value : null;
+    const blockThreshold = currentHeight !== null ? currentHeight - BLOCKS_PER_DAY : null;
+    const mintedToday = blockThreshold !== null && lastId >= 0
+      ? await countRecentMints(lastId, blockThreshold) : 0;
+
+    const kv = getKv();
+    const tasks = kv ? Object.values((await kv.get(TASKS_KEY).catch(() => null)) || {}) : [];
+    const cutoff = Date.now() - 86_400_000;
+    return res.status(200).json({
+      minted_today:  mintedToday,
+      tasks_posted:  tasks.filter(t => t.created_at && new Date(t.created_at).getTime() >= cutoff).length,
+      tasks_claimed: tasks.filter(t => t.claimed_at  && new Date(t.claimed_at).getTime()  >= cutoff).length,
+      total_minted:  totalMinted,
+      last_updated:  new Date().toISOString(),
+    });
+  } catch (e) {
+    return res.status(500).json({ error: 'digest failed', detail: e.message });
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 module.exports = async function handler(req, res) {
   Object.entries(CORS).forEach(([k, v]) => res.setHeader(k, v));
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' });
+
+  const urlPath = (req.url || '').split('?')[0];
+  if (urlPath.endsWith('/digest')) return handleDigest(req, res);
 
   // Edge cache: 60s fresh, 5min stale-while-revalidate
   res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=300');
