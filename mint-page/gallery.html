@@ -71,29 +71,6 @@ h1, h2, h3, h4 { font-family: 'Rajdhani', sans-serif; font-weight: 700; letter-s
 .btn-ghost:hover { background: var(--gold-dim); transform: translateY(-2px); }
 .btn-sm { padding: 8px 16px; font-size: 12px; }
 
-/* ── NAV ── */
-nav {
-  position: sticky; top: 0; z-index: 100;
-  background: rgba(13,17,23,0.92); backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border-sub);
-  padding: 14px 0;
-}
-.nav-inner { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-.nav-brand {
-  font-family: 'Rajdhani', sans-serif; font-weight: 700;
-  font-size: 20px; color: var(--gold); text-decoration: none;
-  display: flex; align-items: center; gap: 8px;
-}
-.nav-links { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.nav-links a {
-  font-family: 'Rajdhani', sans-serif; font-weight: 500; font-size: 13px;
-  letter-spacing: 0.05em; text-transform: uppercase;
-  color: var(--text-muted); text-decoration: none;
-  padding: 6px 12px; border-radius: 6px; transition: all 0.2s ease;
-}
-.nav-links a:hover { color: var(--gold); background: var(--gold-dim); }
-.nav-links a.active { color: var(--gold); }
-.nav-right { display: flex; align-items: center; gap: 10px; }
 
 /* ── Page header ── */
 .page-header {
@@ -338,22 +315,13 @@ nav {
 
 @media (max-width: 640px) {
   .filter-bar { top: 52px; }
-  nav { padding: 10px 0; }
 }
 </style>
 </head>
 <body>
 
-<!-- ── Navigation ── -->
-<nav>
-  <div class="container nav-inner">
-    <a class="nav-brand" href="/">🦅 Early Eagles</a>
-    <div class="nav-links"><a href="/gallery" class="active">Gallery</a><a href="/market">Market</a><a href="/holders">Holders</a><a href="/directory">Network</a><a href="/log">Log</a><a href="/whitepaper">Whitepaper</a></div>
-      <div class="nav-right">
-      <a class="btn btn-primary btn-sm" href="/#mint">Mint Your Eagle →</a>
-    </div>
-  </div>
-</nav>
+
+
 
 <!-- ── Page Header ── -->
 <div class="page-header">
@@ -719,8 +687,9 @@ function escHtml(str) {
 /* ── Init ── */
 (async function init() {
   await loadGallery(false);
-  
+
 })();
 </script>
+<script src="/scripts/navbar.js"></script>
 </body>
 </html>

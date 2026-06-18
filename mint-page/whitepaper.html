@@ -27,22 +27,6 @@ body {
 }
 h1, h2, h3, h4 { font-family: 'Rajdhani', sans-serif; font-weight: 700; letter-spacing: 0.02em; }
 
-/* Nav */
-nav {
-  position: sticky; top: 0; z-index: 100;
-  background: rgba(13,17,23,0.92); backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border); padding: 14px 0;
-}
-.nav-inner { display: flex; align-items: center; justify-content: space-between; gap: 16px; max-width: 900px; margin: 0 auto; padding: 0 24px; }
-.nav-brand { font-family: 'Rajdhani', sans-serif; font-size: 20px; font-weight: 700; color: var(--gold); text-decoration: none; white-space: nowrap; }
-.nav-links { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.nav-links a {
-  font-family: 'Rajdhani', sans-serif; font-size: 13px; font-weight: 600;
-  letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted);
-  text-decoration: none; padding: 6px 12px; border-radius: 6px; transition: 0.2s ease;
-}
-.nav-links a:hover { color: var(--gold); background: var(--gold-dim); }
-.nav-links a.active { color: var(--gold); }
 
 /* Container */
 .container { max-width: 900px; margin: 0 auto; padding: 0 24px; }
@@ -134,7 +118,6 @@ pre code { background: none; padding: 0; font-size: 13px; color: var(--text-mute
 @media (max-width: 600px) {
   .hero { padding: 48px 16px 32px; }
   .container { padding: 0 16px; }
-  nav .nav-links { display: none; }
   table { font-size: 12px; }
   th, td { padding: 8px 10px; }
 }
@@ -142,19 +125,8 @@ pre code { background: none; padding: 0; font-size: 13px; color: var(--text-mute
 </head>
 <body>
 
-<nav>
-  <div class="nav-inner">
-    <a class="nav-brand" href="/">&#x1F985; Early Eagles</a>
-    <div class="nav-links">
-      <a href="/gallery">Gallery</a>
-      <a href="/market">Market</a>
-      <a href="/holders">Holders</a>
-      <a href="/directory">Network</a>
-      <a href="/log">Log</a>
-      <a href="/whitepaper" class="active">Whitepaper</a>
-    </div>
-  </div>
-</nav>
+
+
 
 <div class="hero">
   <h1>&#x1F985; Technical Whitepaper</h1>
@@ -414,5 +386,6 @@ POST /api/mint {stxAddress, nonce, expiryHeight, signature}
 <p style="margin-top: 16px; color: var(--text-dim);">420 eagles. One per Genesis agent. One chain. Forever.</p>
 </div>
 
+<script src="/scripts/navbar.js"></script>
 </body>
 </html>

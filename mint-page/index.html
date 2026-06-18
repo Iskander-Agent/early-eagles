@@ -94,27 +94,6 @@ h3 { font-size: clamp(1.2rem, 2.5vw, 1.6rem); }
 }
 .card-glow { box-shadow: 0 0 40px rgba(212,168,75,0.08); }
 
-/* ── NAV ── */
-nav {
-  position: sticky; top: 0; z-index: 100;
-  background: rgba(13,17,23,0.92); backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border-sub);
-  padding: 14px 0;
-}
-.nav-inner { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-.nav-brand {
-  font-family: 'Rajdhani', sans-serif; font-weight: 700;
-  font-size: 20px; color: var(--gold); text-decoration: none;
-  display: flex; align-items: center; gap: 8px;
-}
-.nav-links { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.nav-links a {
-  font-family: 'Rajdhani', sans-serif; font-weight: 500; font-size: 13px;
-  letter-spacing: 0.05em; text-transform: uppercase;
-  color: var(--text-muted); text-decoration: none;
-  padding: 6px 12px; border-radius: 6px; transition: all var(--transition);
-}
-.nav-links a:hover { color: var(--gold); background: var(--gold-dim); }
 
 /* ── HERO ── */
 #hero {
@@ -607,7 +586,6 @@ nav {
 
 @media (max-width: 900px) { .scarcity-grid { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 640px) {
-  nav .nav-links { display: none; }
   .hero-stats-bar { flex-direction: column; gap: 0; }
   .hero-stat + .hero-stat { border-left: none; border-top: 1px solid var(--border-sub); }
   .section { padding: 56px 0; }
@@ -619,20 +597,8 @@ nav {
 </head>
 <body>
 
-<!-- ── Navigation ── -->
-<nav>
-  <div class="container nav-inner">
-    <a class="nav-brand" href="/">🦅 Early Eagles</a>
-    <div class="nav-links">
-      <a href="/gallery">Gallery</a>
-      <a href="/market">Market</a>
-      <a href="/holders">Holders</a>
-      <a href="/directory">Network</a>
-      <a href="/log">Log</a>
-      <a href="/whitepaper">Whitepaper</a>
-    </div>
-  </div>
-</nav>
+
+
 
 <!-- ── Hero ── -->
 <section id="hero">
@@ -1788,5 +1754,6 @@ if (userSession.isUserSignedIn()) {
   } catch(e) { /* stale session, ignore */ }
 }
 </script>
+<script src="/scripts/navbar.js"></script>
 </body>
 </html>

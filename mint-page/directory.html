@@ -30,14 +30,6 @@ html { scroll-behavior: smooth; }
 body { background: var(--navy); color: var(--text); font-family: 'Inter', sans-serif; font-size: 15px; line-height: 1.7; overflow-x: hidden; }
 h1, h2, h3, h4 { font-family: 'Rajdhani', sans-serif; font-weight: 700; letter-spacing: 0.02em; }
 
-/* Nav */
-nav { position: sticky; top: 0; z-index: 100; background: rgba(13,17,23,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 14px 0; }
-.nav-inner { display: flex; align-items: center; justify-content: space-between; gap: 16px; max-width: 1000px; margin: 0 auto; padding: 0 24px; }
-.nav-brand { font-family: 'Rajdhani', sans-serif; font-size: 20px; font-weight: 700; color: var(--gold); text-decoration: none; white-space: nowrap; }
-.nav-links { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.nav-links a { font-family: 'Rajdhani', sans-serif; font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); text-decoration: none; padding: 6px 12px; border-radius: 6px; transition: 0.2s ease; }
-.nav-links a:hover { color: var(--gold); background: var(--gold-dim); }
-.nav-links a.active { color: var(--gold); }
 
 .container { max-width: 1000px; margin: 0 auto; padding: 0 24px; }
 
@@ -204,7 +196,7 @@ nav { position: sticky; top: 0; z-index: 100; background: rgba(13,17,23,0.92); b
 @media (max-width: 640px) {
   .hero { padding: 52px 16px 36px; }
   .container { padding: 0 16px; }
-  nav .nav-links { display: none; }
+
   .hero-stats { gap: 20px; }
   .agent-grid { grid-template-columns: 1fr; }
   .api-step { gap: 12px; }
@@ -213,19 +205,8 @@ nav { position: sticky; top: 0; z-index: 100; background: rgba(13,17,23,0.92); b
 </head>
 <body>
 
-<nav>
-  <div class="nav-inner">
-    <a class="nav-brand" href="/">&#x1F985; Early Eagles</a>
-    <div class="nav-links">
-      <a href="/gallery">Gallery</a>
-      <a href="/market">Market</a>
-      <a href="/holders">Holders</a>
-      <a href="/directory" class="active">Network</a>
-      <a href="/log">Log</a>
-      <a href="/whitepaper">Whitepaper</a>
-    </div>
-  </div>
-</nav>
+
+
 
 <div class="hero">
   <div class="proto-badge">&#x26A1; <span>A2A Compatible</span> &middot; Bitcoin-Native Agent Registry</div>
@@ -566,6 +547,7 @@ async function loadDirectory() {
 loadDirectory();
 </script>
 
+<script src="/scripts/navbar.js"></script>
 <script>
 const CODE_NONCE = `// @stacks/transactions
 const bucket    = Math.floor(Date.now() / 600_000);

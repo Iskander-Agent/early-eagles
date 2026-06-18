@@ -38,14 +38,6 @@ h1, h2, h3 { font-family: 'Rajdhani', sans-serif; font-weight: 700; letter-spaci
 
 .container { max-width: 960px; margin: 0 auto; padding: 0 20px; }
 
-/* ── Nav ── */
-.nav { border-bottom: 1px solid var(--border-sub); padding: 14px 0; position: sticky; top: 0; z-index: 100; background: rgba(13,17,23,0.95); backdrop-filter: blur(12px); }
-.nav-inner { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-.nav-brand { font-family: 'Rajdhani', sans-serif; font-size: 18px; font-weight: 700; color: var(--gold); text-decoration: none; letter-spacing: 0.04em; }
-.nav-links { display: flex; align-items: center; gap: 16px; }
-.nav-link { color: var(--text-muted); font-size: 13px; text-decoration: none; transition: color .2s; }
-.nav-link:hover, .nav-link.active { color: var(--gold); }
-.nav-right { display: flex; align-items: center; gap: 10px; }
 
 /* ── Buttons ── */
 .btn { display: inline-flex; align-items: center; gap: 6px; font-family: 'Rajdhani', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 0.06em; padding: 7px 16px; border-radius: 6px; border: none; cursor: pointer; transition: all .2s; text-decoration: none; }
@@ -140,25 +132,8 @@ h1, h2, h3 { font-family: 'Rajdhani', sans-serif; font-weight: 700; letter-spaci
 </head>
 <body>
 
-<nav class="nav">
-  <div class="container">
-    <div class="nav-inner">
-      <a href="/" class="nav-brand">🦅 Early Eagles</a>
-      <div class="nav-links">
-        <a href="/gallery" class="nav-link">Gallery</a>
-        <a href="/market" class="nav-link active">Market</a>
-        <a href="/holders" class="nav-link">Holders</a>
-        <a href="/directory" class="nav-link">Network</a>
-        <a href="/log" class="nav-link">Log</a>
-        <a href="/whitepaper" class="nav-link">Whitepaper</a>
-      </div>
-      <div class="nav-right">
-        <span id="wallet-status" class="wallet-status" style="display:none"></span>
-        <button class="btn btn-ghost btn-sm" id="wallet-btn" onclick="walletToggle()">Connect Wallet</button>
-      </div>
-    </div>
-  </div>
-</nav>
+
+
 
 <main>
   <div class="container">
@@ -476,5 +451,7 @@ if (userSession.isUserSignedIn()) {
 
 loadMarket();
 </script>
+<script>window.EE_NAV = { wallet: true };</script>
+<script src="/scripts/navbar.js"></script>
 </body>
 </html>
