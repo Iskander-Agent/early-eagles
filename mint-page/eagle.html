@@ -756,6 +756,7 @@ h1, h2, h3 { font-family: 'Rajdhani', sans-serif; font-weight: 700; letter-spaci
                   <svg id="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                   <span id="copy-label">Copy</span>
                 </button>
+                <a id="holder-profile-link" href="#" style="display:none;font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--tier-text);text-decoration:none;padding:4px 8px;border-radius:6px;background:var(--tier-dim);border:1px solid var(--tier-border);transition:opacity .2s;" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">Profile ↗</a>
               </div>
             </div>
           </div>
@@ -1448,6 +1449,9 @@ async function loadEagle(id) {
   document.getElementById('owner-content').style.display = 'block';
   if (ownerAddr) {
     document.getElementById('owner-addr').textContent = ownerAddr;
+    const profileLink = document.getElementById('holder-profile-link');
+    profileLink.href = `/holder/${ownerAddr}`;
+    profileLink.style.display = 'inline-flex';
   } else {
     document.getElementById('owner-addr').textContent = 'Unknown';
     document.getElementById('copy-addr-btn').style.display = 'none';

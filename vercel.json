@@ -176,6 +176,10 @@
       "dest": "/mint-page/eagle.html"
     },
     {
+      "src": "/holder/([A-Z0-9]+)",
+      "dest": "/mint-page/holder.html"
+    },
+    {
       "src": "/tasks",
       "dest": "/mint-page/tasks.html"
     },
