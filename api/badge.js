@@ -365,6 +365,10 @@ module.exports = async function handler(req, res) {
   const profileUrl = `${BASE_URL}/eagle/${primaryId}`;
   const svg = buildBadge({ tokenId: primaryId, count: tokenIds.length, tier, agentName, alias, address, btcAddress, profileUrl, agentLevel });
 
-  res.setHeader('Cache-Control', 'public, max-age=3600, stale-while-revalidate=600');
+  // If AIBTC level resolved: cache 1h. If fallback (API down): cache 5min so it self-heals quickly.
+  const cacheControl = agentLevel
+    ? 'public, max-age=3600, stale-while-revalidate=600'
+    : 'public, max-age=300, stale-while-revalidate=60';
+  res.setHeader('Cache-Control', cacheControl);
   return res.status(200).send(svg);
 };

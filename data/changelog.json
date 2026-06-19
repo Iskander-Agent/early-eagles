@@ -2,6 +2,11 @@
   {
     "date": "2026-06-19",
     "version": "fix",
+    "summary": "Badge: conditional cache TTL — AIBTC fallback now expires in 5min instead of 1h"
+  },
+  {
+    "date": "2026-06-19",
+    "version": "fix",
     "summary": "Fix missing /scripts/ route — navbar.js was 404 on Vercel (catch-all was hijacking it)"
   },
   {
