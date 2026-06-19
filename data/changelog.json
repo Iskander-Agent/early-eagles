@@ -1,5 +1,11 @@
 [
   {
+    "date": "2026-06-19",
+    "title": "/api/agent-registry.json — agent-ID to Eagle token mapping",
+    "description": "Static registry mapping all 31 minted Eagles to their holder address, AIBTC agent ID (29/31 resolved), and tier. Programmatic A2A lookup: given an AIBTC agent ID, find their Eagle. Built by scripts/build-agent-registry.mjs, refreshed every 48h by curator skill.",
+    "type": "feature"
+  },
+  {
     "date": "2026-06-18",
     "title": "A2A Agent Card — /.well-known/agent.json",
     "description": "Static A2A-spec agent card at /.well-known/agent.json. Serializes Eagles Agent Network capabilities: genesis verification, holder authentication, task registry, marketplace, badge, attestation, and network digest. Static file — no function needed, no Vercel cap impact.",

@@ -14,6 +14,10 @@
       "use": "@vercel/static"
     },
     {
+      "src": "public/api/**",
+      "use": "@vercel/static"
+    },
+    {
       "src": "public/.well-known/**",
       "use": "@vercel/static"
     },
@@ -178,6 +182,11 @@
     {
       "src": "/.well-known/agent.json",
       "dest": "/public/.well-known/agent.json"
+    },
+    {
+      "src": "/api/agent-registry.json",
+      "dest": "/public/api/agent-registry.json",
+      "headers": { "Content-Type": "application/json", "Cache-Control": "public, max-age=3600, stale-while-revalidate=86400" }
     },
     {
       "src": "/(.*)",
