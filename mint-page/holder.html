@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title id="page-title">Early Eagles — Holder Profile</title>
+<meta name="description" id="page-desc" content="Early Eagles holder portrait. Fully on-chain NFT on Stacks.">
+<meta property="og:title" id="og-title" content="Early Eagles — Holder">
+<meta property="og:description" id="og-desc" content="Early Eagles holder portrait. Fully on-chain NFT on Stacks.">
+<meta property="og:image" content="https://early-eagles.vercel.app/og-eagle.png">
+<meta property="og:url" id="og-url" content="https://early-eagles.vercel.app/holder">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Early Eagles">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" id="tw-title" content="Early Eagles">
+<meta name="twitter:description" id="tw-desc" content="Fully on-chain NFT on Stacks.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── Reset & Root ── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --gold:        #d4a84b;
+  --gold-light:  #e8c26a;
+  --gold-dim:    rgba(212,168,75,0.15);
+  --gold-glow:   rgba(212,168,75,0.3);
+  --navy:        #0d1117;
+  --navy-mid:    #131a24;
+  --navy-light:  #1a2433;
+  --surface:     #0f1520;
+  --surface2:    #161f2e;
+  --border:      rgba(212,168,75,0.18);
+  --border-sub:  rgba(255,255,255,0.07);
+  --text:        #e8eaf0;
+  --text-muted:  #8892a4;
+  --text-dim:    #4a5568;
+  --green:       #00ff88;
+  --green-dim:   rgba(0,255,136,0.12);
+  --radius:      12px;
+  --radius-sm:   8px;
+  --transition:  0.2s ease;
+  --tier-glow:   rgba(212,168,75,0.25);
+  --tier-accent: #d4a84b;
+  --tier-text:   #e8c26a;
+  --tier-border: rgba(212,168,75,0.4);
+  --tier-dim:    rgba(212,168,75,0.12);
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--navy);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+h1, h2, h3 { font-family: 'Rajdhani', sans-serif; font-weight: 700; letter-spacing: 0.02em; }
+.mono { font-family: 'JetBrains Mono', monospace; }
+
+/* ── Particles ── */
+#particles {
+  position: fixed; inset: 0;
+  pointer-events: none; z-index: 0;
+  overflow: hidden;
+}
+.particle {
+  position: absolute; bottom: -10px;
+  border-radius: 50%;
+  background: var(--tier-accent);
+  animation: particleRise linear infinite;
+}
+@keyframes particleRise {
+  from { transform: translateY(0) translateX(0); opacity: 0; }
+  8%   { opacity: 0.7; }
+  92%  { opacity: 0.7; }
+  to   { transform: translateY(-105vh) translateX(var(--drift, 40px)); opacity: 0; }
+}
+
+/* ── Layout ── */
+.container { max-width: 1000px; margin: 0 auto; padding: 0 24px; }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: 'Rajdhani', sans-serif; font-weight: 600; font-size: 14px;
+  letter-spacing: 0.05em; text-transform: uppercase;
+  padding: 10px 22px; border-radius: var(--radius-sm);
+  border: none; cursor: pointer; text-decoration: none;
+  transition: all var(--transition);
+}
+.btn-primary {
+  background: var(--gold); color: #0d1117;
+  box-shadow: 0 0 20px rgba(212,168,75,0.3);
+}
+.btn-primary:hover { background: var(--gold-light); box-shadow: 0 0 30px rgba(212,168,75,0.5); }
+.btn-secondary {
+  background: transparent; color: var(--text-muted);
+  border: 1px solid var(--border-sub);
+}
+.btn-secondary:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+
+/* ── Hero section ── */
+.profile-hero {
+  padding: 80px 24px 48px;
+  background: linear-gradient(180deg, var(--navy-mid) 0%, var(--navy) 100%);
+  border-bottom: 1px solid var(--border);
+  position: relative; z-index: 1;
+}
+.profile-hero-inner {
+  max-width: 1000px; margin: 0 auto;
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 48px;
+  align-items: start;
+}
+@media (max-width: 768px) {
+  .profile-hero-inner { grid-template-columns: 1fr; gap: 32px; }
+  .profile-hero { padding: 60px 24px 36px; }
+}
+
+/* ── Eagle Card (render iframe) ── */
+.eagle-card-wrap {
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--tier-border);
+  box-shadow: 0 0 40px var(--tier-glow), 0 0 80px rgba(0,0,0,0.4);
+  transition: box-shadow 0.4s ease;
+  background: var(--surface);
+}
+.eagle-card-aspect {
+  position: relative;
+  width: 100%; padding-bottom: 100%;
+}
+.eagle-card-skeleton {
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, var(--surface) 0%, var(--surface2) 50%, var(--surface) 100%);
+  background-size: 200% 200%;
+  animation: shimmer 1.8s ease-in-out infinite;
+  display: flex; align-items: center; justify-content: center;
+}
+.eagle-card-skeleton.hidden { display: none; }
+@keyframes shimmer {
+  0%   { background-position: 200% 200%; }
+  100% { background-position: -200% -200%; }
+}
+.skeleton-eagle-icon {
+  font-size: 48px; opacity: 0.15;
+  animation: pulse 1.8s ease-in-out infinite;
+}
+@keyframes pulse { 0%, 100% { opacity: 0.12; } 50% { opacity: 0.22; } }
+.eagle-iframe {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  border: none; display: none;
+  background: transparent;
+}
+
+/* ── Profile info ── */
+.profile-info { padding-top: 8px; }
+
+.holder-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--text-dim); margin-bottom: 8px;
+}
+
+.holder-address-row {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 20px; flex-wrap: wrap;
+}
+.holder-address {
+  font-family: 'JetBrains Mono', monospace; font-size: 13px;
+  color: var(--text-muted); word-break: break-all;
+}
+
+.tier-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 13px;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  padding: 4px 12px; border-radius: 20px;
+  border: 1px solid var(--tier-border);
+  color: var(--tier-text); background: var(--tier-dim);
+  white-space: nowrap;
+}
+
+.eagle-name {
+  font-family: 'Rajdhani', sans-serif; font-size: clamp(2rem, 4vw, 2.8rem);
+  font-weight: 700; letter-spacing: 0.02em;
+  color: var(--text); line-height: 1.1;
+  margin-bottom: 6px;
+}
+
+.agent-name {
+  font-size: 16px; color: var(--text-muted); margin-bottom: 28px;
+  font-weight: 300;
+}
+.agent-name strong { color: var(--tier-text); font-weight: 600; }
+
+/* ── Stats grid ── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px; margin-bottom: 28px;
+}
+@media (max-width: 480px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border-sub);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+}
+.stat-card .stat-label {
+  font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--text-dim); margin-bottom: 4px;
+}
+.stat-card .stat-value {
+  font-family: 'Rajdhani', sans-serif; font-size: 1.4rem; font-weight: 700;
+  color: var(--tier-accent); line-height: 1;
+}
+.stat-card .stat-sub {
+  font-size: 11px; color: var(--text-dim); margin-top: 2px;
+}
+
+/* ── Rarity bar ── */
+.rarity-section { margin-bottom: 28px; }
+.rarity-label {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text-dim); margin-bottom: 6px;
+}
+.rarity-bar-track {
+  height: 4px; background: var(--border-sub); border-radius: 2px; overflow: hidden;
+}
+.rarity-bar-fill {
+  height: 100%; border-radius: 2px; background: var(--tier-accent);
+  transition: width 1.2s cubic-bezier(0.4,0,0.2,1); width: 0;
+}
+
+/* ── Action buttons ── */
+.action-row {
+  display: flex; gap: 12px; flex-wrap: wrap;
+}
+
+/* ── Copy button ── */
+.copy-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: 'JetBrains Mono', monospace; font-size: 11px;
+  color: var(--text-dim); background: none; border: none; cursor: pointer;
+  padding: 3px 0; transition: color var(--transition);
+}
+.copy-btn:hover { color: var(--tier-accent); }
+.copy-btn.copied { color: var(--green); }
+
+/* ── Error state ── */
+.error-state {
+  display: none; text-align: center;
+  padding: 80px 24px;
+  position: relative; z-index: 1;
+}
+.error-state .error-icon { font-size: 56px; margin-bottom: 20px; opacity: 0.5; }
+.error-state h2 { font-size: 1.8rem; color: var(--text-muted); margin-bottom: 12px; }
+.error-state p  { color: var(--text-dim); max-width: 400px; margin: 0 auto 24px; }
+
+/* ── Traits section ── */
+.traits-section {
+  padding: 40px 0 60px;
+  position: relative; z-index: 1;
+}
+.section-header {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 20px; padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.section-header h2 { font-size: 1.2rem; color: var(--gold); }
+
+.traits-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 10px;
+}
+.trait-pill {
+  background: var(--surface);
+  border: 1px solid var(--border-sub);
+  border-left: 3px solid var(--tier-accent);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+}
+.trait-pill .trait-type {
+  font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--text-dim); margin-bottom: 2px;
+}
+.trait-pill .trait-value {
+  font-family: 'Rajdhani', sans-serif; font-weight: 600; font-size: 15px;
+  color: var(--text);
+}
+
+/* ── Skeleton ── */
+.skel { display: block; border-radius: 4px; background: var(--surface2); }
+.skel-anim { animation: shimmer 1.8s ease-in-out infinite; background-size: 200% 200%; }
+
+/* ── Reveal ── */
+.reveal { opacity: 0; transform: translateY(12px); transition: opacity 0.4s ease, transform 0.4s ease; }
+.reveal.visible { opacity: 1; transform: none; }
+</style>
+</head>
+<body>
+<div id="particles"></div>
+
+<!-- Error State -->
+<div class="error-state" id="error-state">
+  <div class="error-icon">🦅</div>
+  <h2 id="error-title">Not a Holder</h2>
+  <p id="error-msg">This address does not hold an Early Eagle.</p>
+  <a href="/holders" class="btn btn-secondary">Back to Holders</a>
+</div>
+
+<!-- Main Profile -->
+<div id="profile-main" style="display:none;">
+  <section class="profile-hero">
+    <div class="profile-hero-inner">
+      <!-- Eagle render card -->
+      <div class="eagle-card-wrap" id="eagle-card-wrap">
+        <div class="eagle-card-aspect">
+          <div class="eagle-card-skeleton" id="card-skeleton">
+            <div class="skeleton-eagle-icon">🦅</div>
+          </div>
+          <iframe
+            id="eagle-iframe"
+            class="eagle-iframe"
+            scrolling="no"
+            title="Eagle render"
+          ></iframe>
+        </div>
+      </div>
+
+      <!-- Profile info -->
+      <div class="profile-info">
+        <div class="holder-label">Early Eagle Holder</div>
+        <div class="holder-address-row">
+          <span class="holder-address mono" id="holder-address">—</span>
+          <button class="copy-btn" id="copy-addr-btn" onclick="copyAddress()">
+            <span id="copy-label">Copy</span>
+          </button>
+        </div>
+
+        <div class="tier-badge" id="tier-badge">— Loading</div>
+
+        <h1 class="eagle-name" id="eagle-name">EAGLE #—</h1>
+        <p class="agent-name" id="agent-name"></p>
+
+        <div class="stats-grid">
+          <div class="stat-card reveal" id="stat-mint">
+            <div class="stat-label">Mint Order</div>
+            <div class="stat-value" id="stat-mint-val">—</div>
+            <div class="stat-sub">of 31 minted</div>
+          </div>
+          <div class="stat-card reveal" id="stat-aibtc" style="transition-delay:60ms">
+            <div class="stat-label">AIBTC Agent</div>
+            <div class="stat-value" id="stat-aibtc-val">—</div>
+            <div class="stat-sub">genesis agent</div>
+          </div>
+          <div class="stat-card reveal" id="stat-block" style="transition-delay:120ms">
+            <div class="stat-label">Minted Block</div>
+            <div class="stat-value" id="stat-block-val">—</div>
+            <div class="stat-sub">Stacks chain</div>
+          </div>
+        </div>
+
+        <div class="rarity-section reveal" style="transition-delay:180ms">
+          <div class="rarity-label">
+            <span>Rarity — <span id="rarity-tier">—</span></span>
+            <span id="rarity-pct">— of 420 supply</span>
+          </div>
+          <div class="rarity-bar-track">
+            <div class="rarity-bar-fill" id="rarity-bar"></div>
+          </div>
+        </div>
+
+        <div class="action-row reveal" style="transition-delay:240ms">
+          <a id="btn-eagle-page" href="#" class="btn btn-primary">View Eagle ↗</a>
+          <a id="btn-share-x" href="#" target="_blank" rel="noopener" class="btn btn-secondary">Share on X</a>
+          <button onclick="copyLink()" class="btn btn-secondary" id="btn-copy-link">
+            <span id="copy-link-label">Copy Link</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Traits -->
+  <section class="traits-section">
+    <div class="container">
+      <div class="section-header">
+        <h2>Eagle Traits</h2>
+      </div>
+      <div class="traits-grid" id="traits-grid"></div>
+    </div>
+  </section>
+</div>
+
+<script>
+/* ════════════════════════════════════════════════════════
+   CONSTANTS
+════════════════════════════════════════════════════════ */
+const BASE_URL     = 'https://early-eagles.vercel.app';
+const TOTAL_SUPPLY = 420;
+const EXPLORER_BASE = 'https://explorer.hiro.so';
+
+const TIERS = [
+  { id: 'legendary', name: 'Legendary', symbol: '🔱', supply: 10,
+    glow: 'rgba(212,168,75,0.28)', accent: '#d4a84b', text: '#e8c26a',
+    dim: 'rgba(212,168,75,0.12)', border: 'rgba(212,168,75,0.4)' },
+  { id: 'epic',      name: 'Epic',      symbol: '◈', supply: 60,
+    glow: 'rgba(168,85,247,0.22)', accent: '#a855f7', text: '#c084fc',
+    dim: 'rgba(168,85,247,0.12)', border: 'rgba(168,85,247,0.4)' },
+  { id: 'rare',      name: 'Rare',      symbol: '◇', supply: 80,
+    glow: 'rgba(56,189,248,0.2)',  accent: '#0ea5e9', text: '#7dd3fc',
+    dim: 'rgba(14,165,233,0.12)', border: 'rgba(14,165,233,0.4)' },
+  { id: 'uncommon',  name: 'Uncommon',  symbol: '○', supply: 150,
+    glow: 'rgba(52,211,153,0.2)', accent: '#10b981', text: '#6ee7b7',
+    dim: 'rgba(16,185,129,0.12)', border: 'rgba(16,185,129,0.4)' },
+  { id: 'common',    name: 'Common',    symbol: '●', supply: 120,
+    glow: 'rgba(107,114,128,0.18)', accent: '#6b7280', text: '#9ca3af',
+    dim: 'rgba(107,114,128,0.12)', border: 'rgba(107,114,128,0.3)' },
+];
+
+/* ════════════════════════════════════════════════════════
+   TIER THEMING
+════════════════════════════════════════════════════════ */
+function applyTierTheme(tierIdx) {
+  const t = TIERS[tierIdx] || TIERS[4];
+  const root = document.documentElement;
+  root.style.setProperty('--tier-glow',   t.glow);
+  root.style.setProperty('--tier-accent', t.accent);
+  root.style.setProperty('--tier-text',   t.text);
+  root.style.setProperty('--tier-border', t.border);
+  root.style.setProperty('--tier-dim',    t.dim);
+  return t;
+}
+
+/* ════════════════════════════════════════════════════════
+   PARTICLES
+════════════════════════════════════════════════════════ */
+function initParticles() {
+  const container = document.getElementById('particles');
+  const count = 12;
+  for (let i = 0; i < count; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const size = 2 + Math.random() * 3;
+    p.style.cssText = [
+      `width:${size}px`, `height:${size}px`,
+      `left:${Math.random() * 100}%`,
+      `animation-duration:${8 + Math.random() * 12}s`,
+      `animation-delay:${Math.random() * -14}s`,
+      `--drift:${(Math.random() - 0.5) * 80}px`,
+      `opacity:${0.3 + Math.random() * 0.5}`,
+    ].join(';');
+    container.appendChild(p);
+  }
+}
+
+/* ════════════════════════════════════════════════════════
+   REVEAL ON SCROLL
+════════════════════════════════════════════════════════ */
+function initReveal() {
+  const obs = new IntersectionObserver(
+    entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); }),
+    { threshold: 0.1 }
+  );
+  document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+}
+
+/* ════════════════════════════════════════════════════════
+   ERROR / NOT FOUND
+════════════════════════════════════════════════════════ */
+function showError(title, msg) {
+  document.getElementById('profile-main').style.display = 'none';
+  const err = document.getElementById('error-state');
+  document.getElementById('error-title').textContent = title;
+  document.getElementById('error-msg').textContent   = msg;
+  err.style.display = 'block';
+}
+
+/* ════════════════════════════════════════════════════════
+   TRAITS RENDER
+════════════════════════════════════════════════════════ */
+function renderTraits(props) {
+  const grid = document.getElementById('traits-grid');
+  grid.innerHTML = '';
+
+  const traitMap = [
+    ['Tier',        props.tier_name  || '—'],
+    ['Color',       props.color_name || '—'],
+    ['Background',  props.bg_name    || '—'],
+    ['Eye Color',   props.eye_color  || '—'],
+    ['Pattern',     props.pattern    || '—'],
+    ['Accessory',   props.accessory  || '—'],
+  ].filter(([, v]) => v && v !== '—');
+
+  traitMap.forEach(([type, val], i) => {
+    const pill = document.createElement('div');
+    pill.className = 'trait-pill reveal';
+    pill.style.transitionDelay = `${i * 50}ms`;
+    pill.innerHTML = `<div class="trait-type">${type}</div><div class="trait-value">${val}</div>`;
+    grid.appendChild(pill);
+  });
+
+  // Re-observe newly added reveals
+  const obs = new IntersectionObserver(
+    entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); }),
+    { threshold: 0.1 }
+  );
+  grid.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+}
+
+/* ════════════════════════════════════════════════════════
+   COPY HELPERS
+════════════════════════════════════════════════════════ */
+let holderAddress = '';
+
+function copyAddress() {
+  if (!holderAddress) return;
+  navigator.clipboard.writeText(holderAddress).then(() => {
+    const btn = document.getElementById('copy-addr-btn');
+    const lbl = document.getElementById('copy-label');
+    btn.classList.add('copied');
+    lbl.textContent = 'Copied!';
+    setTimeout(() => { btn.classList.remove('copied'); lbl.textContent = 'Copy'; }, 2000);
+  }).catch(() => {});
+}
+
+function copyLink() {
+  navigator.clipboard.writeText(window.location.href).then(() => {
+    const lbl = document.getElementById('copy-link-label');
+    lbl.textContent = 'Copied!';
+    setTimeout(() => { lbl.textContent = 'Copy Link'; }, 2000);
+  }).catch(() => {});
+}
+
+/* ════════════════════════════════════════════════════════
+   META UPDATE
+════════════════════════════════════════════════════════ */
+function updateMeta(address, tokenId, tierName, colorName, agentName) {
+  const short  = address.slice(0, 8) + '…' + address.slice(-4);
+  const title  = `${agentName || short} — ${tierName} Eagle #${tokenId}`;
+  const desc   = `${tierName} Early Eagle #${tokenId}${agentName ? ' · ' + agentName : ''} · Fully on-chain NFT on Stacks.`;
+  const url    = `${BASE_URL}/holder/${address}`;
+
+  document.getElementById('page-title').textContent = title;
+  document.getElementById('page-desc').content      = desc;
+  document.getElementById('og-title').content       = title;
+  document.getElementById('og-desc').content        = desc;
+  document.getElementById('og-url').content         = url;
+  document.getElementById('tw-title').content       = title;
+  document.getElementById('tw-desc').content        = desc;
+
+  const tweet = `${agentName || short}'s Early Eagle #${tokenId} — ${tierName} ${colorName} 🦅\nFully on-chain NFT on @Stacks. No IPFS.\n${url}`;
+  document.getElementById('btn-share-x').href =
+    `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweet)}`;
+}
+
+/* ════════════════════════════════════════════════════════
+   MAIN LOAD
+════════════════════════════════════════════════════════ */
+async function loadHolder(address) {
+  holderAddress = address;
+
+  // Show address immediately
+  const short = address.slice(0, 8) + '…' + address.slice(-4);
+  document.getElementById('holder-address').textContent = short;
+  document.title = `Early Eagles — ${short}`;
+
+  // Fetch registry to find this holder's Eagle
+  let registry;
+  try {
+    const res = await fetch('/api/agent-registry.json');
+    if (!res.ok) throw new Error('registry ' + res.status);
+    registry = await res.json();
+  } catch (e) {
+    showError('Failed to Load', 'Could not reach the registry. Try refreshing.');
+    return;
+  }
+
+  const entry = (registry.entries || []).find(
+    e => e.stx_address.toLowerCase() === address.toLowerCase()
+  );
+
+  if (!entry) {
+    showError('Not a Holder', `${short} doesn't hold an Early Eagle yet.`);
+    return;
+  }
+
+  const tokenId = entry.token_id;
+
+  // Fetch token metadata for traits and block
+  let tokenData;
+  try {
+    const res = await fetch(`/api/token/${tokenId}`);
+    if (!res.ok) throw new Error('token ' + res.status);
+    tokenData = await res.json();
+  } catch (e) {
+    showError('Failed to Load', 'Could not reach the chain API. Try refreshing.');
+    return;
+  }
+
+  const props = tokenData.properties || {};
+  const tierIdx = props.tier ?? 4;
+  const tierInfo = applyTierTheme(tierIdx);
+
+  // Reveal main section
+  document.getElementById('profile-main').style.display = 'block';
+
+  // Tier badge
+  const badge = document.getElementById('tier-badge');
+  badge.textContent = `${tierInfo.symbol} ${tierInfo.name}`;
+  badge.style.color      = tierInfo.text;
+  badge.style.background = tierInfo.dim;
+  badge.style.borderColor = tierInfo.border;
+
+  // Eagle name
+  document.getElementById('eagle-name').textContent = `EAGLE #${tokenId}`;
+
+  // Agent display name
+  const agentName = props.display_name || '';
+  if (agentName) {
+    document.getElementById('agent-name').innerHTML = `<strong>${agentName}</strong>`;
+  }
+
+  // Stats
+  document.getElementById('stat-mint-val').textContent  = `#${tokenId + 1}`;
+  document.getElementById('stat-aibtc-val').textContent =
+    entry.aibtc_agent_id ? `#${entry.aibtc_agent_id}` : '—';
+
+  const mintedBlock = (tokenData.attributes || [])
+    .find(a => a.trait_type === 'Minted At Block')?.value ?? null;
+  document.getElementById('stat-block-val').textContent =
+    mintedBlock ? mintedBlock.toLocaleString() : '—';
+
+  // Rarity bar
+  const rarityPct = ((tierInfo.supply / TOTAL_SUPPLY) * 100).toFixed(1);
+  document.getElementById('rarity-tier').textContent = tierInfo.name;
+  document.getElementById('rarity-pct').textContent  = `${tierInfo.supply} of ${TOTAL_SUPPLY} supply`;
+  setTimeout(() => {
+    document.getElementById('rarity-bar').style.width = rarityPct + '%';
+    document.getElementById('rarity-bar').style.background = tierInfo.accent;
+  }, 200);
+
+  // Action buttons
+  document.getElementById('btn-eagle-page').href = `/eagle/${tokenId}`;
+
+  // Traits
+  renderTraits(props);
+
+  // Meta & share
+  updateMeta(address, tokenId, tierInfo.name, props.color_name || '', agentName);
+
+  // Eagle render iframe
+  const iframe = document.getElementById('eagle-iframe');
+  iframe.src = `/api/render/${tokenId}`;
+  iframe.addEventListener('load', () => {
+    document.getElementById('card-skeleton').classList.add('hidden');
+    iframe.style.display = 'block';
+  });
+
+  // Particles
+  initParticles();
+
+  // Reveal animations
+  initReveal();
+  setTimeout(() => {
+    document.querySelectorAll('.reveal').forEach(el => el.classList.add('visible'));
+  }, 100);
+}
+
+/* ════════════════════════════════════════════════════════
+   BOOT
+════════════════════════════════════════════════════════ */
+(function boot() {
+  // Parse address from URL: /holder/SP... or /holder/SM...
+  const parts  = window.location.pathname.replace(/\/$/, '').split('/');
+  const addr   = parts[parts.length - 1];
+
+  // Basic Stacks address validation
+  if (!addr || !/^S[MP][A-Z0-9]{38,}$/i.test(addr)) {
+    // Fallback: try query param ?address=
+    const qp = new URLSearchParams(window.location.search).get('address');
+    if (qp && /^S[MP][A-Z0-9]{38,}$/i.test(qp)) {
+      loadHolder(qp);
+      return;
+    }
+    showError('Invalid Address', 'No valid Stacks address found in the URL.');
+    return;
+  }
+
+  loadHolder(addr);
+})();
+</script>
+<script src="/scripts/navbar.js"></script>
+</body>
+</html>
