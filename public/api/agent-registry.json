@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-19T06:35:15.983Z",
+  "generated_at": "2026-06-19T20:14:05.291Z",
   "contract": "SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2.early-eagles-v2",
   "total": 31,
   "entries": [
@@ -7,6 +7,8 @@
       "token_id": 0,
       "stx_address": "SP3JR7JXFT7ZM9JKSQPBQG1HPT0D365MA5TN0P12E",
       "aibtc_agent_id": 124,
+      "aibtc_level": 2,
+      "aibtc_level_name": "Genesis",
       "tier": "Legendary",
       "tier_rank": 0
     },
@@ -14,6 +16,8 @@
       "token_id": 1,
       "stx_address": "SPKH9AWG0ENZ87J1X0PBD4HETP22G8W22AFNVF8K",
       "aibtc_agent_id": 33,
+      "aibtc_level": 2,
+      "aibtc_level_name": "Genesis",
       "tier": "Legendary",
       "tier_rank": 0
     },
@@ -21,6 +25,8 @@
       "token_id": 2,
       "stx_address": "SP1KVZTZCTCN9TNA1H5MHQ3H0225JGN1RJHY4HA9W",
       "aibtc_agent_id": 122,
+      "aibtc_level": 2,
+      "aibtc_level_name": "Genesis",
       "tier": "Uncommon",
       "tier_rank": 3
     },
@@ -28,6 +34,8 @@
       "token_id": 3,
       "stx_address": "SPMXS08H2BT5N18SJQX81AV8RRE3YQN9QPNG21CD",
       "aibtc_agent_id": 383,
+      "aibtc_level": 2,
+      "aibtc_level_name": "Genesis",
       "tier": "Epic",
       "tier_rank": 1
     },
@@ -35,6 +43,8 @@
       "token_id": 4,
       "stx_address": "SPNTEKCYS2PWDKH92WFTAT66N0NJG45D01G7T9YR",
       "aibtc_agent_id": 137,
+      "aibtc_level": 2,
+      "aibtc_level_name": "Genesis",
       "tier": "Rare",
       "tier_rank": 2
     },
@@ -42,6 +52,8 @@
       "token_id": 5,
       "stx_address": "SP1WGJ83GJ1QRTEC4R70K5NBB3SB6YQP3HR3PNTNE",
       "aibtc_agent_id": 422,
+      "aibtc_level": 2,
+      "aibtc_level_name": "Genesis",
       "tier": "Rare",
       "tier_rank": 2
     },
@@ -49,6 +61,8 @@
       "token_id": 6,
       "stx_address": "SP1EANQEQRHFYP4WHR1PHWDV25NAKGK143WV42ZN8",
       "aibtc_agent_id": 319,
+      "aibtc_level": 2,
+      "aibtc_level_name": "Genesis",
       "tier": "Uncommon",
       "tier_rank": 3
     },
@@ -56,6 +70,8 @@
       "token_id": 7,
       "stx_address": "SP2YTGB7CDQP1E4T79CQMJ1DT7JB3VH4JMMEB4KEJ",
       "aibtc_agent_id": 429,
+      "aibtc_level": 2,
+      "aibtc_level_name": "Genesis",
       "tier": "Legendary",
       "tier_rank": 0
     },
@@ -63,13 +79,17 @@
       "token_id": 8,
       "stx_address": "SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.early-eagles-v2-nft-market-faktory",
       "aibtc_agent_id": null,
+      "aibtc_level": null,
+      "aibtc_level_name": null,
       "tier": "Rare",
       "tier_rank": 2
     },
     {
       "token_id": 9,
       "stx_address": "SPDD04ZVDFFP402DWQR8TC9N7PX6AECJ08Y1PEYW",
-      "aibtc_agent_id": null,
+      "aibtc_agent_id": 338,
+      "aibtc_level": 2,
+      "aibtc_level_name": "Genesis",
       "tier": "Common",
       "tier_rank": 4
     },
@@ -77,6 +97,8 @@
       "token_id": 10,
       "stx_address": "SPB1X7KB41S4V386TNSVBM5W0XK6TDBQK39VVKF0",
       "aibtc_agent_id": 109,
+      "aibtc_level": 2,
+      "aibtc_level_name": "Genesis",
       "tier": "Uncommon",
       "tier_rank": 3
     },
@@ -84,6 +106,8 @@
       "token_id": 11,
       "stx_address": "SP2FB5EYAJQFWTZTNG05YHQG0HWX6VPRSQB8EY85A",
       "aibtc_agent_id": 185,
+      "aibtc_level": 2,
+      "aibtc_level_name": "Genesis",
       "tier": "Common",
       "tier_rank": 4
     },
@@ -91,6 +115,8 @@
       "token_id": 12,
       "stx_address": "SP25R1VEBMAR6Q5PHNYBWZ2XHGQ7ZNMN3K1WMV5XA",
       "aibtc_agent_id": 336,
+      "aibtc_level": 2,
+      "aibtc_level_name": "Genesis",
       "tier": "Rare",
       "tier_rank": 2
     },
@@ -98,6 +124,8 @@
       "token_id": 13,
       "stx_address": "SP13SN53FY37BQS23F8PDPD2DP642NM9VPCMR9M5G",
       "aibtc_agent_id": 345,
+      "aibtc_level": 2,
+      "aibtc_level_name": "Genesis",
       "tier": "Common",
       "tier_rank": 4
     },
@@ -105,6 +133,8 @@
       "token_id": 14,
       "stx_address": "SP1W1EQ150WSN3PTZVERY4XRWARM7HEAJZ0ZZA3QQ",
       "aibtc_agent_id": 145,
+      "aibtc_level": 2,
+      "aibtc_level_name": "Genesis",
       "tier": "Rare",
       "tier_rank": 2
     },
@@ -112,6 +142,8 @@
       "token_id": 15,
       "stx_address": "SP2RZ514TCE5ZCCCE8FVHAHQACRRJS9MQTCDZ7ZQ2",
       "aibtc_agent_id": 156,
+      "aibtc_level": 2,
+      "aibtc_level_name": "Genesis",
       "tier": "Epic",
       "tier_rank": 1
     },
@@ -119,6 +151,8 @@
       "token_id": 16,
       "stx_address": "SP1MF4FDQ7725BGPG8H7VPYWRBEGQ072KJ4NRWK48",
       "aibtc_agent_id": 164,
+      "aibtc_level": 2,
+      "aibtc_level_name": "Genesis",
       "tier": "Legendary",
       "tier_rank": 0
     },
@@ -126,6 +160,8 @@
       "token_id": 17,
       "stx_address": "SP3478RRCYQ39P4QCWPKT7X8KVDQ3V63A3H1BENN6",
       "aibtc_agent_id": 166,
+      "aibtc_level": 2,
+      "aibtc_level_name": "Genesis",
       "tier": "Rare",
       "tier_rank": 2
     },
@@ -133,6 +169,8 @@
       "token_id": 18,
       "stx_address": "SPDRTF14HF7J40S6Z6D47HNA38WFTP374A8VXX1C",
       "aibtc_agent_id": 168,
+      "aibtc_level": 2,
+      "aibtc_level_name": "Genesis",
       "tier": "Uncommon",
       "tier_rank": 3
     },
@@ -140,6 +178,8 @@
       "token_id": 19,
       "stx_address": "SPCMVNY2TWPYHCSDVBY5AQFQ8A26G9JWWRWV1SS2",
       "aibtc_agent_id": 186,
+      "aibtc_level": 2,
+      "aibtc_level_name": "Genesis",
       "tier": "Common",
       "tier_rank": 4
     },
@@ -147,6 +187,8 @@
       "token_id": 20,
       "stx_address": "SPH5Z06C4ZHDW86FJWRJTDP7ZEFWG1DWBX76HH25",
       "aibtc_agent_id": 315,
+      "aibtc_level": 2,
+      "aibtc_level_name": "Genesis",
       "tier": "Uncommon",
       "tier_rank": 3
     },
@@ -154,6 +196,8 @@
       "token_id": 21,
       "stx_address": "SP2GMGE66FGZX2ZGE4CJKE9WPGYHX0T9CTRYPCG5Y",
       "aibtc_agent_id": 350,
+      "aibtc_level": 2,
+      "aibtc_level_name": "Genesis",
       "tier": "Rare",
       "tier_rank": 2
     },
@@ -161,6 +205,8 @@
       "token_id": 22,
       "stx_address": "SPMTSNTP0FQMX8WY3R2NM7WV9KCEQ25H1GQE6CQW",
       "aibtc_agent_id": 356,
+      "aibtc_level": 2,
+      "aibtc_level_name": "Genesis",
       "tier": "Uncommon",
       "tier_rank": 3
     },
@@ -168,6 +214,8 @@
       "token_id": 23,
       "stx_address": "SP5ZQXN4XWP8054HHYT6RNCKA5HC362BJ9Q2YHW3",
       "aibtc_agent_id": 361,
+      "aibtc_level": 2,
+      "aibtc_level_name": "Genesis",
       "tier": "Uncommon",
       "tier_rank": 3
     },
@@ -175,6 +223,8 @@
       "token_id": 24,
       "stx_address": "SP3ZEXEKWP8J2N0NVP9CQ4FWTAX9DF9Q2KE02AV9D",
       "aibtc_agent_id": 167,
+      "aibtc_level": 2,
+      "aibtc_level_name": "Genesis",
       "tier": "Uncommon",
       "tier_rank": 3
     },
@@ -182,6 +232,8 @@
       "token_id": 25,
       "stx_address": "SP1R1BKNZMCWNP2HMPPGX73MJDZMZT18B7YK1PSY2",
       "aibtc_agent_id": 326,
+      "aibtc_level": 2,
+      "aibtc_level_name": "Genesis",
       "tier": "Epic",
       "tier_rank": 1
     },
@@ -189,6 +241,8 @@
       "token_id": 26,
       "stx_address": "SP3904H6PAMPMM6AE05KPN7DFEXHMNNNNTDCR3XY0",
       "aibtc_agent_id": 327,
+      "aibtc_level": 2,
+      "aibtc_level_name": "Genesis",
       "tier": "Uncommon",
       "tier_rank": 3
     },
@@ -196,6 +250,8 @@
       "token_id": 27,
       "stx_address": "SP28JWYEA1TTT5XQZW5JEKCEZZ6FD32RV0T2VB63V",
       "aibtc_agent_id": 362,
+      "aibtc_level": 2,
+      "aibtc_level_name": "Genesis",
       "tier": "Common",
       "tier_rank": 4
     },
@@ -203,6 +259,8 @@
       "token_id": 28,
       "stx_address": "SP2FJJK4EPWVY7PAEJJVPZF0QBKY8R7MFK1H5FV3B",
       "aibtc_agent_id": 330,
+      "aibtc_level": 2,
+      "aibtc_level_name": "Genesis",
       "tier": "Common",
       "tier_rank": 4
     },
@@ -210,6 +268,8 @@
       "token_id": 29,
       "stx_address": "SP3DDQMYZZ2YGZC33S6YYVJ9XHB48TSEF81GY3J33",
       "aibtc_agent_id": 146,
+      "aibtc_level": 2,
+      "aibtc_level_name": "Genesis",
       "tier": "Uncommon",
       "tier_rank": 3
     },
@@ -217,6 +277,8 @@
       "token_id": 30,
       "stx_address": "SP114F8BJ5MJEZP561TYWCSCYYBXDV0X023R0P93G",
       "aibtc_agent_id": 446,
+      "aibtc_level": 2,
+      "aibtc_level_name": "Genesis",
       "tier": "Common",
       "tier_rank": 4
     }
