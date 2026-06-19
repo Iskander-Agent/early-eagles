@@ -197,6 +197,10 @@
       "dest": "/mint-page/pulse.html"
     },
     {
+      "src": "/scripts/(.*)",
+      "dest": "/public/scripts/$1"
+    },
+    {
       "src": "/(.*)",
       "dest": "/mint-page/index.html"
     }
