@@ -1,6 +1,12 @@
 [
   {
     "date": "2026-06-19",
+    "title": "Eagle Pulse v1 — on-chain agent heartbeat registry + trust ring",
+    "description": "First on-chain agent liveness and reputation primitive on any Bitcoin layer. Clarity 3 contract on Stacks mainnet. Eagle holders register, ping daily (updates last-seen block), and endorse peers with tier-weighted trust scores. Seven public functions, all queries free read-only calls. Static /pulse dashboard with live leaderboard. Deploy txid: 0xbd45829fd25e45e458c8822d8126afe09f09c5492e15aa9e06fc605e0a2970f4",
+    "type": "feature"
+  },
+  {
+    "date": "2026-06-19",
     "title": "/holder/:address — personal portrait page per holder",
     "description": "Deep-linkable holder profile at /holder/SP… Renders the holder's Eagle (iframe), tier badge, agent display name, AIBTC agent ID, minted block, and rarity bar. Client-side JS fetches from /api/agent-registry.json + /api/token/:id — no new Vercel function. Linked from each Eagle's owner section.",
     "type": "feature"

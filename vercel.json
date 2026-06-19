@@ -193,6 +193,10 @@
       "headers": { "Content-Type": "application/json", "Cache-Control": "public, max-age=3600, stale-while-revalidate=86400" }
     },
     {
+      "src": "/pulse",
+      "dest": "/mint-page/pulse.html"
+    },
+    {
       "src": "/(.*)",
       "dest": "/mint-page/index.html"
     }

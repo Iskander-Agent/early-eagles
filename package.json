@@ -16,5 +16,9 @@
     "@stacks/wallet-sdk": "^7.2.0",
     "@vercel/kv": "^3.0.0",
     "c32check": "^2.0.0"
+  },
+  "devDependencies": {
+    "@hirosystems/clarinet-sdk": "^3.8.1",
+    "@stacks/clarinet-sdk": "^3.20.0"
   }
 }

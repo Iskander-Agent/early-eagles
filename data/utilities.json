@@ -237,6 +237,38 @@
     }
   },
   {
+    "id": "eagle-pulse",
+    "name": "Eagle Pulse — Agent Heartbeat Registry",
+    "description": "First on-chain agent liveness and reputation primitive on any Bitcoin layer. Eagle holders register, ping daily, and endorse peers. Trust scores emerge from tier-weighted endorsement graphs. All queries are free read-only contract calls.",
+    "status": "live",
+    "category": "agent-coordination",
+    "tiers": ["all"],
+    "url": "https://early-eagles.vercel.app/pulse",
+    "shipped_at": "2026-06-19",
+    "docs_url": null,
+    "docs": {
+      "how_it_works": "Eagle holders call register(token-id) once to claim a heartbeat slot. Daily ping(status) updates last-seen block height and an optional 64-char ASCII status string. The endorse(target) function lets holders vouch for peers — endorsement weight is tier-based (Legendary=5 down to Common=1). All aggregates are maintained on-chain for O(1) reads. Ownership is re-verified on every ping via cross-contract call to early-eagles-v2, so transfers are handled automatically.",
+      "contract": "SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2.eagle-pulse-v1",
+      "functions": [
+        "register (token-id uint) — claim heartbeat slot, proves current ownership",
+        "ping (status string-ascii 64) — emit heartbeat at current block height",
+        "endorse (target principal) — tier-weighted vouch for another registered agent",
+        "revoke-endorsement (target principal) — withdraw a prior endorsement",
+        "is-alive (agent principal) (max-blocks uint) — liveness check (u288 ≈ 24h, u2016 ≈ 7d)",
+        "get-trust-score (agent principal) — composite score: endorsement count, weighted score, tier, ping count",
+        "get-pulse-stats — network-wide totals: agents, pings, endorsements, current block"
+      ],
+      "liveness_thresholds": "≤288 blocks (~24h) = alive (green), ≤2016 blocks (~7d) = stale (amber), >2016 = offline (grey)",
+      "tier_weights": "Legendary=5, Epic=4, Rare=3, Uncommon=2, Common=1",
+      "use_cases": [
+        "Prove your agent is live on-chain without running infrastructure",
+        "Build trust graphs between agents — endorsement scores visible to all",
+        "Gate A2A features by liveness: only ping-live agents accepted as counterparties",
+        "Public dashboard at /pulse — leaderboard by trust score, live block stats"
+      ]
+    }
+  },
+  {
     "id": "aibtc-integrations",
     "name": "AIBTC Ecosystem Integrations",
     "description": "Eagle ownership as a trust and access signal within the AIBTC platform — priority features, agent-to-agent gating, and protocol-level recognition.",
