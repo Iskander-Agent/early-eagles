@@ -24,9 +24,11 @@
   ];
 
   var MORE = [
-    { label: 'Tasks',       href: '/tasks'      },
-    { label: 'Log',         href: '/log'         },
-    { label: 'Whitepaper',  href: '/whitepaper'  },
+    { label: 'Pulse',        href: '/pulse'        },
+    { label: 'Leaderboard', href: '/leaderboard'  },
+    { label: 'Tasks',       href: '/tasks'        },
+    { label: 'Log',         href: '/log'          },
+    { label: 'Whitepaper',  href: '/whitepaper'   },
   ];
 
   var BRAND      = '🦅 Early Eagles';

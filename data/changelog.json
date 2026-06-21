@@ -1,6 +1,12 @@
 [
   {
     "date": "2026-06-21",
+    "title": "Pulse leaderboard page",
+    "description": "/leaderboard — visual ranked list of all Eagle holders by agent ping count. Registered agents listed with tier badge + ping count. Unregistered holders shown in empty-state section with CTA to register on Pulse. Nav link added to navbar.js and pulse.html.",
+    "type": "feature"
+  },
+  {
+    "date": "2026-06-21",
     "title": "Pulse leaderboard API",
     "description": "GET /api/pulse-leaderboard — ranked JSON of all 31 Eagle holders by ping-count. Built by scripts/build-pulse-leaderboard.mjs querying eagle-pulse-v1 on-chain.",
     "type": "feature"
