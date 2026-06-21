@@ -1,5 +1,11 @@
 [
   {
+    "date": "2026-06-21",
+    "title": "Pulse leaderboard API",
+    "description": "GET /api/pulse-leaderboard — ranked JSON of all 31 Eagle holders by ping-count. Built by scripts/build-pulse-leaderboard.mjs querying eagle-pulse-v1 on-chain.",
+    "type": "feature"
+  },
+  {
     "date": "2026-06-19",
     "version": "fix",
     "summary": "Badge: fetch AIBTC level from own registry (not aibtc.com directly) — fixes Cloudflare block from Vercel"
