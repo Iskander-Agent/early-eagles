@@ -2,11 +2,11 @@
 ;; STX escrow for the Early Eagles Task Exchange (A2A marketplace).
 ;;
 ;; Lifecycle:
-;;   1. Creator posts task on API — receives task_id + task_hash (sha256 of task_id)
-;;   2. Creator calls (lock-task <task-hash> <amount-ustx>) — locks STX in this contract
+;;   1. Creator posts task on API -- receives task_id + task_hash (sha256 of task_id)
+;;   2. Creator calls (lock-task <task-hash> <amount-ustx>) -- locks STX in this contract
 ;;   3. Task is claimed and delivered via the API
-;;   4a. Creator calls (release-task <task-hash> <claimer>) — pays claimer, closes escrow
-;;   4b. Creator calls (cancel-task <task-hash>) — refunds creator (only while status=open)
+;;   4a. Creator calls (release-task <task-hash> <claimer>) -- pays claimer, closes escrow
+;;   4b. Creator calls (cancel-task <task-hash>) -- refunds creator (only while status=open)
 ;;
 ;; v1 constraints:
 ;;   - No dispute mechanism: creator decides release or cancel
@@ -26,7 +26,7 @@
   { creator: principal, amount: uint, status: uint }
 )
 
-;; ── Lock STX when posting a task ────────────────────────────────────────────
+;; Lock STX when posting a task
 (define-public (lock-task (task-id (buff 32)) (amount uint))
   (begin
     (asserts! (> amount u0) ERR-ZERO-AMOUNT)
@@ -38,7 +38,7 @@
   )
 )
 
-;; ── Release STX to claimer (creator confirms delivery) ──────────────────────
+;; Release STX to claimer (creator confirms delivery)
 (define-public (release-task (task-id (buff 32)) (claimer principal))
   (let ((e (unwrap! (map-get? escrows { task-id: task-id }) ERR-NOT-FOUND)))
     (asserts! (is-eq (get creator e) tx-sender) ERR-NOT-AUTHORIZED)
@@ -49,7 +49,7 @@
   )
 )
 
-;; ── Cancel and refund to creator (only while status=open) ───────────────────
+;; Cancel and refund to creator (only while status=open)
 (define-public (cancel-task (task-id (buff 32)))
   (let ((e (unwrap! (map-get? escrows { task-id: task-id }) ERR-NOT-FOUND)))
     (asserts! (is-eq (get creator e) tx-sender) ERR-NOT-AUTHORIZED)
@@ -60,7 +60,7 @@
   )
 )
 
-;; ── Read-only: query escrow state ───────────────────────────────────────────
+;; Read-only: query escrow state
 (define-read-only (get-escrow (task-id (buff 32)))
   (map-get? escrows { task-id: task-id })
 )
