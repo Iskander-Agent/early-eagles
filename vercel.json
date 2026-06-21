@@ -14,14 +14,6 @@
       "use": "@vercel/static"
     },
     {
-      "src": "public/api/**",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "public/.well-known/**",
-      "use": "@vercel/static"
-    },
-    {
       "src": "data/**",
       "use": "@vercel/static"
     }
@@ -76,14 +68,6 @@
       "dest": "/api/verify.js"
     },
     {
-      "src": "/api/nest/(authorize|check|members)",
-      "dest": "/api/nest.js"
-    },
-    {
-      "src": "^/api/nest$",
-      "dest": "/api/nest.js"
-    },
-    {
       "src": "/api/badge/([A-Z0-9]+)",
       "dest": "/api/badge.js?address=$1"
     },
@@ -104,46 +88,6 @@
       "dest": "/api/verify.js"
     },
     {
-      "src": "/api/trust-score",
-      "dest": "/api/registry.js"
-    },
-    {
-      "src": "/api/tasks/create",
-      "dest": "/api/registry.js"
-    },
-    {
-      "src": "/api/tasks/claim",
-      "dest": "/api/registry.js"
-    },
-    {
-      "src": "/api/tasks/deliver",
-      "dest": "/api/registry.js"
-    },
-    {
-      "src": "/api/tasks/confirm",
-      "dest": "/api/registry.js"
-    },
-    {
-      "src": "/api/tasks/escrow",
-      "dest": "/api/registry.js"
-    },
-    {
-      "src": "/api/tasks",
-      "dest": "/api/registry.js"
-    },
-    {
-      "src": "/api/registry/pulse",
-      "dest": "/api/registry.js"
-    },
-    {
-      "src": "/api/registry/card/([A-Z0-9]+)",
-      "dest": "/api/registry.js?address=$1"
-    },
-    {
-      "src": "/api/registry",
-      "dest": "/api/registry.js"
-    },
-    {
       "src": "/api/eligibility",
       "dest": "/api/verify.js"
     },
@@ -156,28 +100,8 @@
       "dest": "/mint-page/holders.html"
     },
     {
-      "src": "/utilities",
-      "dest": "/mint-page/holders.html"
-    },
-    {
       "src": "/traits",
       "dest": "/mint-page/traits.html"
-    },
-    {
-      "src": "/market",
-      "dest": "/mint-page/market.html"
-    },
-    {
-      "src": "/api/market",
-      "dest": "/api/market.js"
-    },
-    {
-      "src": "/directory",
-      "dest": "/mint-page/directory.html"
-    },
-    {
-      "src": "/network",
-      "dest": "/mint-page/directory.html"
     },
     {
       "src": "/log",
@@ -194,23 +118,6 @@
     {
       "src": "/holder/([A-Z0-9]+)",
       "dest": "/mint-page/holder.html"
-    },
-    {
-      "src": "/tasks",
-      "dest": "/mint-page/tasks.html"
-    },
-    {
-      "src": "/.well-known/agent.json",
-      "dest": "/public/.well-known/agent.json"
-    },
-    {
-      "src": "/api/agent-registry.json",
-      "dest": "/public/api/agent-registry.json",
-      "headers": { "Content-Type": "application/json", "Cache-Control": "public, max-age=3600, stale-while-revalidate=86400" }
-    },
-    {
-      "src": "/pulse",
-      "dest": "/mint-page/pulse.html"
     },
     {
       "src": "/scripts/(.*)",

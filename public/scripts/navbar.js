@@ -17,18 +17,14 @@
   // Edit these arrays to add/remove/reorder pages. One place, propagates everywhere.
 
   var PRIMARY = [
-    { label: 'Gallery',  href: '/gallery'   },
-    { label: 'Holders',  href: '/holders'   },
-    { label: 'Market',   href: '/market'    },
-    { label: 'Network',  href: '/directory' },
+    { label: 'Gallery',    href: '/gallery'    },
+    { label: 'Holders',   href: '/holders'    },
+    { label: 'Traits',    href: '/traits'     },
   ];
 
   var MORE = [
-    { label: 'Pulse',        href: '/pulse'        },
-    { label: 'Leaderboard', href: '/leaderboard'  },
-    { label: 'Tasks',       href: '/tasks'        },
-    { label: 'Log',         href: '/log'          },
-    { label: 'Whitepaper',  href: '/whitepaper'   },
+    { label: 'Whitepaper', href: '/whitepaper' },
+    { label: 'Log',        href: '/log'        },
   ];
 
   var BRAND      = '🦅 Early Eagles';
