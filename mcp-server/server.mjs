@@ -279,7 +279,7 @@ function parseBody(req) {
   });
 }
 
-httpServer.listen(PORT, () => {
+httpServer.listen(PORT, '127.0.0.1', () => {
   console.log(`Eagle MCP server running on http://localhost:${PORT}/mcp`);
   console.log(`Health check: http://localhost:${PORT}/health`);
   console.log(`Auth: include X-Eagle-Address + X-Eagle-Sig headers`);
