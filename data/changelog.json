@@ -56,18 +56,21 @@
   },
   {
     "date": "2026-06-19",
-    "version": "fix",
-    "summary": "Badge: fetch AIBTC level from own registry (not aibtc.com directly) \u2014 fixes Cloudflare block from Vercel"
+    "title": "Badge: fetch AIBTC level from own registry (not aibtc.com directly) \u2014 fixes Cloudflare block from Vercel",
+    "description": "",
+    "type": "fix"
   },
   {
     "date": "2026-06-19",
-    "version": "fix",
-    "summary": "Badge: conditional cache TTL \u2014 AIBTC fallback now expires in 5min instead of 1h"
+    "title": "Badge: conditional cache TTL \u2014 AIBTC fallback now expires in 5min instead of 1h",
+    "description": "",
+    "type": "fix"
   },
   {
     "date": "2026-06-19",
-    "version": "fix",
-    "summary": "Fix missing /scripts/ route \u2014 navbar.js was 404 on Vercel (catch-all was hijacking it)"
+    "title": "Fix missing /scripts/ route \u2014 navbar.js was 404 on Vercel (catch-all was hijacking it)",
+    "description": "",
+    "type": "fix"
   },
   {
     "date": "2026-06-19",

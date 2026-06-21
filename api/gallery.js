@@ -10,8 +10,6 @@
  *  3. In-memory cache — fastest path for warm instances
  */
 
-const { fetchCallReadOnlyFunction, cvToValue } = require('@stacks/transactions');
-const { STACKS_MAINNET } = require('@stacks/network');
 const { c32address } = require('c32check');
 
 // Lazy KV loader — only connect when env vars are present (same pattern as nest.js)
@@ -215,17 +213,18 @@ module.exports = async function handler(req, res) {
   res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=300');
 
   try {
-    // 1. Get total minted (use get-mint-stats — accurate count, not last-id)
-    const statsCV = await fetchCallReadOnlyFunction({
-      contractAddress: ADMIN_ADDRESS,
-      contractName: NFT_CONTRACT,
-      functionName: 'get-mint-stats',
-      functionArgs: [],
-      senderAddress: ADMIN_ADDRESS,
-      network: STACKS_MAINNET,
-    });
-    const stats = cvToValue(statsCV);
-    const totalMinted = parseInt(stats['total-minted'].value, 10) || 0;
+    // 1. Get total minted via direct call-read (v7 compatible)
+    const { hexToCV, cvToJSON } = await import('@stacks/transactions');
+    const mintStatsRes = await fetch(
+      `${STACKS_API}/v2/contracts/call-read/${ADMIN_ADDRESS}/${NFT_CONTRACT}/get-mint-stats`,
+      { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sender: ADMIN_ADDRESS, arguments: [] }) }
+    );
+    if (!mintStatsRes.ok) throw new Error(`get-mint-stats ${mintStatsRes.status}`);
+    const mintStatsData = await mintStatsRes.json();
+    if (!mintStatsData.okay) throw new Error('get-mint-stats contract error');
+    const statsJson = cvToJSON(hexToCV(mintStatsData.result));
+    const totalMinted = parseInt(statsJson?.value?.value?.['total-minted']?.value ?? statsJson?.value?.['total-minted']?.value ?? '0', 10) || 0;
 
     // 2. Get renderer segments (cache in memory — they're locked)
     if (!_segCache) {
