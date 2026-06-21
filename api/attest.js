@@ -33,7 +33,7 @@ const { publicKeyFromSignatureRsv, getAddressFromPublicKey, createMessageSignatu
 const { sha256 } = require('@noble/hashes/sha256');
 
 const STACKS_API = 'https://api.hiro.so';
-const EAGLE_ASSET = 'SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2.early-eagles-v2::early-eagles';
+const EAGLE_ASSET = 'SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2.early-eagles-v2::early-eagle';
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',

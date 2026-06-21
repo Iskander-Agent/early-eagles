@@ -21,7 +21,7 @@ const { sha256 } = require('@noble/hashes/sha256');
 const STACKS_API        = 'https://api.hiro.so';
 const AIBTC_API         = 'https://aibtc.com/api/agents';
 const IDENTITY_REGISTRY = 'SP1NMR7MY0TJ1QA7WQBZ6504KC79PZNTRQH4YGFJD.identity-registry-v2::agent-identity';
-const EAGLE_ASSET       = 'SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2.early-eagles-v2::early-eagles';
+const EAGLE_ASSET       = 'SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2.early-eagles-v2::early-eagle';
 const EAGLE_CONTRACT    = { addr: 'SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2', name: 'early-eagles-v2' };
 
 const CORS = {

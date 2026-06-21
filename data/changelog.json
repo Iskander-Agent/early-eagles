@@ -1,6 +1,12 @@
 [
   {
     "date": "2026-06-21",
+    "title": "Fix Eagle asset ID -- early-eagle not early-eagles",
+    "description": "Hiro NFT holdings API requires the exact asset class name from the contract. Contract defines early-eagle (singular); all 5 files (registry, verify, nest, attest, mcp-server) were using early-eagles (plural) causing all holder verification to silently return 0 holdings.",
+    "type": "fix"
+  },
+  {
+    "date": "2026-06-21",
     "title": "Fix signature verification in KV registry (verifyNonceSignature)",
     "description": "publicKeyFromSignatureRsv in @stacks/transactions v7 takes raw hex string, not MessageSignature object; and returns hex string pubKey, not {data:...}. Also TransactionVersion.Mainnet is undefined in v7 -- use string mainnet. Both bugs caused every registry POST to silently fail with 401.",
     "type": "fix"
