@@ -1,6 +1,12 @@
 [
   {
     "date": "2026-06-21",
+    "title": "Fix serializeCV double-encoding in trust score API",
+    "description": "In @stacks/transactions v7, serializeCV returns a hex string (not Uint8Array). Wrapping in Buffer.from() was double-encoding (treating hex chars as UTF-8 bytes), causing get-trust-score calls to always return null. Fix: pass hex string directly.",
+    "type": "fix"
+  },
+  {
+    "date": "2026-06-21",
     "title": "Fix Eagle asset ID -- early-eagle not early-eagles",
     "description": "Hiro NFT holdings API requires the exact asset class name from the contract. Contract defines early-eagle (singular); all 5 files (registry, verify, nest, attest, mcp-server) were using early-eagles (plural) causing all holder verification to silently return 0 holdings.",
     "type": "fix"

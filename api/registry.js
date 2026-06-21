@@ -200,7 +200,7 @@ async function writeTasks(kv, data) {
 async function fetchPulseScore(address) {
   const { serializeCV, standardPrincipalCV, hexToCV, cvToJSON } = await import('@stacks/transactions');
   let argHex;
-  try { argHex = '0x' + Buffer.from(serializeCV(standardPrincipalCV(address))).toString('hex'); }
+  try { argHex = '0x' + serializeCV(standardPrincipalCV(address)); }
   catch { return null; }
   const r = await fetch(
     `${STACKS_API}/v2/contracts/call-read/${ADMIN_ADDRESS}/${PULSE_CONTRACT}/get-trust-score`,
