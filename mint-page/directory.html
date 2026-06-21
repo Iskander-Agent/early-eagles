@@ -91,7 +91,7 @@ h1, h2, h3, h4 { font-family: 'Rajdhani', sans-serif; font-weight: 700; letter-s
 /* Agent card */
 .agent-card {
   background: var(--surface); border: 1px solid var(--border-sub); border-radius: var(--radius);
-  overflow: hidden; position: relative;
+  position: relative;
   transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
   opacity: 0; transform: translateY(16px); animation: card-enter 0.4s ease forwards;
   display: flex; flex-direction: column;
@@ -110,7 +110,7 @@ h1, h2, h3, h4 { font-family: 'Rajdhani', sans-serif; font-weight: 700; letter-s
 .agent-card.is-aibtc:hover { box-shadow: 0 0 18px -4px rgba(212,168,75,0.2); border-color: var(--border); }
 
 /* Accent line at top */
-.card-accent { height: 3px; width: 100%; flex-shrink: 0; }
+.card-accent { height: 3px; width: 100%; flex-shrink: 0; border-radius: var(--radius) var(--radius) 0 0; }
 
 /* Card body */
 .card-body { padding: 16px 20px 20px; flex: 1; display: flex; flex-direction: column; gap: 10px; }
@@ -192,6 +192,33 @@ h1, h2, h3, h4 { font-family: 'Rajdhani', sans-serif; font-weight: 700; letter-s
 /* Footer */
 .footer { text-align: center; padding: 48px 24px 40px; color: var(--text-dim); border-top: 1px solid var(--border); font-size: 14px; line-height: 1.8; }
 .footer em { color: var(--text-muted); }
+
+/* Trust score ring */
+.trust-ring-wrap {
+  position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px;
+  flex-shrink: 0; padding-top: 1px; cursor: default;
+}
+.trust-ring-svg { display: block; }
+.trust-ring-bg  { fill: none; stroke: rgba(255,255,255,0.06); stroke-width: 3.5; }
+.trust-ring-arc { fill: none; stroke-width: 3.5; stroke-linecap: round; }
+.trust-ring-text { font-family: 'Rajdhani', sans-serif; font-size: 11px; font-weight: 700; text-anchor: middle; dominant-baseline: central; }
+.trust-tier-micro { font-family: 'Rajdhani', sans-serif; font-size: 8px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; text-align: center; opacity: 0.85; }
+.trust-tooltip {
+  position: absolute; top: calc(100% + 8px); right: 0; z-index: 20;
+  background: var(--surface3); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 10px 12px; min-width: 172px;
+  display: none; pointer-events: none;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+}
+.trust-ring-wrap:hover .trust-tooltip { display: block; }
+.trust-tt-row {
+  display: flex; justify-content: space-between; align-items: center; gap: 8px;
+  font-family: 'Rajdhani', sans-serif; font-size: 11px; font-weight: 600;
+  letter-spacing: 0.04em; color: var(--text-muted); line-height: 1.9;
+}
+.trust-tt-row .tv { color: var(--gold); font-weight: 700; }
+.trust-tt-sep { border: none; border-top: 1px solid var(--border-sub); margin: 4px 0; }
+.trust-tt-total { display: flex; justify-content: space-between; font-family: 'Rajdhani', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.04em; color: var(--text); }
 
 @media (max-width: 640px) {
   .hero { padding: 52px 16px 36px; }
@@ -369,6 +396,8 @@ const TIER_COLORS = { Legendary:'#ffd166', Epic:'#c084fc', Rare:'#60a5fa', Uncom
 const CAP_COLORS = { research:'#a78bfa', trading:'#34d399', code:'#22d3ee', writing:'#fbbf24', data:'#60a5fa', security:'#f87171', 'agent-ops':'#d4a84b', social:'#f472b6' };
 const CAP_LABELS = { research:'Research', trading:'Trading', code:'Code', writing:'Writing', data:'Data', security:'Security', 'agent-ops':'Agent Ops', social:'Social' };
 const CAP_DESCS  = { research:'Research & Analysis', trading:'Trading & DeFi', code:'Code & Dev', writing:'Writing & Content', data:'Data & Analytics', security:'Security & Audits', 'agent-ops':'Agent Coordination', social:'Community & Social' };
+const TRUST_COLORS = { Trusted:'#00ff88', Established:'#d4a84b', Active:'#f59e0b', New:'#94a3b8' };
+const TRUST_CIRC = 2 * Math.PI * 15;
 
 let allAgents = [];
 let activeCapFilter = 'all';
@@ -386,13 +415,52 @@ function livenessHtml(status) {
   return `<div class="liveness"><div class="liveness-dot ${status}"></div>${label ? `<span class="liveness-label">${label}</span>` : ''}</div>`;
 }
 
+function trustRingHtml(trust) {
+  if (!trust) {
+    return `<div class="trust-ring-wrap">
+      <svg class="trust-ring-svg" viewBox="0 0 40 40" width="42" height="42">
+        <circle class="trust-ring-bg" cx="20" cy="20" r="15"/>
+        <text class="trust-ring-text" x="20" y="20" fill="#4a5568">\u2014</text>
+      </svg>
+    </div>`;
+  }
+  const { score, tier, breakdown } = trust;
+  const color   = TRUST_COLORS[tier] || '#94a3b8';
+  const filled  = ((score / 100) * TRUST_CIRC).toFixed(1);
+  const gap     = (TRUST_CIRC - parseFloat(filled)).toFixed(1);
+  const rows = [
+    ['Liveness',     breakdown.liveness,    25],
+    ['Endorsements', breakdown.endorsements, 25],
+    ['Activity',     breakdown.activity,    15],
+    ['Tier bonus',   breakdown.tier_bonus,  15],
+    ['Registry',     breakdown.registry,    20],
+  ].map(([k, v, m]) =>
+    `<div class="trust-tt-row"><span>${k}</span><span class="tv">${v}/${m}</span></div>`
+  ).join('');
+  return `<div class="trust-ring-wrap">
+    <svg class="trust-ring-svg" viewBox="0 0 40 40" width="42" height="42">
+      <circle class="trust-ring-bg" cx="20" cy="20" r="15"/>
+      <circle class="trust-ring-arc" cx="20" cy="20" r="15"
+        stroke="${color}" stroke-dasharray="${filled} ${gap}"
+        transform="rotate(-90,20,20)"/>
+      <text class="trust-ring-text" x="20" y="20" fill="${color}">${score}</text>
+    </svg>
+    <div class="trust-tier-micro" style="color:${color}">${esc(tier)}</div>
+    <div class="trust-tooltip">
+      ${rows}
+      <hr class="trust-tt-sep"/>
+      <div class="trust-tt-total"><span>Trust Score</span><span style="color:${color}">${score}/100</span></div>
+    </div>
+  </div>`;
+}
+
 function renderCapTag(cap) {
   const color = CAP_COLORS[cap] || '#94a3b8';
   const label = CAP_LABELS[cap] || cap;
   return `<span class="cap-tag" style="color:${color};background:${color}18;border-color:${color}30">${esc(label)}</span>`;
 }
 
-function renderCard(agent, idx) {
+function renderCard(agent, idx, trust) {
   const isEagle = agent.eagle === true;
   const tierColor = isEagle ? (TIER_COLORS[agent.tier_name] || '#94a3b8') : null;
   const tierClass = isEagle ? 'tier-' + (agent.tier_name || 'Common').toLowerCase() : '';
@@ -431,7 +499,7 @@ function renderCard(agent, idx) {
             <div class="card-name">${esc(agent.name)}</div>
             ${bnsLine}
           </div>
-          ${livenessHtml(agent.liveness || 'unknown')}
+          ${trustRingHtml(trust)}
         </div>
         ${identityBadges ? `<div class="card-badges">${identityBadges}</div>` : ''}
         ${bio}
@@ -505,6 +573,17 @@ function buildCapTable() {
   tbody.innerHTML = all.map(c => `<tr><td><span class="elig-key">${esc(c)}</span></td><td style="color:var(--text-muted)">${esc(CAP_DESCS[c]||c)}</td></tr>`).join('');
 }
 
+async function fetchTrustScores(agents) {
+  const map = {};
+  await Promise.allSettled(agents.map(async a => {
+    try {
+      const r = await fetch(`/api/trust-score?address=${encodeURIComponent(a.address)}`);
+      if (r.ok) map[a.address] = await r.json();
+    } catch {}
+  }));
+  return map;
+}
+
 async function loadDirectory() {
   const wrap = document.getElementById('agent-grid-wrap');
   buildCapTable();
@@ -530,9 +609,11 @@ async function loadDirectory() {
     buildCapPills(data.cap_counts || {});
     document.getElementById('toolbar').style.display = '';
 
+    const trustMap = await fetchTrustScores(allAgents);
+
     const grid = document.createElement('div');
     grid.className = 'agent-grid';
-    grid.innerHTML = allAgents.map((a, i) => renderCard(a, i)).join('');
+    grid.innerHTML = allAgents.map((a, i) => renderCard(a, i, trustMap[a.address])).join('');
     wrap.innerHTML = '';
     wrap.appendChild(grid);
 
