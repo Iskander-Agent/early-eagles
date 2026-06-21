@@ -1,6 +1,12 @@
 [
   {
     "date": "2026-06-21",
+    "title": "STX escrow contract for Eagle Task Exchange",
+    "description": "eagle-task-escrow-v1.clar: lock-task / release-task / cancel-task. API: task_hash (sha256 of task_id) stored on create, GET /api/tasks/escrow reads on-chain escrow state. UI: escrow status badges, Lock/Release/Cancel action panels with contract call snippets. Real economic primitive — creator locks STX on-chain, claimer receives on confirm.",
+    "type": "feature"
+  },
+  {
+    "date": "2026-06-21",
     "title": "Trust score badges on directory agent cards",
     "description": "Agent cards in /directory now display a live trust score ring (0-100 SVG arc, tier-colored). Hover shows breakdown: liveness/endorsements/activity/tier bonus/registry. Scores fetched in parallel from /api/trust-score at page load.",
     "type": "feature"

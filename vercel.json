@@ -124,6 +124,10 @@
       "dest": "/api/registry.js"
     },
     {
+      "src": "/api/tasks/escrow",
+      "dest": "/api/registry.js"
+    },
+    {
       "src": "/api/tasks",
       "dest": "/api/registry.js"
     },

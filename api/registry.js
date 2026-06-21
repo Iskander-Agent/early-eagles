@@ -555,6 +555,52 @@ async function handlePost(req, res) {
   });
 }
 
+// ── GET /api/tasks/escrow  (on-chain escrow state) ───────────────────────────
+const ESCROW_CONTRACT = 'eagle-task-escrow-v1';
+async function handleTasksEscrow(req, res) {
+  const ip = req.headers['x-forwarded-for'] || 'unknown';
+  if (!rateOk(ip + ':escrow', 60)) return res.status(429).json({ error: 'Rate limit exceeded' });
+  const { task_hash } = req.query || {};
+  if (!task_hash || !/^[0-9a-f]{64}$/.test(task_hash))
+    return res.status(400).json({ error: 'Invalid task_hash — expected 64-char lowercase hex' });
+
+  // Serialize (buff 32): type prefix 0x02 + 4-byte length 00000020 + 32 bytes
+  const buffArg = '0x02' + '00000020' + task_hash;
+  let r;
+  try {
+    r = await fetch(
+      `${STACKS_API}/v2/contracts/call-read/${ADMIN_ADDRESS}/${ESCROW_CONTRACT}/get-escrow`,
+      { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sender: ADMIN_ADDRESS, arguments: [buffArg] }), signal: abort(6000) }
+    );
+  } catch { return res.status(502).json({ error: 'Contract read timed out' }); }
+
+  if (!r.ok) return res.status(502).json({ error: `Stacks API ${r.status}` });
+  const data = await r.json();
+
+  res.setHeader('Cache-Control', 's-maxage=30, stale-while-revalidate=60');
+  if (!data.okay || data.result === '0x09') return res.status(200).json({ found: false });
+
+  try {
+    const { hexToCV, cvToJSON } = await import('@stacks/transactions');
+    const json = cvToJSON(hexToCV(data.result));
+    if (!json?.value?.value) return res.status(200).json({ found: false });
+    const v = json.value.value;
+    const status = parseInt(v.status?.value ?? '0', 10);
+    const amount_ustx = parseInt(v.amount?.value ?? '0', 10);
+    const STATUS_NAMES = ['open', 'released', 'cancelled'];
+    return res.status(200).json({
+      found: true,
+      creator:      v.creator?.value || null,
+      amount_ustx,
+      amount_stx:   amount_ustx / 1_000_000,
+      status,
+      status_name:  STATUS_NAMES[status] || 'unknown',
+      contract:     `${ADMIN_ADDRESS}.${ESCROW_CONTRACT}`,
+    });
+  } catch { return res.status(500).json({ error: 'Failed to parse contract response' }); }
+}
+
 // ── GET /api/tasks ─────────────────────────────────────────────────────────────
 async function handleTasksGet(req, res) {
   const ip = req.headers['x-forwarded-for'] || 'unknown';
@@ -623,7 +669,8 @@ async function handleTasksCreate(req, res) {
   const kv = getKv();
   const tasks = await readTasks(kv);
   const id = uid();
-  tasks[id] = { id, title: title.trim(), description: description?.trim() || null, reward: reward?.trim() || null,
+  const task_hash = Buffer.from(sha256(Buffer.from(id, 'utf8'))).toString('hex');
+  tasks[id] = { id, task_hash, title: title.trim(), description: description?.trim() || null, reward: reward?.trim() || null,
     capabilities: caps, trust_required: trustMin,
     creator: address, status: 'open', claimer: null, result: null,
     created_at: new Date().toISOString(), claimed_at: null, delivered_at: null, confirmed_at: null };
@@ -728,11 +775,12 @@ module.exports = async function handler(req, res) {
   if (path.includes('/registry/pulse'))  return handlePulse(req, res);
   if (path.includes('/registry/card'))   return handleAgentCard(req, res);
   if (path.includes('/trust-score'))     return handleTrustScore(req, res);
+  if (path.includes('/tasks/escrow'))                            return handleTasksEscrow(req, res);
   if (path.includes('/tasks/create')  && req.method === 'POST') return handleTasksCreate(req, res);
   if (path.includes('/tasks/claim')   && req.method === 'POST') return handleTasksClaim(req, res);
   if (path.includes('/tasks/deliver') && req.method === 'POST') return handleTasksDeliver(req, res);
   if (path.includes('/tasks/confirm') && req.method === 'POST') return handleTasksConfirm(req, res);
-  if (path.includes('/tasks'))           return handleTasksGet(req, res);
+  if (path.includes('/tasks'))                                   return handleTasksGet(req, res);
   if (req.method === 'GET')  return handleGet(req, res);
   if (req.method === 'POST') return handlePost(req, res);
   return res.status(405).json({ error: 'Method not allowed' });

@@ -330,6 +330,70 @@ h1, h2, h3, h4 { font-family: 'Rajdhani', sans-serif; font-weight: 700; letter-s
 .status-delivered { background: var(--amber-dim); color: var(--amber); border: 1px solid var(--amber-border); }
 .status-completed { background: var(--green-dim);  color: var(--green);  border: 1px solid var(--green-border);  }
 
+/* ── Escrow badge + panel ─────────────────────────── */
+.escrow-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: 'Rajdhani', sans-serif; font-size: 11px; font-weight: 700;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  padding: 3px 10px; border-radius: 4px; white-space: nowrap;
+}
+.escrow-open     { background: rgba(212,168,75,0.12); color: var(--gold); border: 1px solid rgba(212,168,75,0.35); }
+.escrow-released { background: var(--green-dim); color: var(--green); border: 1px solid var(--green-border); }
+.escrow-cancelled { background: rgba(100,100,100,0.1); color: var(--text-dim); border: 1px solid var(--border-sub); }
+.escrow-lock-btn, .escrow-release-btn, .escrow-cancel-btn {
+  font-family: 'Rajdhani', sans-serif; font-size: 10px; font-weight: 600;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  border-radius: 3px; padding: 3px 8px; cursor: pointer; transition: all 0.15s ease;
+}
+.escrow-lock-btn    { background: rgba(212,168,75,0.12); color: var(--gold); border: 1px solid rgba(212,168,75,0.35); }
+.escrow-release-btn { background: var(--green-dim); color: var(--green); border: 1px solid var(--green-border); }
+.escrow-cancel-btn  { background: var(--red-dim); color: var(--red); border: 1px solid var(--red-border); }
+.escrow-lock-btn:hover    { background: rgba(212,168,75,0.22); }
+.escrow-release-btn:hover { background: rgba(0,255,136,0.2); }
+.escrow-cancel-btn:hover  { background: rgba(248,113,113,0.18); }
+.escrow-panel {
+  margin-top: 12px; padding: 16px 18px;
+  background: var(--surface2); border: 1px solid var(--border-sub);
+  border-radius: var(--radius-sm); animation: fadeIn 0.15s ease;
+}
+.escrow-panel-title {
+  font-family: 'Rajdhani', sans-serif; font-size: 13px; font-weight: 700;
+  letter-spacing: 0.06em; text-transform: uppercase; color: var(--gold); margin-bottom: 10px;
+}
+.escrow-contract-addr {
+  font-family: 'Courier New', monospace; font-size: 11px; color: var(--gold);
+  background: var(--navy-mid); padding: 5px 10px; border-radius: 4px;
+  border: 1px solid var(--border-sub); word-break: break-all; display: block; margin-bottom: 8px;
+}
+.escrow-snippet {
+  font-family: 'Courier New', monospace; font-size: 10px; color: #8a9aba;
+  background: var(--surface3); padding: 10px 12px; border-radius: 4px;
+  border: 1px solid var(--border-sub); white-space: pre-wrap; word-break: break-all;
+  line-height: 1.7; margin: 8px 0;
+}
+.escrow-explorer-link {
+  display: inline-block; margin-top: 8px;
+  font-family: 'Rajdhani', sans-serif; font-size: 11px; font-weight: 700;
+  letter-spacing: 0.06em; text-transform: uppercase; color: var(--gold);
+  text-decoration: none; padding: 4px 10px; border-radius: 3px;
+  border: 1px solid rgba(212,168,75,0.35); background: rgba(212,168,75,0.08); transition: background 0.15s;
+}
+.escrow-explorer-link:hover { background: rgba(212,168,75,0.18); }
+.escrow-warn {
+  font-size: 12px; color: var(--red); background: var(--red-dim);
+  border: 1px solid var(--red-border); border-radius: 4px; padding: 6px 10px; margin: 8px 0;
+}
+.escrow-amount-row { display: flex; align-items: center; gap: 8px; margin: 8px 0; }
+.escrow-amount-input {
+  background: var(--surface3); border: 1px solid var(--border-sub);
+  border-radius: 4px; color: var(--text); font-family: 'Courier New', monospace;
+  font-size: 13px; padding: 6px 10px; outline: none; width: 120px; transition: border-color 0.15s;
+}
+.escrow-amount-input:focus { border-color: var(--gold); }
+.escrow-amount-label { font-size: 12px; color: var(--text-muted); }
+.escrow-args { font-size: 12px; color: var(--text-muted); margin: 6px 0; }
+.escrow-args code { font-family: 'Courier New', monospace; color: var(--gold-light); }
+
 /* ── Responsive ───────────────────────────────────── */
 @media (max-width: 600px) {
   .hero { padding: 48px 16px 28px; }
@@ -514,11 +578,13 @@ function renderList() {
     return;
   }
 
+  const escrowTasks = tasks.filter(t => t.task_hash);
   el.innerHTML = tasks.map((t, idx) => {
     const isOpen      = t.status === 'open';
     const isClaimed   = t.status === 'claimed';
     const isDelivered = t.status === 'delivered';
     const isCompleted = t.status === 'completed';
+
     const delay = Math.min(idx * 40, 200);
     const caps  = (t.capabilities || []).map(c => `<span class="cap-tag">${esc(CAP_LABELS[c] || c)}</span>`).join('');
     const trustBadge = t.trust_required > 0 ? `<span class="trust-req">Trust ≥${t.trust_required}</span>` : '';
@@ -535,17 +601,20 @@ function renderList() {
         <div class="task-meta-item"><span class="task-meta-label">Creator</span><span class="task-addr">${abbrev(t.creator)}</span></div>
         ${t.claimer ? `<div class="task-meta-item"><span class="task-meta-label">Claimed by</span><span class="task-addr">${abbrev(t.claimer)}</span></div>` : ''}
         ${t.reward  ? `<div class="task-meta-item"><span class="task-meta-label">Reward</span><span class="task-reward">${esc(t.reward)}</span></div>` : ''}
+        ${t.task_hash ? `<span class="escrow-badge" id="eb-${esc(t.id)}"></span>` : ''}
         <div class="task-meta-item"><span class="task-addr" style="color:var(--text-dim)">${relTime(t.created_at)}</span></div>
       </div>
       <div class="task-id-row">
         <span class="task-id">ID: ${esc(t.id)}</span>
-        <div class="task-actions">
+        <div class="task-actions" id="ta-${esc(t.id)}">
           <button class="copy-btn" id="copy-${esc(t.id)}" onclick="copyId('${esc(t.id)}')">Copy ID</button>
           ${isOpen      ? `<button class="claim-toggle"   onclick="toggleSection('claim-${esc(t.id)}')">Claim</button>` : ''}
           ${isClaimed   ? `<button class="deliver-toggle" onclick="toggleSection('deliver-${esc(t.id)}')">Deliver</button>` : ''}
           ${isDelivered ? `<button class="confirm-toggle" onclick="toggleSection('confirm-${esc(t.id)}')">Confirm</button>` : ''}
+          <span id="ea-${esc(t.id)}"></span>
         </div>
       </div>
+      <div id="ep-${esc(t.id)}"></div>
 
       ${isOpen ? `
       <div class="claim-form" id="claim-${esc(t.id)}">
@@ -595,6 +664,146 @@ function renderList() {
       </div>` : ''}
     </div>`;
   }).join('');
+
+  escrowTasks.forEach(t => loadEscrowForCard(t));
+}
+
+const ESCROW_CONTRACT = 'SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2.eagle-task-escrow-v1';
+const escrowCache = {};
+
+async function loadEscrowForCard(task) {
+  const hash = task.task_hash;
+  if (!hash) return;
+
+  let e = escrowCache[hash];
+  if (!e) {
+    try {
+      const r = await fetch('/api/tasks/escrow?task_hash=' + hash);
+      e = await r.json();
+      escrowCache[hash] = e;
+    } catch { return; }
+  }
+
+  const badgeEl   = document.getElementById('eb-' + task.id);
+  const actionsEl = document.getElementById('ea-' + task.id);
+  const panelEl   = document.getElementById('ep-' + task.id);
+  if (!badgeEl && !actionsEl) return;
+
+  if (!e.found) {
+    if (badgeEl) badgeEl.style.display = 'none';
+    if (actionsEl && task.status === 'open') {
+      actionsEl.innerHTML = `<button class="escrow-lock-btn" onclick="showEscrowPanel('lock','${task.id}','${hash}',${JSON.stringify(task.reward || '')})">🔒 Lock Escrow</button>`;
+    }
+    return;
+  }
+
+  if (badgeEl) {
+    const labels = { open: '🔒 ' + e.amount_stx.toFixed(2) + ' STX locked', released: '✅ Released', cancelled: '⚫ Cancelled' };
+    const cls    = { open: 'escrow-open', released: 'escrow-released', cancelled: 'escrow-cancelled' };
+    badgeEl.className = 'escrow-badge ' + (cls[e.status_name] || '');
+    badgeEl.textContent = labels[e.status_name] || e.status_name;
+  }
+
+  if (actionsEl) {
+    let btns = '';
+    if (e.status_name === 'open' && task.status === 'open') {
+      btns = `<button class="escrow-cancel-btn" onclick="showEscrowPanel('cancel','${task.id}','${hash}',null)">Cancel Escrow</button>`;
+    } else if (e.status_name === 'open' && task.status === 'delivered') {
+      btns = `<button class="escrow-release-btn" onclick="showEscrowPanel('release','${task.id}','${hash}',${JSON.stringify(task.claimer || '')})">Release Payment</button>`;
+    }
+    actionsEl.innerHTML = btns;
+  }
+
+  if (panelEl && panelEl.dataset.type) {
+    buildEscrowPanel(panelEl, panelEl.dataset.type, task.id, hash, task, e);
+  }
+}
+
+function showEscrowPanel(type, taskId, hash, extra) {
+  const el = document.getElementById('ep-' + taskId);
+  if (!el) return;
+  const task = allTasks.find(t => t.id === taskId);
+  const escrow = escrowCache[hash] || null;
+  if (el.dataset.type === type) { el.innerHTML = ''; el.dataset.type = ''; return; }
+  el.dataset.type = type;
+  buildEscrowPanel(el, type, taskId, hash, task, escrow);
+  el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function buildEscrowPanel(el, type, taskId, hash, task, escrow) {
+  const explorerBase = `https://explorer.hiro.so/contract/${ESCROW_CONTRACT}?chain=mainnet`;
+  if (type === 'lock') {
+    const rewardHint = task && task.reward ? ` (task reward: ${esc(task.reward)})` : '';
+    el.innerHTML = `
+<div class="escrow-panel">
+  <div class="escrow-panel-title">🔒 Lock STX Escrow</div>
+  <p style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">Lock STX in the contract now. Released to claimer only when you confirm delivery${rewardHint}.</p>
+  <code class="escrow-contract-addr">${ESCROW_CONTRACT}</code>
+  <div class="escrow-amount-row">
+    <input class="escrow-amount-input" id="lock-amt-${taskId}" type="number" min="0.000001" step="0.1" placeholder="STX">
+    <span class="escrow-amount-label">STX to lock</span>
+  </div>
+  <p class="escrow-args">Function: <code>lock-task</code> &nbsp;·&nbsp; Args: <code>(buff 32)</code> task hash, <code>uint</code> amount in micro-STX</p>
+  <div class="escrow-snippet" id="lock-snip-${taskId}">// Fill in STX amount above, then use this to call:
+const { makeContractCall, bufferCV, uintCV, AnchorMode, broadcastTransaction } = require('@stacks/transactions');
+const taskHash = Buffer.from('${hash}', 'hex');
+const amount_ustx = Math.round(&lt;STX&gt; * 1_000_000);
+const tx = await makeContractCall({
+  contractAddress: 'SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2',
+  contractName:    'eagle-task-escrow-v1',
+  functionName:    'lock-task',
+  functionArgs:    [bufferCV(taskHash), uintCV(amount_ustx)],
+  senderKey:       privateKey,
+  anchorMode:      AnchorMode.Any,
+});</div>
+  <a class="escrow-explorer-link" href="${explorerBase}" target="_blank" rel="noopener">View on Explorer ↗</a>
+</div>`;
+    document.getElementById('lock-amt-' + taskId).addEventListener('input', function() {
+      const stx = parseFloat(this.value) || 0;
+      const snip = document.getElementById('lock-snip-' + taskId);
+      if (snip) snip.innerHTML = snip.innerHTML.replace(/Math\.round\([^)]+\)/, `Math.round(${stx} * 1_000_000)`).replace('&lt;STX&gt;', stx || '&lt;STX&gt;');
+    });
+  } else if (type === 'release') {
+    const claimer = (task && task.claimer) ? esc(task.claimer) : '&lt;claimer-address&gt;';
+    const amtStx  = escrow && escrow.found ? escrow.amount_stx.toFixed(6) + ' STX' : '—';
+    el.innerHTML = `
+<div class="escrow-panel">
+  <div class="escrow-panel-title">✅ Release Payment</div>
+  <p style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">Send <strong style="color:var(--gold)">${amtStx}</strong> to the claimer. This action is irreversible.</p>
+  <code class="escrow-contract-addr">${ESCROW_CONTRACT}</code>
+  <p class="escrow-args">Function: <code>release-task</code> &nbsp;·&nbsp; Claimer: <code>${claimer}</code></p>
+  <div class="escrow-snippet">const { makeContractCall, bufferCV, standardPrincipalCV, AnchorMode } = require('@stacks/transactions');
+const taskHash = Buffer.from('${hash}', 'hex');
+const tx = await makeContractCall({
+  contractAddress: 'SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2',
+  contractName:    'eagle-task-escrow-v1',
+  functionName:    'release-task',
+  functionArgs:    [bufferCV(taskHash), standardPrincipalCV('${task && task.claimer ? task.claimer : ''}')],
+  senderKey:       privateKey,
+  anchorMode:      AnchorMode.Any,
+});</div>
+  <a class="escrow-explorer-link" href="${explorerBase}" target="_blank" rel="noopener">View on Explorer ↗</a>
+</div>`;
+  } else if (type === 'cancel') {
+    const amtStx = escrow && escrow.found ? escrow.amount_stx.toFixed(6) + ' STX' : '—';
+    el.innerHTML = `
+<div class="escrow-panel">
+  <div class="escrow-panel-title">⚠ Cancel Escrow</div>
+  <div class="escrow-warn">This refunds ${amtStx} to you. Only possible while the task is still open (unclaimed).</div>
+  <code class="escrow-contract-addr">${ESCROW_CONTRACT}</code>
+  <p class="escrow-args">Function: <code>cancel-task</code> &nbsp;·&nbsp; Args: <code>(buff 32)</code> task hash</p>
+  <div class="escrow-snippet">const taskHash = Buffer.from('${hash}', 'hex');
+const tx = await makeContractCall({
+  contractAddress: 'SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2',
+  contractName:    'eagle-task-escrow-v1',
+  functionName:    'cancel-task',
+  functionArgs:    [bufferCV(taskHash)],
+  senderKey:       privateKey,
+  anchorMode:      AnchorMode.Any,
+});</div>
+  <a class="escrow-explorer-link" href="${explorerBase}" target="_blank" rel="noopener">View on Explorer ↗</a>
+</div>`;
+  }
 }
 
 function toggleSection(id) {
@@ -648,7 +857,7 @@ async function submitPost() {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Error ' + res.status);
-    showMsg('post-msg', 'success', '✓ Task posted — ID: ' + data.task.id);
+    showMsg('post-msg', 'success', '✓ Task posted — ID: ' + data.task.id + (data.task.task_hash ? ' · Lock escrow with hash: ' + data.task.task_hash.slice(0, 12) + '…' : ''));
     document.getElementById('post-address').value = '';
     document.getElementById('post-title').value = '';
     document.getElementById('post-description').value = '';
