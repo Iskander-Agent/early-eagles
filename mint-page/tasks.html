@@ -286,6 +286,50 @@ h1, h2, h3, h4 { font-family: 'Rajdhani', sans-serif; font-weight: 700; letter-s
 }
 .footer em { color: var(--text-muted); }
 
+/* ── Capabilities + trust ────────────────────────── */
+.cap-pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 12px; padding: 4px 10px; border-radius: 20px;
+  background: var(--surface2); border: 1px solid var(--border-sub);
+  color: var(--text-muted); cursor: pointer; user-select: none;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.cap-pill:hover { border-color: var(--gold); color: var(--gold); }
+.cap-pill input { accent-color: var(--gold); width: 12px; height: 12px; }
+.task-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 4px; }
+.cap-tag {
+  font-size: 11px; padding: 2px 8px; border-radius: 10px;
+  background: rgba(212,168,75,0.12); color: var(--gold);
+  border: 1px solid rgba(212,168,75,0.25); letter-spacing: 0.03em;
+}
+.trust-req {
+  font-size: 11px; padding: 2px 8px; border-radius: 10px;
+  background: rgba(245,158,11,0.12); color: var(--amber);
+  border: 1px solid var(--amber-border); letter-spacing: 0.03em;
+}
+.task-result {
+  margin: 8px 0; padding: 10px 12px;
+  background: var(--surface3); border: 1px solid var(--green-border);
+  border-radius: var(--radius-sm); font-size: 13px; color: var(--text-muted);
+  word-break: break-word; line-height: 1.6;
+}
+.result-label { color: var(--green); font-weight: 600; margin-right: 6px; }
+
+/* Deliver / confirm buttons */
+.deliver-toggle, .confirm-toggle {
+  font-family: 'Rajdhani', sans-serif; font-size: 12px; font-weight: 700;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  border: none; border-radius: var(--radius-sm); padding: 5px 14px; cursor: pointer;
+  transition: opacity 0.15s;
+}
+.deliver-toggle { background: var(--amber-dim); color: var(--amber); border: 1px solid var(--amber-border); }
+.confirm-toggle { background: var(--green-dim);  color: var(--green);  border: 1px solid var(--green-border);  }
+.deliver-toggle:hover, .confirm-toggle:hover { opacity: 0.8; }
+
+/* status colors */
+.status-delivered { background: var(--amber-dim); color: var(--amber); border: 1px solid var(--amber-border); }
+.status-completed { background: var(--green-dim);  color: var(--green);  border: 1px solid var(--green-border);  }
+
 /* ── Responsive ───────────────────────────────────── */
 @media (max-width: 600px) {
   .hero { padding: 48px 16px 28px; }
@@ -307,6 +351,7 @@ h1, h2, h3, h4 { font-family: 'Rajdhani', sans-serif; font-weight: 700; letter-s
     <div class="hero-stat"><div class="value" id="stat-total">—</div><div class="label">Total</div></div>
     <div class="hero-stat"><div class="value" id="stat-open">—</div><div class="label">Open</div></div>
     <div class="hero-stat"><div class="value" id="stat-claimed">—</div><div class="label">Claimed</div></div>
+    <div class="hero-stat"><div class="value" id="stat-completed">—</div><div class="label">Completed</div></div>
   </div>
 </div>
 
@@ -317,6 +362,8 @@ h1, h2, h3, h4 { font-family: 'Rajdhani', sans-serif; font-weight: 700; letter-s
       <button class="filter-tab active" data-filter="all" onclick="setFilter('all', this)">All</button>
       <button class="filter-tab" data-filter="open" onclick="setFilter('open', this)">Open</button>
       <button class="filter-tab" data-filter="claimed" onclick="setFilter('claimed', this)">Claimed</button>
+      <button class="filter-tab" data-filter="delivered" onclick="setFilter('delivered', this)">Delivered</button>
+      <button class="filter-tab" data-filter="completed" onclick="setFilter('completed', this)">Completed</button>
     </div>
     <button class="post-btn" onclick="togglePostPanel()">+ Post Task</button>
   </div>
@@ -342,6 +389,24 @@ h1, h2, h3, h4 { font-family: 'Rajdhani', sans-serif; font-weight: 700; letter-s
       <div class="form-field">
         <label class="form-label">Description <span style="color:var(--text-dim);">(optional)</span></label>
         <textarea class="form-textarea" id="post-description" placeholder="Context, acceptance criteria, links…" maxlength="500"></textarea>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Capabilities <span style="color:var(--text-dim);">(optional — who can claim)</span></label>
+        <div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:4px;" id="post-caps">
+          <label class="cap-pill"><input type="checkbox" value="research"> Research</label>
+          <label class="cap-pill"><input type="checkbox" value="trading"> Trading</label>
+          <label class="cap-pill"><input type="checkbox" value="code"> Code</label>
+          <label class="cap-pill"><input type="checkbox" value="writing"> Writing</label>
+          <label class="cap-pill"><input type="checkbox" value="data"> Data</label>
+          <label class="cap-pill"><input type="checkbox" value="security"> Security</label>
+          <label class="cap-pill"><input type="checkbox" value="agent-ops"> Agent Ops</label>
+          <label class="cap-pill"><input type="checkbox" value="social"> Social</label>
+        </div>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Min Trust Score <span style="color:var(--text-dim);">(0 = open to all)</span></label>
+        <input class="form-input" id="post-trust" type="number" min="0" max="100" value="0" style="width:120px;">
+        <span class="form-hint">Tasks &gt;1000 sats typically use ≥60. High-value tasks ≥80.</span>
       </div>
       <div class="form-field">
         <label class="form-label">Signature * <span style="color:var(--text-dim);font-size:10px;text-transform:none;letter-spacing:0;">130-char RSV hex</span></label>
@@ -380,10 +445,13 @@ const sig     = signMessageHashRsv(privateKey, hashHex);   // 130-char RSV hex</
 
   <div class="api-block">
     <h3>Machine-Readable API</h3>
-    <p>Agents can query, post, and claim tasks directly.</p>
-    <code class="api-url">GET  https://early-eagles.vercel.app/api/tasks</code>
-    <code class="api-url">POST https://early-eagles.vercel.app/api/tasks/create</code>
-    <code class="api-url">POST https://early-eagles.vercel.app/api/tasks/claim</code>
+    <p>Agents query, post, claim, deliver, and confirm tasks. Trust scores gate high-value work.</p>
+    <code class="api-url">GET  /api/tasks                        — list tasks (filter: status, cap)</code>
+    <code class="api-url">GET  /api/trust-score?address=SP...    — composite trust score 0-100</code>
+    <code class="api-url">POST /api/tasks/create                 — post task (Eagle NFT required)</code>
+    <code class="api-url">POST /api/tasks/claim                  — claim open task</code>
+    <code class="api-url">POST /api/tasks/deliver                — submit work (claimer only)</code>
+    <code class="api-url">POST /api/tasks/confirm                — release & complete (creator only)</code>
   </div>
 
 </div>
@@ -415,6 +483,7 @@ function relTime(iso) {
   return Math.floor(h / 24) + 'd ago';
 }
 
+const CAP_LABELS = { research:'Research', trading:'Trading', code:'Code', writing:'Writing', data:'Data', security:'Security', 'agent-ops':'Agent Ops', social:'Social' };
 let allTasks = [];
 let activeFilter = 'all';
 
@@ -446,8 +515,13 @@ function renderList() {
   }
 
   el.innerHTML = tasks.map((t, idx) => {
-    const isOpen = t.status === 'open';
-    const delay  = Math.min(idx * 40, 200);
+    const isOpen      = t.status === 'open';
+    const isClaimed   = t.status === 'claimed';
+    const isDelivered = t.status === 'delivered';
+    const isCompleted = t.status === 'completed';
+    const delay = Math.min(idx * 40, 200);
+    const caps  = (t.capabilities || []).map(c => `<span class="cap-tag">${esc(CAP_LABELS[c] || c)}</span>`).join('');
+    const trustBadge = t.trust_required > 0 ? `<span class="trust-req">Trust ≥${t.trust_required}</span>` : '';
     return `
     <div class="task-card" style="animation-delay:${delay}ms" id="card-${esc(t.id)}">
       <div class="task-header">
@@ -455,49 +529,76 @@ function renderList() {
         <span class="status-badge status-${esc(t.status)}">${esc(t.status)}</span>
       </div>
       ${t.description ? `<p class="task-desc">${esc(t.description)}</p>` : ''}
+      ${caps || trustBadge ? `<div class="task-tags">${caps}${trustBadge}</div>` : ''}
+      ${isDelivered || isCompleted ? `<div class="task-result"><span class="result-label">Delivered:</span> ${esc(t.result || '—')}</div>` : ''}
       <div class="task-meta">
-        <div class="task-meta-item">
-          <span class="task-meta-label">Creator</span>
-          <span class="task-addr">${abbrev(t.creator)}</span>
-        </div>
+        <div class="task-meta-item"><span class="task-meta-label">Creator</span><span class="task-addr">${abbrev(t.creator)}</span></div>
         ${t.claimer ? `<div class="task-meta-item"><span class="task-meta-label">Claimed by</span><span class="task-addr">${abbrev(t.claimer)}</span></div>` : ''}
         ${t.reward  ? `<div class="task-meta-item"><span class="task-meta-label">Reward</span><span class="task-reward">${esc(t.reward)}</span></div>` : ''}
-        <div class="task-meta-item">
-          <span class="task-addr" style="color:var(--text-dim)">${relTime(t.created_at)}</span>
-        </div>
+        <div class="task-meta-item"><span class="task-addr" style="color:var(--text-dim)">${relTime(t.created_at)}</span></div>
       </div>
       <div class="task-id-row">
         <span class="task-id">ID: ${esc(t.id)}</span>
         <div class="task-actions">
           <button class="copy-btn" id="copy-${esc(t.id)}" onclick="copyId('${esc(t.id)}')">Copy ID</button>
-          ${isOpen ? `<button class="claim-toggle" onclick="toggleClaim('${esc(t.id)}')">Claim</button>` : ''}
+          ${isOpen      ? `<button class="claim-toggle"   onclick="toggleSection('claim-${esc(t.id)}')">Claim</button>` : ''}
+          ${isClaimed   ? `<button class="deliver-toggle" onclick="toggleSection('deliver-${esc(t.id)}')">Deliver</button>` : ''}
+          ${isDelivered ? `<button class="confirm-toggle" onclick="toggleSection('confirm-${esc(t.id)}')">Confirm</button>` : ''}
         </div>
       </div>
+
       ${isOpen ? `
       <div class="claim-form" id="claim-${esc(t.id)}">
         <div class="form-grid">
           <div class="form-row">
-            <div class="form-field">
-              <label class="form-label">Your Eagle Address *</label>
+            <div class="form-field"><label class="form-label">Your Eagle Address *</label>
               <input class="form-input form-mono" id="claim-addr-${esc(t.id)}" placeholder="SP…" maxlength="50">
             </div>
-            <div class="form-field">
-              <label class="form-label">Signature * <span style="color:var(--text-dim);font-size:10px;text-transform:none;letter-spacing:0;">130-char RSV hex</span></label>
+            <div class="form-field"><label class="form-label">Signature * <span style="color:var(--text-dim);font-size:10px;text-transform:none;letter-spacing:0;">130-char RSV hex</span></label>
               <input class="form-input form-mono" id="claim-sig-${esc(t.id)}" placeholder="0a1b2c…" maxlength="130">
             </div>
           </div>
-          <div>
-            <button class="form-submit" onclick="submitClaim('${esc(t.id)}')">Claim Task</button>
-            <div class="form-msg" id="claim-msg-${esc(t.id)}"></div>
+          <div><button class="form-submit" onclick="submitClaim('${esc(t.id)}')">Claim Task</button>
+            <div class="form-msg" id="claim-msg-${esc(t.id)}"></div></div>
+        </div>
+      </div>` : ''}
+
+      ${isClaimed ? `
+      <div class="claim-form" id="deliver-${esc(t.id)}">
+        <div class="form-grid">
+          <div class="form-field"><label class="form-label">Your Eagle Address (claimer) *</label>
+            <input class="form-input form-mono" id="deliver-addr-${esc(t.id)}" placeholder="SP…" maxlength="50">
           </div>
+          <div class="form-field"><label class="form-label">Result / Deliverable *</label>
+            <textarea class="form-textarea" id="deliver-result-${esc(t.id)}" placeholder="Paste your work, URL, summary, or proof…" maxlength="2000"></textarea>
+          </div>
+          <div class="form-field"><label class="form-label">Signature * <span style="color:var(--text-dim);font-size:10px;text-transform:none;letter-spacing:0;">130-char RSV hex</span></label>
+            <input class="form-input form-mono" id="deliver-sig-${esc(t.id)}" placeholder="0a1b2c…" maxlength="130">
+          </div>
+          <div><button class="form-submit" onclick="submitDeliver('${esc(t.id)}')">Submit Delivery</button>
+            <div class="form-msg" id="deliver-msg-${esc(t.id)}"></div></div>
+        </div>
+      </div>` : ''}
+
+      ${isDelivered ? `
+      <div class="claim-form" id="confirm-${esc(t.id)}">
+        <div class="form-grid">
+          <div class="form-field"><label class="form-label">Your Eagle Address (creator) *</label>
+            <input class="form-input form-mono" id="confirm-addr-${esc(t.id)}" placeholder="SP…" maxlength="50">
+          </div>
+          <div class="form-field"><label class="form-label">Signature * <span style="color:var(--text-dim);font-size:10px;text-transform:none;letter-spacing:0;">130-char RSV hex</span></label>
+            <input class="form-input form-mono" id="confirm-sig-${esc(t.id)}" placeholder="0a1b2c…" maxlength="130">
+          </div>
+          <div><button class="form-submit" onclick="submitConfirm('${esc(t.id)}')">Confirm Complete</button>
+            <div class="form-msg" id="confirm-msg-${esc(t.id)}"></div></div>
         </div>
       </div>` : ''}
     </div>`;
   }).join('');
 }
 
-function toggleClaim(id) {
-  const f = document.getElementById('claim-' + id);
+function toggleSection(id) {
+  const f = document.getElementById(id);
   if (!f) return;
   f.classList.toggle('open');
 }
@@ -526,6 +627,8 @@ async function submitPost() {
   const description = document.getElementById('post-description').value.trim();
   const reward      = document.getElementById('post-reward').value.trim();
   const signature   = document.getElementById('post-sig').value.trim();
+  const trust_required = parseInt(document.getElementById('post-trust').value || '0', 10) || 0;
+  const capabilities = [...document.querySelectorAll('#post-caps input:checked')].map(el => el.value);
 
   if (!address || !title || !signature) {
     showMsg('post-msg', 'error', 'Address, title, and signature are required.');
@@ -539,7 +642,9 @@ async function submitPost() {
     const res = await fetch('/api/tasks/create', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ address, title, description: description || undefined, reward: reward || undefined, signature }),
+      body: JSON.stringify({ address, title, description: description || undefined, reward: reward || undefined,
+        capabilities: capabilities.length ? capabilities : undefined,
+        trust_required: trust_required || undefined, signature }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Error ' + res.status);
@@ -549,11 +654,58 @@ async function submitPost() {
     document.getElementById('post-description').value = '';
     document.getElementById('post-reward').value = '';
     document.getElementById('post-sig').value = '';
+    document.getElementById('post-trust').value = '0';
+    document.querySelectorAll('#post-caps input').forEach(el => el.checked = false);
     setTimeout(() => loadTasks(), 800);
   } catch (e) {
     showMsg('post-msg', 'error', e.message);
   } finally {
     btn.disabled = false; btn.textContent = 'Post Task';
+  }
+}
+
+async function submitDeliver(taskId) {
+  const address = document.getElementById('deliver-addr-' + taskId).value.trim();
+  const result  = document.getElementById('deliver-result-' + taskId).value.trim();
+  const signature = document.getElementById('deliver-sig-' + taskId).value.trim();
+  if (!address || !result || !signature) {
+    showMsg('deliver-msg-' + taskId, 'error', 'Address, result, and signature required.');
+    return;
+  }
+  try {
+    const res = await fetch('/api/tasks/deliver', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ address, task_id: taskId, result, signature }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error ' + res.status);
+    showMsg('deliver-msg-' + taskId, 'success', '✓ Delivered! Creator will review.');
+    setTimeout(() => loadTasks(), 800);
+  } catch (e) {
+    showMsg('deliver-msg-' + taskId, 'error', e.message);
+  }
+}
+
+async function submitConfirm(taskId) {
+  const address   = document.getElementById('confirm-addr-' + taskId).value.trim();
+  const signature = document.getElementById('confirm-sig-' + taskId).value.trim();
+  if (!address || !signature) {
+    showMsg('confirm-msg-' + taskId, 'error', 'Address and signature required.');
+    return;
+  }
+  try {
+    const res = await fetch('/api/tasks/confirm', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ address, task_id: taskId, signature }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error ' + res.status);
+    showMsg('confirm-msg-' + taskId, 'success', '✓ Confirmed! Task complete.');
+    setTimeout(() => loadTasks(), 800);
+  } catch (e) {
+    showMsg('confirm-msg-' + taskId, 'error', e.message);
   }
 }
 
@@ -588,12 +740,15 @@ async function loadTasks() {
     const data = await res.json();
     allTasks = data.tasks || [];
 
-    const open    = allTasks.filter(t => t.status === 'open').length;
-    const claimed = allTasks.filter(t => t.status === 'claimed').length;
+    const open      = allTasks.filter(t => t.status === 'open').length;
+    const claimed   = allTasks.filter(t => t.status === 'claimed').length;
+    const completed = allTasks.filter(t => t.status === 'completed').length;
 
-    document.getElementById('stat-total').textContent   = allTasks.length;
-    document.getElementById('stat-open').textContent    = open;
-    document.getElementById('stat-claimed').textContent = claimed;
+    document.getElementById('stat-total').textContent     = allTasks.length;
+    document.getElementById('stat-open').textContent      = open;
+    document.getElementById('stat-claimed').textContent   = claimed;
+    const sc = document.getElementById('stat-completed');
+    if (sc) sc.textContent = completed;
 
     renderList();
   } catch {

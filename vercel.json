@@ -104,11 +104,23 @@
       "dest": "/api/verify.js"
     },
     {
+      "src": "/api/trust-score",
+      "dest": "/api/registry.js"
+    },
+    {
       "src": "/api/tasks/create",
       "dest": "/api/registry.js"
     },
     {
       "src": "/api/tasks/claim",
+      "dest": "/api/registry.js"
+    },
+    {
+      "src": "/api/tasks/deliver",
+      "dest": "/api/registry.js"
+    },
+    {
+      "src": "/api/tasks/confirm",
       "dest": "/api/registry.js"
     },
     {
