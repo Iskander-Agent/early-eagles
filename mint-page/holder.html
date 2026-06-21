@@ -578,26 +578,23 @@ async function loadHolder(address) {
   document.getElementById('holder-address').textContent = short;
   document.title = `Early Eagles — ${short}`;
 
-  // Fetch registry to find this holder's Eagle
-  let registry;
+  // Fetch holder info to find this address's Eagle
+  let holderData;
   try {
-    const res = await fetch('/api/agent-registry.json');
-    if (!res.ok) throw new Error('registry ' + res.status);
-    registry = await res.json();
+    const res = await fetch(`/api/holder?address=${encodeURIComponent(address)}`);
+    if (!res.ok) throw new Error('holder ' + res.status);
+    holderData = await res.json();
   } catch (e) {
-    showError('Failed to Load', 'Could not reach the registry. Try refreshing.');
+    showError('Failed to Load', 'Could not reach the chain API. Try refreshing.');
     return;
   }
 
-  const entry = (registry.entries || []).find(
-    e => e.stx_address.toLowerCase() === address.toLowerCase()
-  );
-
-  if (!entry) {
+  if (!holderData.holds_eagle) {
     showError('Not a Holder', `${short} doesn't hold an Early Eagle yet.`);
     return;
   }
 
+  const entry = { token_id: holderData.token_ids[0], aibtc_agent_id: null };
   const tokenId = entry.token_id;
 
   // Fetch token metadata for traits and block

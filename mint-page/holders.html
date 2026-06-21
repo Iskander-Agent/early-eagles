@@ -335,24 +335,6 @@ h1, h2, h3, h4 { font-family: 'Rajdhani', sans-serif; font-weight: 700; letter-s
   .agent-card { min-width: calc(50% - 4px); }
 }
 
-/* Marketplace listings table */
-.market-section { padding: 32px 0 0; }
-.market-table { width: 100%; border-collapse: collapse; }
-.market-table th {
-  font-family: 'Rajdhani', sans-serif; font-size: 11px; font-weight: 600;
-  letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim);
-  padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border-sub);
-}
-.market-table td {
-  padding: 10px 12px; border-bottom: 1px solid var(--border-sub); font-size: 14px;
-}
-.market-table tr:last-child td { border-bottom: none; }
-.market-table tr:hover td { background: var(--surface2); transition: background 0.15s; }
-.market-eagle-link { color: var(--text); text-decoration: none; font-weight: 500; }
-.market-eagle-link:hover { color: var(--gold); }
-.market-price { font-family: 'Rajdhani', sans-serif; font-size: 16px; font-weight: 700; color: var(--gold); }
-.market-seller { font-size: 12px; color: var(--text-muted); font-family: monospace; }
-.market-empty { text-align: center; padding: 32px; color: var(--text-dim); font-size: 14px; }
 
 /* Eagle of the day spotlight */
 .spotlight-section {
@@ -420,8 +402,6 @@ h1, h2, h3, h4 { font-family: 'Rajdhani', sans-serif; font-weight: 700; letter-s
     <div class="hero-stat"><div class="value" id="stat-live">—</div><div class="label">Live</div></div>
     <div class="hero-stat"><div class="value" id="stat-building">—</div><div class="label">Building</div></div>
     <div class="hero-stat"><div class="value" id="stat-planned">—</div><div class="label">Planned</div></div>
-    <div class="hero-stat"><div class="value" id="stat-floor">—</div><div class="label">Floor</div></div>
-    <div class="hero-stat"><div class="value" id="stat-listed">—</div><div class="label">Listed</div></div>
   </div>
 </div>
 
@@ -456,15 +436,6 @@ h1, h2, h3, h4 { font-family: 'Rajdhani', sans-serif; font-weight: 700; letter-s
   <div id="tier-bars"></div>
 </div>
 
-<div class="market-section" id="market-section" style="display:none">
-  <div class="container">
-    <div class="section-header">
-      <h2>🦅 For Sale</h2>
-      <span class="section-count" id="market-count">0</span>
-    </div>
-    <div id="market-table-wrap"></div>
-  </div>
-</div>
 
 <div class="container" id="main-content">
   <div class="loading">
@@ -744,50 +715,6 @@ const TIER_BADGE_COLORS = {
   Legendary: '#d4a84b', Epic: '#a855f7', Rare: '#3b82f6', Uncommon: '#22c55e', Common: '#94a3b8'
 };
 
-function renderMarketSection(listings) {
-  const section = document.getElementById('market-section');
-  const wrap    = document.getElementById('market-table-wrap');
-  const countEl = document.getElementById('market-count');
-  if (!section || !wrap) return;
-  if (countEl) countEl.textContent = listings.length;
-  if (!listings.length) {
-    wrap.innerHTML = '<div class="market-empty">No active listings — check back soon.</div>';
-    section.style.display = '';
-    return;
-  }
-  const rows = listings.map(l => {
-    const abbrev = l.seller
-      ? l.seller.slice(0, 6) + '\u2026' + l.seller.slice(-4)
-      : '\u2014';
-    const color = TIER_BADGE_COLORS[l.tierName] || '#94a3b8';
-    const name  = esc(l.displayName || 'Eagle #' + l.tokenId);
-    return `<tr>
-      <td><a class="market-eagle-link" href="/eagle/${l.tokenId}">${name}</a></td>
-      <td><span style="color:${color};font-size:12px;font-weight:600">${esc(l.tierName || '\u2014')}</span></td>
-      <td><span class="market-price">${l.price_stx} STX</span></td>
-      <td><span class="market-seller">${abbrev}</span></td>
-    </tr>`;
-  }).join('');
-  wrap.innerHTML = `<table class="market-table">
-    <thead><tr><th>Eagle</th><th>Tier</th><th>Price</th><th>Seller</th></tr></thead>
-    <tbody>${rows}</tbody>
-  </table>`;
-  section.style.display = '';
-}
-
-(async function loadMarket() {
-  try {
-    const r = await fetch('/api/market');
-    if (!r.ok) return;
-    const d = await r.json();
-    const floorEl  = document.getElementById('stat-floor');
-    const listedEl = document.getElementById('stat-listed');
-    if (floorEl)  floorEl.textContent  = d.floorPrice_stx != null ? d.floorPrice_stx + ' STX' : '—';
-    if (listedEl) listedEl.textContent = Array.isArray(d.listings) ? d.listings.length : '—';
-    if (d.tierStats) renderTierTracker(d.tierStats, d.totalMinted);
-    renderMarketSection(d.listings || []);
-  } catch {}
-})();
 </script>
 
 <script>
