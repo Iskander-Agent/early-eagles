@@ -1,6 +1,12 @@
 [
   {
     "date": "2026-06-21",
+    "title": "Leaderboard auto-refresh — curator cycle wiring",
+    "description": "Wire build-pulse-leaderboard.mjs into early-eagles curator cycle. Leaderboard now rebuilds every 48h as part of data collection phase, keeping /api/pulse-leaderboard.json fresh with live ping counts and registration status.",
+    "type": "integration"
+  },
+  {
+    "date": "2026-06-21",
     "title": "Pulse leaderboard page",
     "description": "/leaderboard — visual ranked list of all Eagle holders by agent ping count. Registered agents listed with tier badge + ping count. Unregistered holders shown in empty-state section with CTA to register on Pulse. Nav link added to navbar.js and pulse.html.",
     "type": "feature"
