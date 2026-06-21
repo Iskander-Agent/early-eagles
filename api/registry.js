@@ -103,9 +103,8 @@ function verifyNonceSignature(address, signature) {
     const nonce = `EaglesNest:${address}:${b}`;
     const hashHex = Buffer.from(sha256(Buffer.from(nonce, 'utf8'))).toString('hex');
     try {
-      const msgSig = createMessageSignature(signature);
-      const pubKey = publicKeyFromSignatureRsv(hashHex, msgSig);
-      const derived = getAddressFromPublicKey(pubKey.data, TransactionVersion.Mainnet);
+      const pubKey = publicKeyFromSignatureRsv(hashHex, signature);
+      const derived = getAddressFromPublicKey(pubKey, 'mainnet');
       if (derived === address) return true;
     } catch { /* next */ }
   }
