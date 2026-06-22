@@ -143,17 +143,17 @@ function buildSigil(btcAddr, tierColor, ix, iy) {
     const ky = [Math.min(a, b), Math.max(a, b)].join('-');
     if (drawn.has(ky)) continue;
     drawn.add(ky);
-    const al = (0.18 + (drawn.size / (np + 3)) * 0.32).toFixed(2);
-    lines.push(`<line x1="${pts[a][0].toFixed(1)}" y1="${pts[a][1].toFixed(1)}" x2="${pts[b][0].toFixed(1)}" y2="${pts[b][1].toFixed(1)}" stroke="rgba(${rgb},${al})" stroke-width="1"/>`);
+    const al = (0.30 + (drawn.size / (np + 3)) * 0.42).toFixed(2);
+    lines.push(`<line x1="${pts[a][0].toFixed(1)}" y1="${pts[a][1].toFixed(1)}" x2="${pts[b][0].toFixed(1)}" y2="${pts[b][1].toFixed(1)}" stroke="rgba(${rgb},${al})" stroke-width="1.2"/>`);
   }
   const dots = pts.map((p, i) => {
-    const dr = 1.8 + (bt[i % bt.length] % 2) * 0.4;
-    return `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${dr.toFixed(1)}" fill="rgba(${rgb},0.65)"/>`;
+    const dr = 2.2 + (bt[i % bt.length] % 2) * 0.5;
+    return `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${dr.toFixed(1)}" fill="rgba(${rgb},0.88)"/>`;
   }).join('');
   return `<g transform="translate(${ix},${iy}) scale(${scale.toFixed(4)})">` +
-    `<circle cx="${cx}" cy="${cy}" r="21" fill="none" stroke="rgba(${rgb},0.18)" stroke-width="1"/>` +
+    `<circle cx="${cx}" cy="${cy}" r="21" fill="none" stroke="rgba(${rgb},0.30)" stroke-width="1"/>` +
     lines.join('') + dots +
-    `<circle cx="${cx}" cy="${cy}" r="2" fill="rgba(${rgb},0.45)"/>` +
+    `<circle cx="${cx}" cy="${cy}" r="2" fill="rgba(${rgb},0.65)"/>` +
     `</g>`;
 }
 
