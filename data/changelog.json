@@ -1,5 +1,11 @@
 [
   {
+    "date": "2026-06-23",
+    "title": "Badge: sentence case + dual profile links",
+    "description": "EARLY EAGLE changed to sentence case (Early Eagle #N). Row B now shows two right-aligned links: aibtc ↗ (links to aibtc.com/agents/{address}) and eagle ↗ (links to holder profile page), replacing the former ✓ on-chain label and single View Profile link.",
+    "type": "design"
+  },
+  {
     "date": "2026-06-22",
     "title": "Badge: sigil enlarged + refined, icon box 26px",
     "description": "Sigil icon slot enlarged from 18px to 26px (scale 0.5 of original canvas). Bolder connection lines (stroke-width 1.5), larger node dots, SVG feGaussianBlur glow filter on dots and center. Text columns shifted right to x=41 to match new icon size.",
