@@ -1,6 +1,12 @@
 [
   {
     "date": "2026-06-22",
+    "title": "Badge: sigil enlarged + refined, icon box 26px",
+    "description": "Sigil icon slot enlarged from 18px to 26px (scale 0.5 of original canvas). Bolder connection lines (stroke-width 1.5), larger node dots, SVG feGaussianBlur glow filter on dots and center. Text columns shifted right to x=41 to match new icon size.",
+    "type": "design"
+  },
+  {
+    "date": "2026-06-22",
     "title": "Badge: DNA sigil replaces eagle emoji",
     "description": "Icon slot now renders the holder's personal DNA sigil (SVG port of the on-chain renderer's sig() function). Geometry is deterministic from the holder's BTC address + tier color — same algorithm as the NFT itself. Falls back to 🦅 emoji if BTC address is unavailable.",
     "type": "design"

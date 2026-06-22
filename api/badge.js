@@ -118,9 +118,10 @@ function abbrev(addr) {
 
 // SVG port of the on-chain renderer's sig() canvas function.
 // Geometry is deterministic from the holder's BTC address + tier accent color.
-function buildSigil(btcAddr, tierColor, ix, iy) {
+// size: icon box px (default 26). filterId: SVG filter for dot glow.
+function buildSigil(btcAddr, tierColor, ix, iy, size, filterId) {
   if (!btcAddr) return '';
-  const S = 52, W = 18, scale = W / S;
+  const S = 52, W = size || 26, scale = W / S;
   const cx = S / 2, cy = S / 2;
   const hex = tierColor.replace('#', '');
   const ar = parseInt(hex.slice(0, 2), 16);
@@ -143,18 +144,19 @@ function buildSigil(btcAddr, tierColor, ix, iy) {
     const ky = [Math.min(a, b), Math.max(a, b)].join('-');
     if (drawn.has(ky)) continue;
     drawn.add(ky);
-    const al = (0.35 + (drawn.size / (np + 3)) * 0.5).toFixed(2);
-    lines.push(`<line x1="${pts[a][0].toFixed(1)}" y1="${pts[a][1].toFixed(1)}" x2="${pts[b][0].toFixed(1)}" y2="${pts[b][1].toFixed(1)}" stroke="rgba(${rgb},${al})" stroke-width="1"/>`);
+    const al = (0.30 + (drawn.size / (np + 3)) * 0.55).toFixed(2);
+    lines.push(`<line x1="${pts[a][0].toFixed(1)}" y1="${pts[a][1].toFixed(1)}" x2="${pts[b][0].toFixed(1)}" y2="${pts[b][1].toFixed(1)}" stroke="rgba(${rgb},${al})" stroke-width="1.5"/>`);
   }
+  const filterAttr = filterId ? ` filter="url(#${filterId})"` : '';
   const dots = pts.map((p, i) => {
-    const dr = 1.5 + (bt[i % bt.length] % 2);
-    return `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${(dr * 2.5).toFixed(1)}" fill="rgba(${rgb},0.25)"/>` +
-           `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${dr.toFixed(1)}" fill="rgba(${rgb},1)"/>`;
+    const dr = 2 + (bt[i % bt.length] % 2);
+    return `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${(dr * 3).toFixed(1)}" fill="rgba(${rgb},0.18)"/>` +
+           `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${dr.toFixed(1)}" fill="rgba(${rgb},1)"${filterAttr}/>`;
   }).join('');
   return `<g transform="translate(${ix},${iy}) scale(${scale.toFixed(4)})">` +
-    `<circle cx="${cx}" cy="${cy}" r="22" fill="none" stroke="rgba(${rgb},0.3)" stroke-width="1"/>` +
+    `<circle cx="${cx}" cy="${cy}" r="21" fill="none" stroke="rgba(${rgb},0.22)" stroke-width="1"/>` +
     lines.join('') + dots +
-    `<circle cx="${cx}" cy="${cy}" r="2" fill="rgba(${rgb},0.65)"/>` +
+    `<circle cx="${cx}" cy="${cy}" r="2.5" fill="rgba(${rgb},0.7)"${filterAttr}/>` +
     `</g>`;
 }
 
@@ -254,6 +256,10 @@ function buildBadge({ tokenId, count, tier, agentName, alias, address, btcAddres
       <stop offset="100%" stop-color="${t.color}" stop-opacity="0.35"/>
     </linearGradient>
     <clipPath id="${uid}cl"><rect width="${W}" height="${H}" rx="10"/></clipPath>
+    <filter id="${uid}sg" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="1.8" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
   </defs>
 
   <script type="text/javascript"><![CDATA[
@@ -272,13 +278,13 @@ function buildBadge({ tokenId, count, tier, agentName, alias, address, btcAddres
 
     <!-- ── Row A: icon · title LEFT  |  tier pill RIGHT ─────────────── -->
 
-    <rect x="12" y="7" width="18" height="18" rx="4" fill="${t.dim}"/>
-    ${buildSigil(btcAddress, t.color, 12, 7) || `<text x="21" y="20" font-size="11" text-anchor="middle"
+    <rect x="9" y="9" width="26" height="26" rx="5" fill="${t.dim}"/>
+    ${buildSigil(btcAddress, t.color, 9, 9, 26, uid+'sg') || `<text x="22" y="25" font-size="12" text-anchor="middle"
           font-family="Apple Color Emoji,Segoe UI Emoji,Noto Color Emoji,serif">🦅</text>`}
 
-    <text x="36" y="21"
+    <text x="41" y="21"
           font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
-          font-size="13" font-weight="700" fill="#eef3ff" letter-spacing="0.2"${sub.length * 7.8 > PILL_X - 44 ? ` textLength="${PILL_X - 44}" lengthAdjust="spacingAndGlyphs"` : ''}>${esc(sub)}</text>
+          font-size="13" font-weight="700" fill="#eef3ff" letter-spacing="0.2"${sub.length * 7.8 > PILL_X - 49 ? ` textLength="${PILL_X - 49}" lengthAdjust="spacingAndGlyphs"` : ''}>${esc(sub)}</text>
 
     <rect x="${PILL_X}" y="7" width="${PILL_W}" height="${PILL_H}" rx="5"
           fill="${t.dim}" stroke="${t.color}" stroke-width="0.6" stroke-opacity="0.5"/>
@@ -289,7 +295,7 @@ function buildBadge({ tokenId, count, tier, agentName, alias, address, btcAddres
 
     <!-- ── Row B: name (left)  |  ✓ · View Profile → (right cluster) ─── -->
 
-    <text x="36" y="37"
+    <text x="41" y="37"
           font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
           font-size="8.5" font-weight="500" fill="#4a6282">${esc(title)}</text>
 
