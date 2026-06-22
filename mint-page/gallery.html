@@ -175,24 +175,6 @@ h1, h2, h3, h4 { font-family: 'Rajdhani', sans-serif; font-weight: 700; letter-s
 @media (max-width: 760px)  { .eagles-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; } }
 @media (max-width: 480px)  { .eagles-grid { grid-template-columns: 1fr; gap: 14px; } }
 
-/* ── Nest Info Bar ── */
-.nest-info-bar {
-  background: rgba(212,168,75,0.04);
-  border-bottom: 1px solid var(--border-sub);
-  padding: 10px 0;
-}
-.nest-info-inner {
-  display: flex; align-items: center; justify-content: space-between; gap: 12px;
-}
-.nest-info-text { font-size: 12px; color: var(--text-muted); }
-.nest-info-text strong { color: var(--gold); }
-.nest-info-link {
-  font-family: 'Rajdhani', sans-serif; font-size: 12px; font-weight: 700;
-  color: var(--gold); text-decoration: none; letter-spacing: 0.04em; white-space: nowrap;
-  transition: color var(--transition);
-}
-.nest-info-link:hover { color: var(--gold-light); }
-
 /* ── Eagle Card ── */
 .eagle-card {
   overflow: hidden;
@@ -333,16 +315,6 @@ h1, h2, h3, h4 { font-family: 'Rajdhani', sans-serif; font-weight: 700; letter-s
       <span><strong id="stat-minted">—</strong> eagles minted</span>
       <span class="stat-sep">·</span>
       <span><strong id="stat-remaining">—</strong> remaining</span>
-    </div>
-  </div>
-</div>
-
-<!-- ── Nest Info Bar ── -->
-<div class="nest-info-bar">
-  <div class="container">
-    <div class="nest-info-inner">
-      <span class="nest-info-text">Click any Eagle to view its profile · Holders unlock the <strong>Eagles Nest</strong> — private Telegram with cryptographic proof of holding</span>
-      <a href="/#mint" class="nest-info-link">Mint an Eagle →</a>
     </div>
   </div>
 </div>
