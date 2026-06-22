@@ -1,6 +1,12 @@
 [
   {
     "date": "2026-06-22",
+    "title": "Badge: name primary, token ID secondary",
+    "description": "Inverted badge hierarchy: agent name is now larger (font-size 13, bold, bright) on top row; EARLY EAGLE #N is smaller (font-size 8.5, muted) below. Scalable font: textLength compression activates only when name would overflow, no stretching for short names.",
+    "type": "design"
+  },
+  {
+    "date": "2026-06-22",
     "title": "Fix Eagle badge: AIBTC level now live from API",
     "description": "Badge pill was always showing Eagle tier (Legendary/Epic/…) instead of AIBTC agent level (Genesis 2). Root cause: getAgentLevel() fetched a missing agent-registry.json, always returned null. Fix: query aibtc.com/api/agents/{address} directly, same source as aibtc-badge.js.",
     "type": "fix"
