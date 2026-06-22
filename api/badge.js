@@ -215,7 +215,7 @@ function buildBadge({ tokenId, count, tier, agentName, alias, address, btcAddres
   const W = 340, H = 64;
   const uid = `ee${tier}`;
 
-  const title = count > 1 ? `EARLY EAGLES ×${count}` : `EARLY EAGLE #${tokenId}`;
+  const title = count > 1 ? `Early Eagles ×${count}` : `Early Eagle #${tokenId}`;
   const nameBase = agentName || abbrev(address);
   const sub = truncate(alias ? `${alias} · ${nameBase}` : nameBase, 30);
 
@@ -292,14 +292,16 @@ function buildBadge({ tokenId, count, tier, agentName, alias, address, btcAddres
           font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
           font-size="8.5" font-weight="500" fill="#4a6282">${esc(title)}</text>
 
-    <text x="${W - 82}" y="37" text-anchor="end"
-          font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
-          font-size="7.5" fill="#00c97a">✓ on-chain</text>
+    <a href="https://aibtc.com/agents/${esc(address)}" target="_blank">
+      <text x="${W - 70}" y="37"
+            font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
+            font-size="7.5" fill="#8ba4c4" text-anchor="end" opacity="0.75">aibtc ↗</text>
+    </a>
 
     <a href="${esc(profileUrl)}" target="_blank">
       <text x="${W - 8}" y="37"
             font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
-            font-size="8" fill="${t.text}" text-anchor="end" opacity="0.9">View Profile →</text>
+            font-size="7.5" fill="${t.text}" text-anchor="end" opacity="0.85">eagle ↗</text>
     </a>
 
     <!-- ── Single address row: STX left  ·  BTC right ────────────────── -->
