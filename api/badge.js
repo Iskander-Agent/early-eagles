@@ -116,6 +116,48 @@ function abbrev(addr) {
   return addr.slice(0, 8) + '…' + addr.slice(-6);
 }
 
+// SVG port of the on-chain renderer's sig() canvas function.
+// Geometry is deterministic from the holder's BTC address + tier accent color.
+function buildSigil(btcAddr, tierColor, ix, iy) {
+  if (!btcAddr) return '';
+  const S = 52, W = 18, scale = W / S;
+  const cx = S / 2, cy = S / 2;
+  const hex = tierColor.replace('#', '');
+  const ar = parseInt(hex.slice(0, 2), 16);
+  const ag = parseInt(hex.slice(2, 4), 16);
+  const ab = parseInt(hex.slice(4, 6), 16);
+  const rgb = `${ar},${ag},${ab}`;
+  const bt = btcAddr.split('').map(c => c.charCodeAt(0));
+  const np = 5 + (bt[0] % 3);
+  const pts = [];
+  for (let i = 0; i < np; i++) {
+    const a = (bt[i % bt.length] / 255) * Math.PI * 2 + (i * Math.PI * 2 / np);
+    const r = 13 + (bt[(i + 4) % bt.length] % 7);
+    pts.push([cx + Math.cos(a) * r, cy + Math.sin(a) * r]);
+  }
+  const drawn = new Set();
+  const lines = [];
+  for (let k = 0; k < bt.length && drawn.size < np + 3; k++) {
+    const a = bt[k] % np, b = bt[(k + 2) % bt.length] % np;
+    if (a === b) continue;
+    const ky = [Math.min(a, b), Math.max(a, b)].join('-');
+    if (drawn.has(ky)) continue;
+    drawn.add(ky);
+    const al = (0.35 + (drawn.size / (np + 3)) * 0.5).toFixed(2);
+    lines.push(`<line x1="${pts[a][0].toFixed(1)}" y1="${pts[a][1].toFixed(1)}" x2="${pts[b][0].toFixed(1)}" y2="${pts[b][1].toFixed(1)}" stroke="rgba(${rgb},${al})" stroke-width="1"/>`);
+  }
+  const dots = pts.map((p, i) => {
+    const dr = 1.5 + (bt[i % bt.length] % 2);
+    return `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${(dr * 2.5).toFixed(1)}" fill="rgba(${rgb},0.25)"/>` +
+           `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${dr.toFixed(1)}" fill="rgba(${rgb},1)"/>`;
+  }).join('');
+  return `<g transform="translate(${ix},${iy}) scale(${scale.toFixed(4)})">` +
+    `<circle cx="${cx}" cy="${cy}" r="22" fill="none" stroke="rgba(${rgb},0.3)" stroke-width="1"/>` +
+    lines.join('') + dots +
+    `<circle cx="${cx}" cy="${cy}" r="2" fill="rgba(${rgb},0.65)"/>` +
+    `</g>`;
+}
+
 // The Hiro NFT holdings indexer does not index SIP-018 admin-broadcast mints.
 // Instead: get total minted from contract, then fan-out get-owner calls.
 async function getTokenIdsByOwner(address) {
@@ -231,8 +273,8 @@ function buildBadge({ tokenId, count, tier, agentName, alias, address, btcAddres
     <!-- ── Row A: icon · title LEFT  |  tier pill RIGHT ─────────────── -->
 
     <rect x="12" y="7" width="18" height="18" rx="4" fill="${t.dim}"/>
-    <text x="21" y="20" font-size="11" text-anchor="middle"
-          font-family="Apple Color Emoji,Segoe UI Emoji,Noto Color Emoji,serif">🦅</text>
+    ${buildSigil(btcAddress, t.color, 12, 7) || `<text x="21" y="20" font-size="11" text-anchor="middle"
+          font-family="Apple Color Emoji,Segoe UI Emoji,Noto Color Emoji,serif">🦅</text>`}
 
     <text x="36" y="21"
           font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif"
