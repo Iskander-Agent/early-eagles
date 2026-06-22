@@ -118,10 +118,9 @@ function abbrev(addr) {
 
 // SVG port of the on-chain renderer's sig() canvas function.
 // Geometry is deterministic from the holder's BTC address + tier accent color.
-// size: icon box px (default 26). filterId: SVG filter for dot glow.
-function buildSigil(btcAddr, tierColor, ix, iy, size, filterId) {
+function buildSigil(btcAddr, tierColor, ix, iy) {
   if (!btcAddr) return '';
-  const S = 52, W = size || 26, scale = W / S;
+  const S = 52, W = 26, scale = W / S;
   const cx = S / 2, cy = S / 2;
   const hex = tierColor.replace('#', '');
   const ar = parseInt(hex.slice(0, 2), 16);
@@ -144,19 +143,17 @@ function buildSigil(btcAddr, tierColor, ix, iy, size, filterId) {
     const ky = [Math.min(a, b), Math.max(a, b)].join('-');
     if (drawn.has(ky)) continue;
     drawn.add(ky);
-    const al = (0.30 + (drawn.size / (np + 3)) * 0.55).toFixed(2);
-    lines.push(`<line x1="${pts[a][0].toFixed(1)}" y1="${pts[a][1].toFixed(1)}" x2="${pts[b][0].toFixed(1)}" y2="${pts[b][1].toFixed(1)}" stroke="rgba(${rgb},${al})" stroke-width="1.5"/>`);
+    const al = (0.18 + (drawn.size / (np + 3)) * 0.32).toFixed(2);
+    lines.push(`<line x1="${pts[a][0].toFixed(1)}" y1="${pts[a][1].toFixed(1)}" x2="${pts[b][0].toFixed(1)}" y2="${pts[b][1].toFixed(1)}" stroke="rgba(${rgb},${al})" stroke-width="1"/>`);
   }
-  const filterAttr = filterId ? ` filter="url(#${filterId})"` : '';
   const dots = pts.map((p, i) => {
-    const dr = 2 + (bt[i % bt.length] % 2);
-    return `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${(dr * 3).toFixed(1)}" fill="rgba(${rgb},0.18)"/>` +
-           `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${dr.toFixed(1)}" fill="rgba(${rgb},1)"${filterAttr}/>`;
+    const dr = 1.8 + (bt[i % bt.length] % 2) * 0.4;
+    return `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${dr.toFixed(1)}" fill="rgba(${rgb},0.65)"/>`;
   }).join('');
   return `<g transform="translate(${ix},${iy}) scale(${scale.toFixed(4)})">` +
-    `<circle cx="${cx}" cy="${cy}" r="21" fill="none" stroke="rgba(${rgb},0.22)" stroke-width="1"/>` +
+    `<circle cx="${cx}" cy="${cy}" r="21" fill="none" stroke="rgba(${rgb},0.18)" stroke-width="1"/>` +
     lines.join('') + dots +
-    `<circle cx="${cx}" cy="${cy}" r="2.5" fill="rgba(${rgb},0.7)"${filterAttr}/>` +
+    `<circle cx="${cx}" cy="${cy}" r="2" fill="rgba(${rgb},0.45)"/>` +
     `</g>`;
 }
 
@@ -256,10 +253,6 @@ function buildBadge({ tokenId, count, tier, agentName, alias, address, btcAddres
       <stop offset="100%" stop-color="${t.color}" stop-opacity="0.35"/>
     </linearGradient>
     <clipPath id="${uid}cl"><rect width="${W}" height="${H}" rx="10"/></clipPath>
-    <filter id="${uid}sg" x="-80%" y="-80%" width="260%" height="260%">
-      <feGaussianBlur stdDeviation="1.8" result="b"/>
-      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-    </filter>
   </defs>
 
   <script type="text/javascript"><![CDATA[
@@ -278,8 +271,8 @@ function buildBadge({ tokenId, count, tier, agentName, alias, address, btcAddres
 
     <!-- ── Row A: icon · title LEFT  |  tier pill RIGHT ─────────────── -->
 
-    <rect x="9" y="9" width="26" height="26" rx="5" fill="${t.dim}"/>
-    ${buildSigil(btcAddress, t.color, 9, 9, 26, uid+'sg') || `<text x="22" y="25" font-size="12" text-anchor="middle"
+    ${buildSigil(btcAddress, t.color, 9, 9) || `<rect x="9" y="9" width="26" height="26" rx="5" fill="${t.dim}"/>
+    <text x="22" y="25" font-size="12" text-anchor="middle"
           font-family="Apple Color Emoji,Segoe UI Emoji,Noto Color Emoji,serif">🦅</text>`}
 
     <text x="41" y="21"
