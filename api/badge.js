@@ -59,22 +59,15 @@ const { STACKS_MAINNET } = require('@stacks/network');
 
 function abort(ms) { const c = new AbortController(); setTimeout(() => c.abort(), ms); return c.signal; }
 
-// Fetch AIBTC agent level from our own agent-registry.json (same-origin, no Cloudflare block)
-let _registryCache = null;
-let _registryCacheAt = 0;
+const AIBTC_API = 'https://aibtc.com/api';
+
 async function getAgentLevel(address) {
   try {
-    const now = Date.now();
-    // In-memory cache for 5 min to avoid re-fetching on every badge request
-    if (!_registryCache || now - _registryCacheAt > 5 * 60 * 1000) {
-      const r = await fetch(`${BASE_URL}/api/agent-registry.json`, { signal: abort(5000) });
-      if (!r.ok) return null;
-      _registryCache = await r.json();
-      _registryCacheAt = now;
-    }
-    const entry = (_registryCache?.entries || []).find(e => e.stx_address === address);
-    if (!entry?.aibtc_level_name) return null;
-    return entry.aibtc_level != null ? `${entry.aibtc_level_name} ${entry.aibtc_level}` : entry.aibtc_level_name;
+    const r = await fetch(`${AIBTC_API}/agents/${address}`, { signal: abort(5000) });
+    if (!r.ok) return null;
+    const data = await r.json();
+    if (!data.found || !data.levelName) return null;
+    return data.level != null ? `${data.levelName} ${data.level}` : data.levelName;
   } catch { return null; }
 }
 

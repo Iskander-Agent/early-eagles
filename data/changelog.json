@@ -1,6 +1,12 @@
 [
   {
     "date": "2026-06-22",
+    "title": "Fix Eagle badge: AIBTC level now live from API",
+    "description": "Badge pill was always showing Eagle tier (Legendary/Epic/…) instead of AIBTC agent level (Genesis 2). Root cause: getAgentLevel() fetched a missing agent-registry.json, always returned null. Fix: query aibtc.com/api/agents/{address} directly, same source as aibtc-badge.js.",
+    "type": "fix"
+  },
+  {
+    "date": "2026-06-22",
     "version": "v3.6",
     "title": "Direction reset: pivot to on-chain art",
     "description": "Stripped agent-coordination layer (Network, Leaderboard, Pulse, Tasks, Nest, MCP server, registry API, market). Keeping core art infrastructure: gallery, traits, holders, badges, mint, on-chain renderer. New direction: daily on-chain art creation on Stacks.",
