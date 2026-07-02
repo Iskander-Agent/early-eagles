@@ -1,5 +1,11 @@
 [
   {
+    "date": "2026-07-02",
+    "title": "Eagles Nest taken down",
+    "description": "Telegram gating group and bot service shut down permanently. No API changes — holder verification, attestation, and mint flow unaffected.",
+    "type": "infra"
+  },
+  {
     "date": "2026-06-23",
     "title": "Badge: sentence case + dual profile links",
     "description": "EARLY EAGLE changed to sentence case (Early Eagle #N). Row B now shows two right-aligned links: aibtc ↗ (links to aibtc.com/agents/{address}) and eagle ↗ (links to holder profile page), replacing the former ✓ on-chain label and single View Profile link.",
