@@ -241,8 +241,9 @@ async function handleEligibility(req, res) {
   const ip = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || 'unknown';
   if (!rateOk(ip + ':eligibility', 20)) return res.status(429).json({ error: 'Too many requests. Try again in 1 minute.' });
 
-  const rawAddr = (req.query || {}).address;
-  const rawBtc  = (req.query || {}).btc;
+  const query = req.query || {};
+  const rawAddr = query.address || query.stxAddress;
+  const rawBtc  = query.btc;
   if (!rawAddr || typeof rawAddr !== 'string') return res.status(400).json({ error: 'Missing ?address= parameter' });
   if (!/^S[PMTN][A-Z0-9]{38,41}$/.test(rawAddr)) return res.status(400).json({ error: 'Invalid Stacks address format' });
 
@@ -497,7 +498,7 @@ module.exports = async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
   if (path.endsWith('/genesis'))      return handleGenesis(req, res);
   if (path.endsWith('/holder'))       return handleHolder(req, res);
-  if (path.endsWith('/eligibility'))  return handleEligibility(req, res);
+  if (path.endsWith('/eligibility') || path.endsWith('/check')) return handleEligibility(req, res);
   if (path.endsWith('/recent-mints')) return handleRecentMints(req, res);
   if (path.endsWith('/utilities'))    return handleUtilities(req, res);
   if (path.endsWith('/shuffle'))      return handleShuffle(req, res);
