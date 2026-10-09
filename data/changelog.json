@@ -1,5 +1,11 @@
 [
   {
+    "date": "2026-10-09",
+    "title": "Gallery instant load + Eagle page rendering fixed",
+    "description": "Bundled gallery-cache.json into deployment (77KB, 34 eagles). Gallery and render API now serve from static JSON on cold start — zero Hiro API calls. Eliminates 500 errors and 1-2 min load times caused by Vercel 10s timeout. Eagle detail page: removed 3D perspective tilt that caused transparent/glossy compositing artifacts; replaced with float animation + glare tracking.",
+    "type": "fix"
+  },
+  {
     "date": "2026-07-02",
     "title": "Eagles Nest taken down",
     "description": "Telegram gating group and bot service shut down permanently. No API changes — holder verification, attestation, and mint flow unaffected.",
