@@ -4,13 +4,23 @@
  * Segments are locked on-chain — cache aggressively.
  */
 
+const path = require('path');
 const STACKS_API = 'https://api.hiro.so';
 const ADMIN_ADDRESS = 'SP35A2J9JBTPSS9WA9XZAPRX8FB3245XXG7CZ0ZM2';
 const NFT_CONTRACT = 'early-eagles-v2';
 const RENDERER_NAME = 'early-eagles-renderer';
 
+// Bundled cache — built by scripts/build-gallery-cache.mjs.
+// For cached tokens: zero Hiro calls. For delta mints: segments cached, 1 Hiro call only.
+const BUNDLED = (() => {
+  try { return require(path.join(__dirname, '..', '..', 'data', 'gallery-cache.json')); }
+  catch { return null; }
+})();
+
 // In-memory segment cache — renderer is locked, never changes
-let _segs = null;
+let _segs = BUNDLED?.renderer
+  ? { s1: BUNDLED.renderer.seg1, eagle: BUNDLED.renderer.eagle, s2: BUNDLED.renderer.seg2, s3: BUNDLED.renderer.seg3 }
+  : null;
 
 async function callRead(contract, fn, args = []) {
   const url = `${STACKS_API}/v2/contracts/call-read/${ADMIN_ADDRESS}/${contract}/${fn}`;
@@ -52,6 +62,18 @@ module.exports = async function handler(req, res) {
   }
 
   try {
+    // Fast path: serve from bundled cache (zero Hiro calls for all deployed eagles)
+    if (BUNDLED?.eagles && BUNDLED?.renderer) {
+      const cached = BUNDLED.eagles.find(e => e.id === tokenId);
+      if (cached?.renderParams) {
+        const { seg1, eagle, seg2, seg3 } = BUNDLED.renderer;
+        const html = seg1 + eagle + seg2 + cached.renderParams + seg3;
+        res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate=86400');
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        return res.status(200).send(html);
+      }
+    }
+
     // Fetch segments once; they're immutable after lock-data
     if (!_segs) {
       const [s1, eagle, s2, s3] = await Promise.all([
