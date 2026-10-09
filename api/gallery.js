@@ -11,6 +11,14 @@
  */
 
 const { c32address } = require('c32check');
+const path = require('path');
+
+// Bundled static cache — built by scripts/build-gallery-cache.mjs after each mint/airdrop.
+// Loaded synchronously at module init: zero Hiro calls on cold start.
+const BUNDLED_CACHE = (() => {
+  try { return require(path.join(__dirname, '..', 'data', 'gallery-cache.json')); }
+  catch { return null; }
+})();
 
 // Lazy KV loader — only connect when env vars are present (same pattern as nest.js)
 function getKv() {
@@ -226,7 +234,11 @@ module.exports = async function handler(req, res) {
     const statsJson = cvToJSON(hexToCV(mintStatsData.result));
     const totalMinted = parseInt(statsJson?.value?.value?.['total-minted']?.value ?? statsJson?.value?.['total-minted']?.value ?? '0', 10) || 0;
 
-    // 2. Get renderer segments (cache in memory — they're locked)
+    // 2. Prime renderer segments — bundled cache first (zero Hiro calls), then fetch
+    if (!_segCache && BUNDLED_CACHE?.renderer) {
+      _segCache = BUNDLED_CACHE.renderer;
+      console.log('[gallery] renderer segments from bundled cache');
+    }
     if (!_segCache) {
       const seg1 = decodeSegment(await callRead(RENDERER_NAME, 'get-seg1', [], 4, RENDERER_ADDRESS));
       const eagle = decodeSegment(await callRead(RENDERER_NAME, 'get-eagle', [], 4, RENDERER_ADDRESS));
@@ -235,18 +247,34 @@ module.exports = async function handler(req, res) {
       _segCache = { seg1, eagle, seg2, seg3 };
     }
 
-    // 3. Build eagle data — KV → in-memory → fetch delta
-    // Try KV first (survives cold starts)
+    // 3. Build eagle data — bundled static → KV → in-memory → fetch delta
     if (_eagleCache.eagles.length === 0) {
-      const kv = getKv();
-      if (kv) {
-        try {
-          const kvData = await kv.get(KV_KEY);
-          if (kvData && kvData.eagles) {
-            _eagleCache = { eagles: kvData.eagles, totalMinted: kvData.totalMinted, builtAt: kvData.builtAt };
-            console.log(`[gallery] KV cache hit: ${kvData.eagles.length} eagles`);
-          }
-        } catch (e) { console.warn('[gallery] KV read failed:', e.message); }
+      // A: bundled static cache (survives cold starts, zero latency)
+      if (BUNDLED_CACHE?.eagles?.length > 0) {
+        const seg = _segCache;
+        _eagleCache = {
+          eagles: BUNDLED_CACHE.eagles.map(e => ({
+            ...e,
+            html: e.renderParams && seg
+              ? seg.seg1 + seg.eagle + seg.seg2 + e.renderParams + seg.seg3
+              : null,
+          })),
+          totalMinted: BUNDLED_CACHE.totalMinted,
+          builtAt: Date.now(),
+        };
+        console.log(`[gallery] bundled cache: ${_eagleCache.eagles.length} eagles`);
+      } else {
+        // B: KV fallback (if configured)
+        const kv = getKv();
+        if (kv) {
+          try {
+            const kvData = await kv.get(KV_KEY);
+            if (kvData && kvData.eagles) {
+              _eagleCache = { eagles: kvData.eagles, totalMinted: kvData.totalMinted, builtAt: kvData.builtAt };
+              console.log(`[gallery] KV cache hit: ${kvData.eagles.length} eagles`);
+            }
+          } catch (e) { console.warn('[gallery] KV read failed:', e.message); }
+        }
       }
     }
 

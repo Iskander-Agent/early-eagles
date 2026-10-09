@@ -176,8 +176,11 @@ h1, h2, h3 { font-family: 'Rajdhani', sans-serif; font-weight: 700; letter-spaci
   position: relative;
   z-index: 1;
   border-radius: 20px;
-  /* NO transition here — managed entirely by JS for smooth tilt */
+  transition: transform 0.35s cubic-bezier(.03,.98,.52,.99);
   cursor: default;
+}
+.eagle-card-wrapper.hovered {
+  transform: translateY(-6px);
 }
 .eagle-card-inner {
   position: relative;
@@ -877,84 +880,47 @@ function applyTierTheme(tier) {
 }
 
 /* ══════════════════════════════════════════════════════════
-   3D TILT
+   HOVER EFFECT (glare + lift — no 3D transform)
 ══════════════════════════════════════════════════════════ */
 function initTilt() {
-  if (window.innerWidth < 768) {
-    const w = document.getElementById('eagle-card-wrapper');
-    if (w) w.style.animation = 'floatCard 4s ease-in-out infinite';
-    return;
-  }
-
-  const wrapper = document.getElementById('eagle-card-wrapper');
-  const glare  = document.getElementById('card-glare');
+  const wrapper      = document.getElementById('eagle-card-wrapper');
+  const glare        = document.getElementById('card-glare');
+  const glow         = document.getElementById('eagle-glow');
+  const mouseCapture = document.getElementById('mouse-capture');
   if (!wrapper) return;
 
-  const PERSPECTIVE = 900;
-  const MAX_TILT    = 10;   // degrees
-  const SPEED       = 400;  // ms for enter/leave ease
-  const EASING      = 'cubic-bezier(.03,.98,.52,.99)'; // VanillaTilt default — fast accel, soft finish
+  // Float animation on all screen sizes
+  wrapper.style.animation = 'floatCard 4s ease-in-out infinite';
 
-  let rect            = null;
-  let rafPending      = false;
-  let lastEvent       = null;
-  let transTimeout    = null;
+  // On mobile, skip glare tracking
+  if (window.innerWidth < 768) return;
 
-  // Apply transition only on enter/leave, never during movement
-  function setTransition(ms) {
-    clearTimeout(transTimeout);
-    wrapper.style.transition = `transform ${ms}ms ${EASING}`;
-    transTimeout = setTimeout(() => { wrapper.style.transition = ''; }, ms);
-  }
+  // Glare tracks mouse position (no 3D transform — no compositing artifacts)
+  const target = mouseCapture || wrapper;
+  let rect = null;
 
-  function applyTilt(e) {
-    if (!rect) return;
-    // Normalize to 0..1, clamped — handles edge entry without jump
-    const x = Math.min(Math.max((e.clientX - rect.left) / rect.width,  0), 1);
-    const y = Math.min(Math.max((e.clientY - rect.top)  / rect.height, 0), 1);
-    // tiltY (rotateX): mouse at top → positive (top tilts toward you), bottom → negative
-    const tiltY = +(MAX_TILT - y * MAX_TILT * 2).toFixed(2);
-    // tiltX (rotateY): mouse at left → negative, right → positive
-    const tiltX = +(x * MAX_TILT * 2 - MAX_TILT).toFixed(2);
-    wrapper.style.transform =
-      `perspective(${PERSPECTIVE}px) rotateX(${tiltY}deg) rotateY(${tiltX}deg) scale3d(1.02,1.02,1.02)`;
-    if (glare) {
-      glare.style.setProperty('--glare-x', (x * 100).toFixed(1) + '%');
-      glare.style.setProperty('--glare-y', (y * 100).toFixed(1) + '%');
-    }
-  }
-
-  // mouseenter: cache rect + apply brief enter transition so first tilt animates in
-  wrapper.addEventListener('mouseenter', () => {
+  target.addEventListener('mouseenter', () => {
     rect = wrapper.getBoundingClientRect();
-    wrapper.style.willChange = 'transform';
-    setTransition(SPEED);
+    wrapper.style.animationPlayState = 'paused';
+    wrapper.classList.add('hovered');
+    if (glow) glow.style.opacity = '1';
   });
 
-  // mousemove: flag + latest-event pattern — one RAF per frame, always freshest coords
-  wrapper.addEventListener('mousemove', (e) => {
-    lastEvent = e;
-    if (!rafPending) {
-      rafPending = true;
-      requestAnimationFrame(() => {
-        if (lastEvent) applyTilt(lastEvent);
-        rafPending = false;
-      });
+  target.addEventListener('mousemove', (e) => {
+    if (!rect) rect = wrapper.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width  * 100).toFixed(1);
+    const y = ((e.clientY - rect.top)  / rect.height * 100).toFixed(1);
+    if (glare) {
+      glare.style.setProperty('--glare-x', x + '%');
+      glare.style.setProperty('--glare-y', y + '%');
     }
   });
 
-  // mouseleave: apply transition, then reset in next frame so browser sees the transition before transform
-  wrapper.addEventListener('mouseleave', () => {
-    clearTimeout(transTimeout);
-    wrapper.style.transition = `transform ${SPEED}ms ${EASING}`;
-    requestAnimationFrame(() => {
-      wrapper.style.transform =
-        `perspective(${PERSPECTIVE}px) rotateX(0deg) rotateY(0deg) scale3d(1,1,1)`;
-    });
-    setTimeout(() => {
-      wrapper.style.willChange = 'auto';
-      wrapper.style.transition = '';
-    }, SPEED);
+  target.addEventListener('mouseleave', () => {
+    rect = null;
+    wrapper.classList.remove('hovered');
+    wrapper.style.animationPlayState = 'running';
+    if (glow) glow.style.opacity = '0.8';
   });
 }
 
